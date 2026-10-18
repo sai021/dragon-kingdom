@@ -6,6 +6,10 @@
 using namespace Dragon;
 int main() {
  Wiring w;
+ assert(w.mirror);
+ assert(logicalIndex(0,0,w)==7 && logicalIndex(7,0,w)==0);
+ assert(logicalIndex(0,7,w)==56 && logicalIndex(7,7,w)==63);
+ w.mirror=false; // Check the underlying serpentine wiring separately.
  assert(logicalIndex(0,0,w)==0);assert(logicalIndex(7,0,w)==7);
  assert(logicalIndex(0,1,w)==15);assert(logicalIndex(7,1,w)==8);
  assert(logicalIndex(0,7,w)==63);assert(logicalIndex(7,7,w)==56);
@@ -25,7 +29,7 @@ int main() {
    int active=0;for(int i=0;i<PHYSICAL_COUNT;i++){if(used[i]){assert(f[i].r>0);active++;}else assert(f[i].r==0&&f[i].g==0&&f[i].b==0);}assert(active==64);configurations++;
   }
  }
- const int expected[ZONE_COUNT]={6,4,4,1,1,10,10,5,11,12};int count[ZONE_COUNT]={};for(auto& row:ZONES)for(Zone z:row){assert(z<ZONE_COUNT);count[z]++;}for(int z=0;z<ZONE_COUNT;z++)assert(count[z]==expected[z]);
+ const int expected[ZONE_COUNT]={0,4,4,1,1,10,10,5,13,16};int count[ZONE_COUNT]={};for(auto& row:ZONES)for(Zone z:row){assert(z<ZONE_COUNT);count[z]++;}for(int z=0;z<ZONE_COUNT;z++)assert(count[z]==expected[z]);
  RGB all[PHYSICAL_COUNT];for(auto& c:all)c={255,255,255};capCurrent(all,1000);assert(estimatedMilliAmps(all)<=1000);capCurrent(all,Config::PANEL_IDLE_MA);assert(channelSum(all)==0);
  assert(fabs(sourceVolts(5250.0f*20000.0f/120000.0f)-5.25f*Config::VOLTAGE_CALIBRATION)<.0001f);
  TouchFilter t;uint32_t now=0;for(int i=0;i<64;i++){now+=20;assert(t.update(10000,now)==0);}assert(t.ready&&!t.pressed);

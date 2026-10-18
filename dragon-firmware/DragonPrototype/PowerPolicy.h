@@ -6,6 +6,9 @@ constexpr uint16_t BASE_TOTAL_MA=Config::PANEL_IDLE_MA+Config::ESP_RESERVE_MA;
 constexpr uint16_t MIN_TOTAL_MA=Config::MIN_TOTAL_MA;
 constexpr uint16_t MAX_TOTAL_MA=Config::DEFAULT_MAX_TOTAL_MA;
 
+inline bool networkBudgetAvailable(uint16_t ceiling){return ceiling>=BASE_TOTAL_MA+Config::WIFI_RESERVE_MA;}
+inline uint16_t runtimeReserve(uint16_t ceiling){return Config::ESP_RESERVE_MA+(networkBudgetAvailable(ceiling)?Config::WIFI_RESERVE_MA:0);}
+
 inline RGB visibleScale(RGB c,uint32_t numerator,uint32_t denominator) {
  RGB out=scaled(c,numerator,denominator);
  if(numerator&&(c.r||c.g||c.b)&&!(out.r||out.g||out.b)) {

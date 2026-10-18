@@ -37,6 +37,14 @@ external supply.
 
 ## GPIO assignment
 
+The default build is S3. The optional C3 build preserves the eight power-side
+header positions in the supplied SuperMini pinouts, subject to actual footprint
+and orientation verification. Its assignments are matrix GPIO3, TTP223 GPIO2,
+LDR GPIO0/ADC1_CH0 and voltage GPIO1/ADC1_CH1; GPIO4 is unused. Power pins are
+5V, GND and 3V3. C3 GPIO2 is a strapping pin: cold-start/setup-gesture behaviour
+with the TTP223 must be checked physically. The C3 conversion is not yet a
+physically validated assembly. Check ADC calibration and USB limiting as well.
+
 | ESP32-S3 pin | Function |
 |---|---|
 | GPIO12 | WS2812B matrix data |

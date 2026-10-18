@@ -32,9 +32,20 @@ class PresetConfigTests(unittest.TestCase):
     def test_duplicate_and_overrides(self):
         self.data['presets'][1]['id'] = self.data['presets'][0]['id']
         with self.assertRaises(ValueError): palettes.validate(self.data)
-        self.data['presets'][1]['id'] = 'ember'
+        self.data['presets'][1]['id'] = json.loads(palettes.SOURCE.read_text(encoding='utf-8'))['presets'][1]['id']
         self.data['presets'][0]['zone_overrides'] = {'LE':'#010203'}
         self.assertIn('{1,2,3}', palettes.header(self.data))
+
+    def test_catalog_ids_cannot_shift_saved_custom_ids(self):
+        for change in ('append', 'remove', 'reorder', 'rename'):
+            with self.subTest(change=change):
+                data=copy.deepcopy(self.data)
+                if change=='append':
+                    extra=copy.deepcopy(data['presets'][0]);extra['id']='extra';data['presets'].append(extra)
+                elif change=='remove':data['presets'].pop()
+                elif change=='reorder':data['presets'][0],data['presets'][1]=data['presets'][1],data['presets'][0]
+                else:data['presets'][0]['id']='renamed'
+                with self.assertRaisesRegex(ValueError,'saved-data compatibility'):palettes.header(data)
 
     def test_generate_and_stale_check(self):
         with tempfile.TemporaryDirectory() as folder:

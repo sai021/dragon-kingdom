@@ -1,4 +1,4 @@
-# Dragon Den project context
+# Dragon Kingdom project context
 
 Read README.md and docs/PROJECT-STATUS.md for the consolidated checkpoint.
 Firmware work also follows dragon-firmware/AGENTS.md, especially the prohibition

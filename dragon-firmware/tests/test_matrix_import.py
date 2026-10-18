@@ -1,3 +1,4 @@
+import json
 import csv
 from pathlib import Path
 import sys
@@ -26,6 +27,24 @@ class MatrixImportTests(unittest.TestCase):
         sunny=next(p for p in catalog['presets'] if p['id']=='sunny')
         self.assertEqual(sunny['effect_zones']['breathe'],['FACE','BODY'])
         self.assertEqual(set(sunny['effect_zones']['glitter']),{'LE','RE','LW','RW'})
+
+    def test_shipped_catalog_keeps_storage_slots_and_valid_pixels(self):
+        shipped=json.loads(palettes.SOURCE.read_text(encoding='utf-8'))
+        original=import_matrix.load_catalog()
+        self.assertEqual([p['id'] for p in shipped['presets']],
+                         [p['id'] for p in original['presets']])
+        audit=json.loads((palettes.ROOT.parent/'docs/COLOUR-AUDIT-2026-10-18.json').read_text())
+        self.assertEqual([p['id'] for p in audit['presets']],[p['id'] for p in shipped['presets']])
+        self.assertEqual(sum(not p.get('retired',False) for p in shipped['presets']),79)
+        for p,review in zip(shipped['presets'],audit['presets']):
+            # Dated audit colours are historical evidence. The desktop editor
+            # deliberately permits later colour changes without changing IDs.
+            self.assertEqual(p['name'],review['name'])
+            pixels=palettes.pixel_colors(p);self.assertEqual(len(pixels),64)
+            for color in pixels:palettes.color(color)
+        # The audit is a frozen reference, not a constraint on later colour edits.
+        self.assertEqual(next(p for p in audit['presets'] if p['id']=='marsh')['zones']['body'],'#8B5B35')
+        self.assertEqual(next(p for p in audit['presets'] if p['id']=='cricket')['zones']['wings'],'#EAA126')
 
     def test_edges_can_change_without_wings(self):
         p=import_matrix.load_catalog()['presets'][0]

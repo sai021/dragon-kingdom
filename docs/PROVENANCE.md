@@ -15,7 +15,7 @@ by itself grant a blanket licence to reuse its contents.
   blanket open-source licence selected yet. Choosing one for original code is
   a separate decision and must not overwrite third-party asset notices.
 
-Device passwords, home Wi-Fi settings and printable credential cards are not
-published. Credentials are generated/stored on each device; local captures
-live under ignored `.tools` directories. Public documentation uses generic
-connection steps rather than the prototype's password.
+The prototype deliberately uses the shared device access password documented
+in the setup guides. Home Wi-Fi credentials, per-device setup cards and raw
+captures remain private under ignored `.tools` directories. The shared access
+key does not grant permission to publish household credentials.

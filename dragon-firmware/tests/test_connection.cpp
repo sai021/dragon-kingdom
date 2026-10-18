@@ -13,6 +13,16 @@ int main(){
  assert(!closeAccessPoint(true,false,0,299999,0));
  assert(closeAccessPoint(true,false,0,300000,0));
  assert(elapsed(100,UINT32_MAX-99,200));
+ assert(!elapsed(45000,0,CONNECT_TIMEOUT_MS)); // permit the observed slow DHCP path
+ assert(!elapsed(1000,1001,CONNECT_TIMEOUT_MS)); // request started after caller's clock sample
+ assert(!closeAccessPoint(true,false,0,1000,1001)); // freshly reopened AP stays visible
+ assert(elapsed(60000,0,CONNECT_TIMEOUT_MS));
+ assert(elapsed(59900,UINT32_MAX-99,CONNECT_TIMEOUT_MS));
+ assert(joinedExpectedNetwork(true,false,true,true)); // late DHCP must still save
+ assert(!joinedExpectedNetwork(true,true,true,false)); // old network must not save new key
+ assert(joinedExpectedNetwork(true,true,false,false)); // reconnect saved network
+ assert(!joinedExpectedNetwork(true,false,false,false)); // no repeated save/MDNS restart
+ assert(!joinedExpectedNetwork(false,true,true,true));
  assert(!elapsed(99,UINT32_MAX-99,200));
  StartupHold hold;
  hold.observe(true,500);hold.observe(true,2499);assert(!hold.requested);

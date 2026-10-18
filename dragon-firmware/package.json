@@ -1,5 +1,5 @@
 {
-  "name": "dragon-den-browser-checks",
+  "name": "dragon-kingdom-browser-checks",
   "private": true,
   "scripts": {"test:web": "node tools/test_web.cjs"},
   "devDependencies": {"playwright": "1.62.1"}

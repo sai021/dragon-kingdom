@@ -37,8 +37,8 @@ def main():
     (local / 'setup-credentials.json').write_text(json.dumps(details), encoding='utf-8')
     escaped = {key: html.escape(value, quote=True) for key, value in details.items()}
     card = '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dragon setup card</title><style>body{font:18px system-ui;max-width:600px;margin:40px auto;padding:24px;color:#19182d}h1{color:#514476}li{margin:18px 0;line-height:1.6}code{font-size:20px;overflow-wrap:anywhere}aside{background:#eef4f4;padding:20px;border-radius:16px}button{font:inherit;padding:12px}@media print{button{display:none}}</style>
-<h1>Your Dragon Den</h1><p>Keep this card for connecting from a phone.</p><ol>
+<title>Dragon Kingdom setup card</title><style>body{font:18px system-ui;max-width:600px;margin:40px auto;padding:24px;color:#19182d}h1{color:#514476}li{margin:18px 0;line-height:1.6}code{font-size:20px;overflow-wrap:anywhere}aside{background:#eef4f4;padding:20px;border-radius:16px}button{font:inherit;padding:12px}@media print{button{display:none}}</style>
+<h1>Your Dragon Kingdom</h1><p>Keep this card for connecting from a phone.</p><ol>
 <li>Plug in your dragon.</li><li>In your phone's Wi-Fi settings, join <strong>{network}</strong>.<br>Password: <code>{password}</code><br>If it says “No internet”, choose to stay connected.</li>
 <li>Open <a href="{setup}">{setup}</a> in your browser.<br>Login: <strong>{login}</strong><br>Use the same password shown above.</li>
 <li>Play, or open <strong>For grown-ups · Wi-Fi &amp; help</strong> to connect your dragon to home Wi-Fi.</li></ol>

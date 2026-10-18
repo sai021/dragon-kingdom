@@ -3,7 +3,9 @@
 The ESP32-S3 hosts an offline HTML/JavaScript interface and local HTTP API.
 The phone controls the device directly over its setup access point or the home
 LAN. There is no cloud backend, remote-control service, child account or audio
-pipeline. Internet access is currently unused by animations.
+pipeline. Internet access is currently unused by animations. Optional NTP supplies UTC
+for the sunrise alarm; phone clock sync also works offline. The intended product
+has one child using it, with optional saved collections.
 
 ```mermaid
 flowchart LR
@@ -38,9 +40,10 @@ flowchart LR
 
 | NVS namespace | Contents |
 | --- | --- |
-| `dragon-wifi` | Unique setup password and last successfully joined home network |
+| `dragon-wifi` | Shared device access key and last successfully joined home network |
 | `dragon-library` | Active profile, saved glow, favourites, custom region overrides/effects |
 | `dragon-light` | Explicit ambient calibration |
+| `dragon-alarm` | Checksummed daily schedule and saved phone timezone rules |
 | `dragon-diag` | Four retained failed startup sweeps |
 
 Library snapshots contain version, generation and checksum fields. A verified
@@ -59,7 +62,7 @@ editing/deleting it requires its owner profile, while other profiles can copy.
 - No saved network: open the password-protected setup AP.
 - Saved network: try joining it; do not open the AP automatically after failure.
 - Deliberate power-on touch hold: reopen setup without deleting credentials.
-- Connection timeout: 20 seconds; saved-network retry: one minute.
+- Connection timeout: 60 seconds; saved-network retry: one minute.
 - Configured AP with no joined clients or active connection attempt: close
   after five minutes of inactivity. An unconfigured AP stays available.
 - Commit home-network credentials only after association succeeds. This does
@@ -90,11 +93,16 @@ request header. Mutation bodies use form-urlencoded fields, not JSON.
 | GET `/api/dragon-detail?id=...` | Pixel/region editor data and ownership flag |
 | POST `/api/custom` | Create or replace a validated custom dragon |
 | POST `/api/delete-custom` | Delete an owned creation and remove favourite references |
+| GET / POST `/api/alarm` | Read/save daily sunrise settings |
+| POST `/api/alarm/clock` | Synchronize UTC and timezone rules |
+| POST `/api/alarm/preview` / `/api/alarm/stop` | Preview or dismiss sunrise |
 | POST `/api/play` | `dragon`, `effect`, `brightness` or `toggle` action |
 
 ## Power and rendering
 
-Networking starts after a passing startup power selection. Computer USB caps
+Networking starts after a passing startup selection with enough budget for
+controller, radio reserve and panel idle. The 300 mA fallback keeps Wi-Fi off
+and retains touch play. Computer USB caps
 the session at an estimated 400 mA. Wi-Fi reserves a further provisional 50 mA
 from the LED budget. Every animation uses channel/current limiting before
 ambient and touch percentages. This allowance needs measurement on the actual
@@ -103,3 +111,21 @@ supply; voltage plus a model is not an actual-current measurement.
 Supply ADC sampling stops after startup. Current-run statistics and session
 ceiling are RAM-only. Successful boots keep earlier failure history. The
 hardware and startup guide contain the precise criteria and limitations.
+
+
+## Reliability changes — 19 October 2026
+
+Collection mutation requests include the loaded `profile` and `generation`.
+The server rejects missing or stale context with HTTP 409; the editor retains
+its draft. `/api/library` and `/api/dragon-detail` expose this context. Version-1
+NVS records and existing preset/custom IDs remain unchanged.
+
+`BoundedWebServer.h` wraps the pinned Arduino WebServer parser. It waits without
+blocking until one complete GET or form-encoded POST is present. Headers are
+limited to 2,048 bytes, bodies to 1,536 bytes, and receipt to three seconds.
+Chunked/multipart requests, conflicting framing and pipelining are rejected.
+Responses are capped at 64 KiB and sent in nonblocking chunks of at most 1,024
+bytes per loop, with a five-second send deadline. Wi-Fi interface changes wait
+for the queued response. Request failures do not stop local touch or rendering.
+This adapter depends on Arduino-ESP32 3.2.1 and needs live-device verification
+before changing that dependency.

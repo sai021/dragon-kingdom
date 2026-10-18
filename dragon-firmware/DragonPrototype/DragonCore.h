@@ -5,6 +5,7 @@
 namespace Dragon {
 constexpr int PHYSICAL_WIDTH = Config::MATRIX_WIDTH, PHYSICAL_COUNT = Config::MATRIX_COUNT, LOGICAL_WIDTH = 8;
 struct RGB { uint8_t r, g, b; };
+// BG retains its stored ID for compatibility; every physical pixel is now a body part or wing.
 enum Zone : uint8_t { BG, LE, RE, LH, RH, FACE, BODY, TAIL, LW, RW, ZONE_COUNT };
 static const char* const ZONE_NAMES[] = {"BG","LE","RE","LH","RH","FACE","BODY","TAIL","LW","RW"};
 static const Zone ZONES[8][8] = {
@@ -14,13 +15,14 @@ static const Zone ZONES[8][8] = {
  {LW,LW,FACE,FACE,FACE,FACE,RW,RW},
  {LW,LW,LW,BODY,BODY,RW,RW,RW},
  {LW,LW,BODY,BODY,BODY,BODY,RW,RW},
- {BG,TAIL,BODY,BODY,BODY,BODY,RW,BG},
- {BG,TAIL,TAIL,TAIL,TAIL,BG,BG,BG}
+ {LW,TAIL,BODY,BODY,BODY,BODY,RW,RW},
+ {LW,TAIL,TAIL,TAIL,TAIL,RW,RW,RW}
 };
 struct Wiring {
  bool serpentine = true;
  bool columns = false;
- bool mirror = false;
+ // Front-facing view: correct the observed left/right reversal on the matrix.
+ bool mirror = true;
  uint8_t quarterTurns = 0;
  uint8_t offsetX = 0, offsetY = 0;
 };

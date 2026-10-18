@@ -6,30 +6,46 @@ const path=require('node:path');
 const {chromium}=require(process.argv[2]||'playwright');
 const root=path.resolve(__dirname,'..');
 const presets=JSON.parse(fs.readFileSync(path.join(root,'presets/dragons.json'),'utf8')).presets;
-const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,5,9,9],[8,8,8,6,6,9,9,9],[8,8,6,6,6,6,9,9],[0,7,6,6,6,6,9,0],[0,7,7,7,7,0,0,0]].flat();
+const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,5,9,9],[8,8,8,6,6,9,9,9],[8,8,6,6,6,6,9,9],[8,7,6,6,6,6,9,9],[8,7,7,7,7,9,9,9]].flat();
 
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.argv[3]?{executablePath:process.argv[3]}:{})});
  try{
-  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,timezoneId:'Australia/Sydney'});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   let state={connected:false,accessPoint:true,connecting:false,mode:0,hostname:'Dragon-test',ip:'192.168.1.23',message:'Ready to play',dragon:0,brightness:100,profile:0};
   let profiles=[{id:0,name:"All",brightness:100,favorites:[]}],customs=[];
-  let scanReads=0,scanWrites=0,forgot=false;
+  let scanReads=0,scanWrites=0,forgot=false,generation=0,alarmGetFailures=0,heldPlay=null,playStarted=null;
+  let alarm={enabled:false,minute:420,duration:20,clockReady:false,active:false,preview:false,progress:0},clockSyncs=0;
   await page.route('http://dragon.test/**',async route=>{
    const request=route.request(),url=new URL(request.url()),data=new URLSearchParams(request.postData()||'');
    const json=body=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)});
-   if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,'web/dragon-den.html'),'utf8').replace('<script src="/library.js"></script>','<script>'+fs.readFileSync(path.join(root,'web/library.js'),'utf8')+'</script>')});
+   if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(root,'web/dragon-kingdom.html'),'utf8').replace('<script src="/library.js"></script>','<script>'+fs.readFileSync(path.join(root,'web/library.js'),'utf8')+'</script>')});
    if(request.method()==='POST')assert.equal(request.headers()['x-dragon-request'],'1');
+   if(request.method()==='POST'&&['/api/profile','/api/custom','/api/delete-profile','/api/delete-custom'].includes(url.pathname)){assert(data.has('profile')&&data.has('generation'));if(Number(data.get('profile'))!==state.profile||Number(data.get('generation'))!==generation)return route.fulfill({status:409,body:'Your collection changed. Reload the page before saving. Your changes have not been saved.'});generation++}
+   if(url.pathname==='/api/alarm/clock'){
+    assert(Number(data.get('epoch'))>1704067200);assert(Number(data.get('validUntil'))>Number(data.get('epoch')));
+    assert(Number(data.get('count'))>=2&&Number(data.get('count'))<=4);clockSyncs++;alarm.clockReady=true;return json(alarm);
+   }
+   if(url.pathname==='/api/alarm'){
+    if(request.method()==='GET'&&alarmGetFailures>0){alarmGetFailures--;return route.fulfill({status:503,body:'Temporary alarm failure'})}
+    if(request.method()==='POST'){
+     if(data.get('duration')==='13')return route.fulfill({status:500,body:'Alarm could not be saved. Try again.'});
+     Object.assign(alarm,{enabled:data.get('enabled')==='1',minute:Number(data.get('minute')),duration:Number(data.get('duration'))});
+    }return json(alarm);
+   }
+   if(url.pathname==='/api/alarm/preview'){Object.assign(alarm,{active:true,preview:true,progress:1});return json(alarm)}
+   if(url.pathname==='/api/alarm/stop'){Object.assign(alarm,{active:false,preview:false,progress:0});return json(alarm)}
    if(url.pathname==='/api/dragons')return json([{id:0,name:'Blue'},{id:1,name:'Sundew'},...customs.map(d=>({...d,owned:d.owner===state.profile}))]);
-   if(url.pathname==='/api/library')return json({active:state.profile,profiles:profiles.filter(Boolean),customLimit:8});
-   if(url.pathname==='/api/dragon-detail'){const id=Number(url.searchParams.get('id')),custom=customs.find(d=>d.id===id);return json({id,base:custom?.base??id,name:custom?.name??'Blue',canEdit:Boolean(custom&&custom.owner===state.profile),colorMask:custom?.colorMask??0,colors:custom?.colors??Array(10).fill('#123456'),pixels:presets[custom?.base??id].pixels,zones:zoneMap,effectZones:custom?.effectZones??[0,0,0,0]})}
+   if(url.pathname==='/api/library')return json({active:state.profile,generation,profiles:profiles.filter(Boolean),customLimit:8});
+   if(url.pathname==='/api/dragon-detail'){const id=Number(url.searchParams.get('id')),custom=customs.find(d=>d.id===id);return json({profile:state.profile,generation,id,base:custom?.base??id,name:custom?.name??'Blue',canEdit:Boolean(custom&&custom.owner===state.profile),colorMask:custom?.colorMask??0,colors:custom?.colors??Array(10).fill('#123456'),pixels:presets[custom?.base??id].pixels,zones:zoneMap,effectZones:custom?.effectZones??[0,0,0,0]})}
    if(url.pathname==='/api/custom'){const id=Number(data.get('id'))<0?81+customs.length:Number(data.get('id'));const custom={id,owner:state.profile,custom:true,name:data.get('name'),base:Number(data.get('base')),colorMask:Number(data.get('colorMask')),colors:data.get('colors').match(/.{6}/g).map(c=>'#'+c),effectZones:data.get('effectZones').split(',').map(Number)};customs=customs.filter(d=>d.id!==id);customs.push(custom);state.dragon=id;state.mode=0;return json({id})}
    if(url.pathname==='/api/delete-profile'){const id=Number(data.get('id'));assert.notEqual(id,0);for(const custom of customs)if(custom.owner===id)custom.owner=0;profiles[id]=null;state.profile=0;state.dragon=0;return json({})}
    if(url.pathname==='/api/delete-custom'){const id=Number(data.get('id'));customs=customs.filter(d=>d.id!==id);for(const p of profiles)if(p)p.favorites=p.favorites.filter(value=>value!==id);if(state.dragon===id)state.dragon=0;return json({})}
    if(url.pathname==='/api/profile'){const action=data.get('action');if(action==='create'){state.profile=profiles.length;profiles.push({id:state.profile,name:data.get('name'),brightness:100,favorites:[]})}else if(action==='select')state.profile=Number(data.get('id'));else{Object.assign(profiles[state.profile],{name:data.get('name'),brightness:Number(data.get('brightness')),favorites:data.get('favorites')?data.get('favorites').split(',').map(Number):[]})}state.dragon=profiles[state.profile].favorites[0]??0;state.brightness=profiles[state.profile].brightness;state.mode=0;return json({})}
    if(url.pathname==='/api/state')return json(state);
    if(url.pathname==='/api/play'){
+    if(heldPlay){playStarted();await heldPlay}
     if(data.get('action')==='dragon'){state.dragon=Number(data.get('value'));state.mode=0}
     if(data.get('action')==='effect')state.mode=['zones','breathe','colorcycle','glitter','incendio','leviosa'].indexOf(data.get('value'));
     if(data.get('action')==='toggle'){state.mode=state.mode===9?0:9}
@@ -49,6 +65,17 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   });
   await page.goto('http://dragon.test/');
   await page.locator('#dragon:not([disabled])').waitFor();
+  await page.locator('#save-alarm:not([disabled])').waitFor({state:'attached'});assert.equal(clockSyncs,1);
+  await page.click('#alarm summary');await page.check('#alarm-enabled');await page.fill('#alarm-time','06:30');await page.fill('#alarm-duration','30');await page.click('#save-alarm');
+  await page.waitForFunction(()=>document.querySelector('#alarm-status').textContent.startsWith('Daily sunrise saved'));
+  assert.equal(alarm.minute,390);assert.equal(alarm.duration,30);assert.equal(alarm.enabled,true);
+  await page.fill('#alarm-time','08:15');await page.evaluate(()=>refresh());assert.equal(await page.inputValue('#alarm-time'),'08:15'); // polling preserves drafts
+  await page.reload();await page.locator('#save-alarm:not([disabled])').waitFor({state:'attached'});await page.click('#alarm summary');assert.equal(await page.inputValue('#alarm-time'),'06:30');
+  await page.fill('#alarm-duration','13');await page.click('#save-alarm');await page.getByText('Alarm could not be saved. Try again.',{exact:true}).waitFor();assert.equal(alarm.duration,30);
+  await page.fill('#alarm-duration','30');await page.click('#preview-alarm');await page.locator('#stop-alarm:not([hidden])').waitFor();assert.equal(alarm.preview,true);
+  await page.click('#stop-alarm');await page.locator('#stop-alarm[hidden]').waitFor({state:'attached'});assert.equal(alarm.active,false);
+  await page.uncheck('#alarm-enabled');await page.click('#save-alarm');await page.waitForFunction(()=>document.querySelector('#alarm-status').textContent.startsWith('Daily alarm is off'));assert.equal(alarm.enabled,false);
+  await page.locator('#alarm').screenshot({path:path.join(root,'.tools/sunrise-alarm-phone.png')});await page.click('#alarm summary');
   await page.selectOption('#dragon','1');
   await page.waitForFunction(()=>document.querySelector('#dragon').value==='1');
   await page.click('[data-effect="glitter"]');
@@ -91,7 +118,35 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   await page.locator('#parents').evaluate(element=>element.open=true);
   page.once('dialog',dialog=>dialog.accept());await page.click('#forget');
   await page.waitForFunction(()=>document.querySelector('#feedback').textContent.startsWith('Home Wi-Fi forgotten'));
-  assert.equal(forgot,true);assert.deepEqual(errors,[]);
-  console.log('PASS: phone layout, selection, effects, sleep/wake, Wi-Fi scanning, password visibility, error/retry, reconnect links forgetting Wi-Fi, custom region editing, saving, profile favourites, switching and page reload.');
+  assert.equal(forgot,true);
+  // An empty saved profile must stay unavailable on a full page reload.
+  state.profile=2;generation++;
+  await page.reload();await page.waitForFunction(()=>collection?.active===2&&document.querySelector('#brightness').options.length===11);
+  assert.equal(await page.locator('#dragon').isDisabled(),true);assert.equal(await page.locator('#brightness').isDisabled(),true);
+  // A transient initial alarm failure retries; clock sync can also safely hydrate the form.
+  Object.assign(alarm,{enabled:true,minute:365,duration:35});alarmGetFailures=2;
+  await page.reload();await page.waitForFunction(()=>collection!==null&&!loading&&document.querySelector('#alarm-status').textContent.startsWith('Could not load'));
+  assert.equal(await page.locator('#save-alarm').isDisabled(),true);
+  await page.evaluate(()=>refresh());await page.waitForFunction(()=>alarmFieldsLoaded);
+  assert.equal(await page.inputValue('#alarm-time'),'06:05');assert.equal(await page.inputValue('#alarm-duration'),'35');assert.equal(await page.isChecked('#alarm-enabled'),true);
+  alarmGetFailures=2;await page.reload();await page.waitForFunction(()=>collection!==null&&!loading&&document.querySelector('#alarm-status').textContent.startsWith('Could not load'));
+  await page.click('#alarm summary');await page.click('#sync-alarm');await page.waitForFunction(()=>!commandBusy&&alarmFieldsLoaded);
+  assert.equal(await page.inputValue('#alarm-time'),'06:05');assert.equal(await page.inputValue('#alarm-duration'),'35');assert.equal(await page.isChecked('#alarm-enabled'),true);
+  // A pending play request visibly disables conflicting controls; a synthetic
+  // onchange is also rejected without leaving a misleading selected profile.
+  state.profile=0;generation++;await page.reload();await page.waitForFunction(()=>collection?.active===0&&alarmFieldsLoaded);
+  let releasePlay;heldPlay=new Promise(resolve=>releasePlay=resolve);const started=new Promise(resolve=>playStarted=resolve);
+  await page.click('[data-effect="glitter"]');await started;
+  assert.equal(await page.locator('#profile').isDisabled(),true);assert.equal(await page.locator('#busy-status').isVisible(),true);
+  await page.evaluate(()=>{const node=document.querySelector('#profile');node.value='2';node.dispatchEvent(new Event('change',{bubbles:true}))});
+  assert.equal(await page.inputValue('#profile'),'0');assert.equal(state.profile,0);
+  heldPlay=null;releasePlay();await page.waitForFunction(()=>!commandBusy);
+  assert.equal(await page.locator('#profile').isDisabled(),false);
+  // A changed collection rejects a stale creation save and preserves its draft.
+  await page.click('#create-dragon');await page.locator('#editor:not([hidden])').waitFor();await page.fill('#custom-name','Unsaved draft');generation++;
+  await page.click('#save-custom');await page.getByText('Your collection changed.',{exact:false}).waitFor();
+  assert.equal(await page.inputValue('#custom-name'),'Unsaved draft');assert.equal(await page.locator('#editor').isVisible(),true);assert.equal(customs.length,0);
+  assert.deepEqual(errors,[]);
+  console.log('PASS: initial alarm failure recovery, safe clock-sync hydration, busy controls, empty-profile reload and stale-draft preservation; daily sunrise save/reload, DST clock payloads, preview/stop, save failure and draft preservation; phone layout, play/effects, Wi-Fi setup, custom editing and profiles.');
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});

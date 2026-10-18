@@ -25,14 +25,14 @@ int main(){
  }
  AmbientLight a;for(uint32_t t=0;t<6000;t+=250)a.update(2000,t);auto before=a.step;
  for(uint32_t t=6000;t<12000;t+=250)a.update(t%500?1990:2010,t);assert(a.step==before);
- for(uint32_t t=12000;t<20000;t+=250)a.update(4095,t);assert(!a.night&&a.targetGain()==0);
+ for(uint32_t t=12000;t<20000;t+=250)a.update(4095,t);assert(!a.night&&a.targetGain()==100);
  for(uint32_t t=20000;t<30000;t+=250)a.update(0,t);assert(a.night&&a.targetGain()==10);
  setBrightness(100);touchGain=100;mode=ZONE_VIEW;gestures=TouchGestures{};lastTouch=0;fakeTime=10000;
  touch(true,20);touch(true,60);touch(true,720);assert(brightness==90);
  touch(true,400);assert(brightness==80);touch(false,20);touch(false,60);assert(dimUp);
  tap();tap();assert(mode==OFF);advance(3000);composeFrame(fakeTime);assert(channelSum(frame)==0);
- // An explicit wake does not bypass daylight.
- ambient.night=false;ambientGain=0;tap();touch(false,450);assert(autoLight&&mode!=OFF);composeFrame(fakeTime);assert(channelSum(frame)==0);
+ // Daylight stays visible, but explicit sleep still works.
+ ambient.night=false;ambientGain=100;tap();touch(false,450);advance(3000);assert(autoLight&&mode!=OFF);composeFrame(fakeTime);assert(channelSum(frame)>0);
  auto writes=storeWrites;cmd("brightness 70");cmd("auto off");assert(storeWrites==writes);
  cmd("light calibrate 0 2515");assert(ambient.dark==377&&ambient.bright==3305);
  puts("PASS: multiplicative hierarchy, ten touch/light steps, smooth fades, threshold dwell, 4Hz ADC, gestures and calibration.");

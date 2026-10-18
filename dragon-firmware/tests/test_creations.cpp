@@ -10,7 +10,7 @@ int main(){
  setPalette(PRESET_COUNT);setBrightness(100);touchGain=ambientGain=100;
  for(uint16_t limit:{300,400,500,800,1600,2400}){
   operatingTotal=limit;
-  for(int effect=0;effect<6;effect++)for(uint32_t now=0;now<6000;now+=137){mode=Mode(effect);composeFrame(now);assert(estimatedMa+Config::ESP_RESERVE_MA+50<=limit||estimatedMa==Config::PANEL_IDLE_MA);for(auto pixel:frame)assert(pixel.r<=204&&pixel.g<=204&&pixel.b<=204);}
+  for(int effect=0;effect<6;effect++)for(uint32_t now=0;now<6000;now+=137){mode=Mode(effect);composeFrame(now);assert(estimatedMa+runtimeReserve(limit)<=limit);for(auto pixel:frame)assert(pixel.r<=204&&pixel.g<=204&&pixel.b<=204);}
  }
  mode=ZONE_VIEW;setPalette(library.next(PRESET_COUNT));assert(palette==0);setPalette(library.next(palette));assert(palette==PRESET_COUNT);
  rememberLighting();toggleLighting();assert(mode==OFF);toggleLighting();assert(palette==PRESET_COUNT&&mode==ZONE_VIEW);

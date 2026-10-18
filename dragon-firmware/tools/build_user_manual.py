@@ -6,17 +6,39 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.pdfgen.canvas import Canvas
 
 ROOT=Path(__file__).resolve().parents[2]
-OUTPUT=ROOT/'output/pdf/dragon-den-user-manual.pdf'
+OUTPUT=ROOT/'output/pdf/dragon-kingdom-user-manual.pdf'
 PURPLE=colors.HexColor('#34304e')
 TEAL=colors.HexColor('#236a70')
 
 def inline(text):
+    text=re.sub('[\u2010-\u2015\u2212]','-',text)
     return re.sub(r'\*\*(.+?)\*\*',r'<b>\1</b>',escape(text))
+
+class NumberedCanvas(Canvas):
+    """Add the actual total after layout, including any overflow pages."""
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs);self.states=[]
+    def showPage(self):
+        self.states.append(dict(self.__dict__));self._startPage()
+    def save(self):
+        total=len(self.states)
+        for state in self.states:
+            self.__dict__.update(state)
+            self.setFont('Helvetica',8);self.setFillColor(colors.HexColor('#686574'))
+            self.drawRightString(A4[0]-52,28,f'{self._pageNumber} / {total}')
+            super().showPage()
+        super().save()
 
 def build():
     OUTPUT.parent.mkdir(parents=True,exist_ok=True)
+    source=(ROOT/'docs/USER-MANUAL.md').read_text(encoding='utf-8')
+    edition=re.search(r'version ([0-9.]+),\s+(\d+ [A-Za-z]+ \d{4})',source)
+    if not edition:raise ValueError('Manual must include its version and edition date.')
+    version,date=edition.groups()
+    chunks=source.split('<!-- page -->')
     styles={
       'title':ParagraphStyle('title',fontName='Helvetica-Bold',fontSize=30,leading=35,textColor=PURPLE,spaceAfter=10),
       'subtitle':ParagraphStyle('subtitle',fontName='Helvetica',fontSize=13,leading=18,textColor=TEAL,spaceAfter=24),
@@ -27,13 +49,12 @@ def build():
     def decoration(canvas,doc):
         width,height=A4;canvas.saveState()
         canvas.setFillColor(TEAL);canvas.rect(0,height-9,width,9,fill=1,stroke=0)
-        canvas.setFont('Helvetica-Bold',9);canvas.setFillColor(PURPLE);canvas.drawString(52,height-35,'DRAGON DEN  /  USER MANUAL')
+        canvas.setFont('Helvetica-Bold',9);canvas.setFillColor(PURPLE);canvas.drawString(52,height-35,'DRAGON KINGDOM  /  USER MANUAL')
         canvas.setStrokeColor(colors.HexColor('#dddbe6'));canvas.line(52,42,width-52,42)
         canvas.setFont('Helvetica',8);canvas.setFillColor(colors.HexColor('#686574'))
-        canvas.drawString(52,28,'Prototype edition 0.1  |  15 October 2026')
-        canvas.drawRightString(width-52,28,f'{doc.page} / 6');canvas.restoreState()
+        canvas.drawString(52,28,f'Prototype edition {version}  |  {date}');canvas.restoreState()
     story=[]
-    for page_index,chunk in enumerate((ROOT/'docs/USER-MANUAL.md').read_text(encoding='utf-8').split('<!-- page -->')):
+    for page_index,chunk in enumerate(chunks):
         if page_index:story.append(PageBreak())
         lines=chunk.strip().splitlines();i=0;subtitle=True
         while i<len(lines):
@@ -49,8 +70,8 @@ def build():
             text=line;i+=1
             while i<len(lines) and lines[i].strip() and not re.match(r'^(?:\d+\.|-|#)\s',lines[i].strip()):text+=' '+lines[i].strip();i+=1
             story.append(Paragraph(inline(text),styles['subtitle'] if subtitle else styles['body']));subtitle=False
-    doc=SimpleDocTemplate(str(OUTPUT),pagesize=A4,rightMargin=52,leftMargin=52,topMargin=62,bottomMargin=58,title='Dragon Den - User Manual',author='Dragon Den',subject='Touch controls, phone setup, profiles and custom dragons')
-    doc.build(story,onFirstPage=decoration,onLaterPages=decoration)
+    doc=SimpleDocTemplate(str(OUTPUT),pagesize=A4,rightMargin=52,leftMargin=52,topMargin=62,bottomMargin=58,title='Dragon Kingdom - User Manual',author='Dragon Kingdom',subject='Touch controls, phone setup, collections, custom dragons and sunrise alarm')
+    doc.build(story,onFirstPage=decoration,onLaterPages=decoration,canvasmaker=NumberedCanvas)
     print(OUTPUT)
 
 if __name__=='__main__':build()

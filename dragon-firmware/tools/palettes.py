@@ -28,11 +28,17 @@ def validate(data):
     presets = data.get('presets')
     if not isinstance(presets, list) or not 1 <= len(presets) <= 255:
         raise ValueError('Use 1..255 presets')
+    # Version-1 saved records use preset-count-relative custom IDs. Freeze the
+    # supplied slots until an explicit storage migration is implemented.
+    stable = json.loads((ROOT / 'presets/catalog-ids.json').read_text(encoding='utf-8'))
+    if [p.get('id') if isinstance(p, dict) else None for p in presets] != stable:
+        raise ValueError('Catalog IDs and order are fixed for saved-data compatibility. Edit colours or create a custom dragon on the device instead.')
     seen = set()
-    allowed = {'id', 'name', 'tribe', 'zones', 'zone_overrides', 'effects', 'source', 'note', 'pixels', 'reference_zones', 'effect_zones'} | set(DEFAULTS)
+    allowed = {'id', 'name', 'tribe', 'zones', 'zone_overrides', 'effects', 'source', 'note', 'pixels', 'reference_zones', 'effect_zones', 'retired'} | set(DEFAULTS)
     for p in presets:
         if not isinstance(p, dict) or set(p) - allowed:
             raise ValueError('Unknown preset fields')
+        if type(p.get('retired',False)) is not bool: raise ValueError('retired must be a boolean')
         slug = p.get('id', '')
         if not isinstance(slug, str) or not re.fullmatch(r'[a-z][a-z0-9-]{0,31}', slug) or slug in seen:
             raise ValueError(f'Invalid or duplicate preset id: {slug!r}')
@@ -68,6 +74,7 @@ def validate(data):
         animated = p.get('animation_zones', DEFAULTS['animation_zones'])
         if not isinstance(animated, list) or any(z not in GROUPS + ZONES for z in animated):
             raise ValueError(f'{slug}: unknown animation zone')
+    if any(p.get('retired',False) and p['id']==data.get('default',presets[0]['id']) for p in presets): raise ValueError('Default must be an active preset')
     if data.get('default', presets[0]['id']) not in seen:
         raise ValueError('Default must name an existing preset id')
     return presets
@@ -111,7 +118,9 @@ def header(data):
                      ','.join(cpp_rgb(c) for c in pixel_colors(p)) + '},{' + ','.join(map(str,masks)) + '}},')
     default = next(i for i, p in enumerate(presets) if p['id'] == data.get('default', presets[0]['id']))
     lines += ['};', 'constexpr uint8_t PRESET_COUNT=sizeof(DRAGON_PRESETS)/sizeof(DRAGON_PRESETS[0]);',
-              f'constexpr uint8_t DEFAULT_PRESET={default};', '}']
+              f'constexpr uint8_t DEFAULT_PRESET={default};',
+              'static const bool PRESET_RETIRED[] = {' + ','.join('true' if p.get('retired',False) else 'false' for p in presets) + '};',
+              'constexpr uint8_t ACTIVE_PRESET_COUNT=' + str(sum(not p.get('retired',False) for p in presets)) + ';', '}']
     return '\n'.join(lines) + '\n'
 
 def generate(source=SOURCE, output=OUTPUT, check=False):

@@ -1,8 +1,31 @@
 # Changelog
 
+## 0.2.0-prototype — 19 October 2026
+
+- Renamed the product, offline interface, setup-card template, manual and build
+  tools to Dragon Kingdom. The repository is now `sai021/dragon-kingdom`.
+  Updated boards advertise `Dragon-Kingdom-XXXXXX`; update older bookmarks and
+  setup cards. Existing home Wi-Fi credentials and saved collections survive.
+- Added separate ESP32-S3 and ESP32-C3 firmware targets, automatic chip detection,
+  checksum-verified paired batch bundles and CI builds/artifacts for both boards.
+- Added daily whole-wing sunrise alarms, phone clock/DST synchronization,
+  preview/stop, daylight glow and brighter glitter.
+- Updated the supplied palette colours and horizontal output orientation;
+  retired two entries without changing the 81 stable storage IDs.
+- Added stale-form/duplicate-save protection, alarm-load recovery, explicit busy
+  controls, empty-profile recovery, bounded HTTP and safer Wi-Fi transitions.
+- Added USB diagnostics/provisioning, assembly diagnostic sketches, expanded
+  native/browser/Python checks and consolidated physical test evidence.
+- Retained network-event locking, protected All, saved-data migration and the
+  estimated 400 mA computer-USB ceiling. Earlier CAD/PCB/optical files remain
+  prototypes pending the user's newer files and assembly evidence.
+
+See [release verification](docs/KINGDOM-RELEASE-2026-10-19.md) for exact build
+hashes, test results and physical coverage limits.
+
 ## 0.1.0-prototype — 15 October 2026
 
-Initial consolidated project checkpoint for Dragon Den.
+Initial consolidated project checkpoint for Dragon Kingdom.
 
 - ESP32-S3 touch/ambient controls, 81 supplied palettes and bounded animations.
 - Offline phone interface, Wi-Fi provisioning, retry and deliberate setup recovery.

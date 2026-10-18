@@ -1,11 +1,18 @@
 """Short serial smoke test for installed presets; restores blue at the end."""
 import time
+import argparse
 from pathlib import Path
-import serial
+from flash_support import serial_modules, check_startup
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--port',required=True,help='Actual current port from tools/dev.py ports')
+    args=parser.parse_args()
+    serial,ports=serial_modules()
+    if args.port not in {p.device for p in ports.comports()}:parser.error('Selected port is not currently present.')
+    check_startup(args.port,lambda text:None)
     port=serial.Serial(port=None,baudrate=115200,timeout=.15,write_timeout=2)
-    port.dtr=False;port.rts=False;port.port='COM17';port.open()
+    port.dtr=True;port.rts=False;port.port=args.port;port.open()
     logpath=Path(__file__).resolve().parents[1]/'.tools'/'dragon-presets-live.log'
     try:
         with logpath.open('w',encoding='utf-8') as log:

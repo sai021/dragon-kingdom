@@ -23,10 +23,10 @@ class Editor:
         root.title('Dragon colour studio')
         outer = ttk.Frame(root, padding=18); outer.pack(fill='both', expand=True)
         ttk.Label(outer, text='Dragon colour studio', font=('Segoe UI', 18, 'bold')).grid(row=0, column=0, columnspan=3, sticky='w')
-        ttk.Label(outer, text='Choose colours, movement and a starting dragon. Save, then build/upload to install.').grid(row=1, column=0, columnspan=3, sticky='w', pady=(3,15))
+        ttk.Label(outer, text='Choose colours, movement and a starting dragon. Save each dragon, then open Flash Dragons and click Build firmware before flashing.').grid(row=1, column=0, columnspan=3, sticky='w', pady=(3,15))
         self.selected = tk.StringVar()
         self.chooser = ttk.Combobox(outer, textvariable=self.selected, state='readonly', width=30,
-                                    values=[p['id'] for p in self.data['presets']])
+                                    values=[p['id'] for p in self.data['presets'] if not p.get('retired',False)])
         self.chooser.grid(row=2, column=0, sticky='w'); self.chooser.bind('<<ComboboxSelected>>', self.change)
         self.description = ttk.Label(outer, wraplength=460)
         self.description.grid(row=3, column=0, columnspan=2, sticky='w', pady=10)
@@ -37,6 +37,7 @@ class Editor:
             self.colors[group] = '#000000'
             button = tk.Button(left, width=14, command=lambda g=group: self.choose_color(g))
             button.grid(row=i, column=1, pady=4); self.buttons[group] = button
+            if group=='background':button.configure(state='disabled')
         right = ttk.LabelFrame(outer, text='Movement', padding=10); right.grid(row=4, column=1, sticky='nsw', padx=14)
         self.effects = {}
         for i, effect in enumerate(palettes.EFFECTS):
@@ -61,7 +62,9 @@ class Editor:
         labels = ('Background','Left edge','Right edge','Left horn','Right horn','Face','Body','Tail','Left wing','Right wing')
         for i, (zone, label) in enumerate(zip(palettes.ZONES, labels)):
             var = tk.BooleanVar(); self.animated[zone] = var
-            ttk.Checkbutton(zones, text=label, variable=var).grid(row=i//5, column=i%5, sticky='w', padx=7)
+            control=ttk.Checkbutton(zones, text=label, variable=var)
+            control.grid(row=i//5, column=i%5, sticky='w', padx=7)
+            if zone not in self.map:control.state(['disabled'])
         self.default = tk.BooleanVar()
         ttk.Checkbutton(outer, text='Start with this dragon after power-on', variable=self.default).grid(row=6,column=0,columnspan=3,sticky='w')
         buttons = ttk.Frame(outer); buttons.grid(row=7,column=0,columnspan=3,sticky='w',pady=(12,0))
@@ -145,7 +148,7 @@ class Editor:
             palettes.generate(self.source,self.output)
             self.data=data;self.current=copy.deepcopy(next(p for p in data['presets'] if p['id']==self.selected.get()))
             self.clean=self.collect()
-            self.status.configure(text='Saved. Build/upload with tools/dev.py to install. Previous JSON kept as .json.bak.')
+            self.status.configure(text='Saved. In Flash Dragons: Build firmware, then Flash this ESP32. Previous JSON kept as .json.bak.')
         except (ValueError,OSError) as error:messagebox.showerror('Could not save',str(error),parent=self.root)
 
 def main(source=palettes.SOURCE, output=palettes.OUTPUT):

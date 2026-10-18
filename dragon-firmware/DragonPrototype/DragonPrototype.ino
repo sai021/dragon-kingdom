@@ -10,9 +10,20 @@
 #include "StartupPower.h"
 #include "ConnectionPolicy.h"
 #include "DragonLibrary.h"
+#include "SunriseAlarm.h"
+#ifdef ARDUINO
+#include <time.h>
+#include <sys/time.h>
+#endif
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S3)
-#error "Select ESP32S3 Dev Module."
+#if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+#error "Select ESP32S3 Dev Module or ESP32C3 Dev Module."
+#endif
+#if defined(CONFIG_IDF_TARGET_ESP32C3) && !DRAGON_USE_TTP223
+#error "The C3 requires the external TTP223; native capacitive touch is unavailable."
+#endif
+#if defined(ARDUINO) && (!ARDUINO_USB_MODE || !ARDUINO_USB_CDC_ON_BOOT)
+#error "Hardware USB CDC on boot is required for computer USB power limiting."
 #endif
 
 using namespace Dragon;
@@ -38,6 +49,35 @@ TouchGestures gestures;
 StartupPower startupPower;
 bool autoLight=true;
 bool computerUsbMode=false;
+DragonAlarm::Alarm sunrise;
+Preferences alarmStore;
+bool alarmStoreReady=false;
+#ifndef ARDUINO
+int64_t simulatedAlarmEpoch=0;
+#endif
+int64_t alarmEpoch(){
+#ifdef ARDUINO
+ return int64_t(time(nullptr));
+#else
+ return simulatedAlarmEpoch;
+#endif
+}
+void loadAlarmSettings(){
+ alarmStoreReady=alarmStore.begin("dragon-alarm",false);
+ DragonAlarm::Settings saved{};
+ if(alarmStoreReady&&alarmStore.getBytesLength("settings")==sizeof(saved)&&
+    alarmStore.getBytes("settings",&saved,sizeof(saved))==sizeof(saved)&&
+    DragonAlarm::valid(saved)&&saved.check==DragonAlarm::checksum(saved))sunrise.apply(saved);
+}
+bool saveAlarmSettings(DragonAlarm::Settings value){
+ if(!DragonAlarm::valid(value))return false;
+ if(!alarmStoreReady)alarmStoreReady=alarmStore.begin("dragon-alarm",false);
+ value.check=DragonAlarm::checksum(value);DragonAlarm::Settings verify{};
+ if(!alarmStoreReady||alarmStore.putBytes("settings",&value,sizeof(value))!=sizeof(value)||
+    alarmStore.getBytes("settings",&verify,sizeof(verify))!=sizeof(verify)||
+    memcmp(&value,&verify,sizeof(value)))return false;
+ sunrise.apply(value);return true;
+}
 bool setupRequested=false;
 DragonConnection::StartupHold setupHold;
 uint8_t touchGain=100;
@@ -70,18 +110,21 @@ bool saveLightSettings(uint16_t dark,uint16_t bright){
  lightCalibrated=true;return true;
 }
 const char* startupResult="not run";
-char commandLine[128];size_t commandLength=0;bool lineOverflow=false;
+char commandLine[256];size_t commandLength=0;bool lineOverflow=false;
+bool networkSerialCommand(char* line);
 
 struct LightingState {Mode mode;uint8_t brightness,palette;RGB solid;};
 LightingState resumeState={ZONE_VIEW,100,0,{255,160,80}};
 
 void setPalette(uint8_t p) {
- palette=DragonLibrary::available(library.data,p,library.data.active)?p:DEFAULT_PRESET;
+ sunrise.stop();
+ palette=DragonLibrary::selectable(library.data,p,library.data.active)?p:DEFAULT_PRESET;
  currentPreset=library.resolve(palette);
  for(int z=0;z<ZONE_COUNT;z++)zoneColors[z]=currentPreset.zones[z];
 }
 
 void setBrightness(uint8_t value) {
+ sunrise.stop();
  brightness=value?min(100,((int(value)+5)/10)*10):0;
  if(value&&brightness==0)brightness=10;
 }
@@ -92,6 +135,7 @@ void wakeLighting(){
  setBrightness(resumeState.brightness?resumeState.brightness:100);
 }
 void toggleLighting(){
+ if(sunrise.active){sunrise.stop();return;}
  bool off=mode==OFF||brightness==0;
  if(off){wakeLighting();}else{rememberLighting();mode=OFF;setBrightness(0);}
 }
@@ -114,6 +158,11 @@ RGB mixRgb(RGB a,RGB b,uint8_t amount) {
          uint8_t((uint16_t(a.g)*(255-amount)+uint16_t(b.g)*amount)/255),
          uint8_t((uint16_t(a.b)*(255-amount)+uint16_t(b.b)*amount)/255)};
 }
+// Add sparkle light rather than blending away a bright base channel.
+RGB sparkleRgb(RGB base,RGB accent,uint8_t amount) {
+ RGB light=scaled(accent,amount,255);
+ return {clampByte(uint16_t(base.r)+light.r),clampByte(uint16_t(base.g)+light.g),clampByte(uint16_t(base.b)+light.b)};
+}
 RGB hueRgb(uint16_t hue) {
  uint8_t region=(hue/256)%6,position=hue&255;
  switch(region){
@@ -123,6 +172,7 @@ RGB hueRgb(uint16_t hue) {
  }
 }
 bool wingZone(Zone z){return z==LW||z==RW;}
+bool fullWingZone(Zone z){return wingZone(z)||z==LE||z==RE;}
 
 // Per-dragon animation layers apply only to their selected regions.
 RGB presetColor(RGB c,Zone z,int x,int y,uint32_t now) {
@@ -142,7 +192,7 @@ RGB presetColor(RGB c,Zone z,int x,int y,uint32_t now) {
   uint32_t clock=now+hashPixel(y*8+x)%span;
   uint32_t key=hashPixel((clock/span)*131+y*8+x);
   float envelope=sinf(float(clock%span)/span*3.14159265f);
-  if(key%100<p.glitterPercent)c=mixRgb(c,p.accent,uint8_t(envelope*envelope*255));
+  if(key%100<p.glitterPercent)c=sparkleRgb(c,p.accent,uint8_t(envelope*envelope*255));
  }
  if((p.effects&PRESET_BREATHE)&&(p.effectZones[1]&(1u<<z))){
   uint16_t level=uint16_t(p.breatheMin+(100-p.breatheMin)*(.5f+.5f*sinf(phase*6.2831853f)));
@@ -177,16 +227,24 @@ void composeFrame(uint32_t now) {
   }
   if(mode==ZONE_VIEW)c=presetColor(c,z,x,y,now);
   if(mode==BREATHE)c=visibleScale(c,breathe,100);
-  if(mode==PATRONUS_GLITTER&&wingZone(z)){
+  if(mode==PATRONUS_GLITTER&&fullWingZone(z)){
    uint32_t age=now%420,key=hashPixel((now/420)*131+y*8+x);
-   if(key%100<13)c=mixRgb(c,{185,225,255},uint8_t(255-age*255/420));
+   // Hold the white peak before fading so a sparkle is easier to see.
+   uint8_t strength=age<90?255:uint8_t(255-(age-90)*255/330);
+   if(key%100<20)c=sparkleRgb(c,{255,255,255},strength);
   }
   if(mode==LEVIOSA&&wingZone(z)){
    uint32_t phase=(now/55+uint32_t(7-y)*3+x*5)%31;
    if(phase<4)c=mixRgb(c,{255,255,255},uint8_t(255-phase*45));
   }
+  if(sunrise.active){
+   // Both wing interiors and wing edges glow from deep orange to warm white.
+   bool wing=fullWingZone(z);
+   RGB dawn=mixRgb({255,35,0},{255,220,150},uint8_t(sunrise.level*255/1000));
+   c=wing?visibleScale(dawn,sunrise.level,1000):RGB{0,0,0};
+  }
   c=visibleScale(c,Config::MAX_CHANNEL_OUTPUT,255);
-  if(mode!=SOLID&&mode!=CORNERS&&mode!=CHASE&&mode!=OFF){
+  if(!sunrise.active&&mode!=SOLID&&mode!=CORNERS&&mode!=CHASE&&mode!=OFF){
    c=scaled(c,zoneGain[z],100);c=scaled(c,pixelGain[y*8+x],100);
   }
   c.r=min(c.r,Config::MAX_CHANNEL_OUTPUT);c.g=min(c.g,Config::MAX_CHANNEL_OUTPUT);c.b=min(c.b,Config::MAX_CHANNEL_OUTPUT);
@@ -194,9 +252,9 @@ void composeFrame(uint32_t now) {
  }
  if(operatingTotal<BASE_TOTAL_MA)clear(frame);
  // Additional provisional allowance for Wi-Fi; verify on the actual supply.
- else capVisibleCurrent(frame,operatingTotal-Config::ESP_RESERVE_MA-50);
+ else capVisibleCurrent(frame,operatingTotal-runtimeReserve(operatingTotal));
  // Exactly one scaling per hierarchy level: session power -> ambient -> touch.
- for(auto& pixel:frame){
+ if(!sunrise.active)for(auto& pixel:frame){
   pixel=scaled(pixel,ambientGain,100);
   pixel=scaled(pixel,touchGain,100);
  }
@@ -351,7 +409,7 @@ bool readTouchPressed(uint32_t now,int& event) {
 #endif
 }
 void updateTouch(uint32_t now) {
- if(!DragonLibrary::contains(library.data,library.next(255),library.data.active))return;
+ if(!sunrise.active&&!DragonLibrary::contains(library.data,library.next(255),library.data.active))return;
  if(setupRequested){
   // Consume the setup hold; releasing it must not change brightness or dragon.
   if(digitalRead(Config::TOUCH_PIN)==0){setupRequested=false;gestures=TouchGestures{};}
@@ -365,6 +423,7 @@ void updateTouch(uint32_t now) {
 #endif
  bool wasPressed=gestures.pressed;
  auto action=gestures.update(pressed,now);
+ if(action!=TouchGestures::NONE&&sunrise.active){sunrise.stop();return;}
  if(!wasPressed&&gestures.pressed)touchPresses++;
  switch(action){
   case TouchGestures::SINGLE:{
@@ -395,7 +454,7 @@ void printStatus() {
  printSensors();
  unsigned customCount=0;for(const auto& c:library.data.customs)customCount+=c.used!=0;
  Serial.printf("library_ready=%u profile=%u profile_name=%s customs=%u generation=%lu\n",library.isReady(),library.data.active,library.data.profiles[library.data.active].name,customCount,(unsigned long)library.data.generation);
- Serial.printf("dragon=%s name=%s effects=%u presets=%u mode=%u estimate=%umA result=%s\n",currentPreset.id,currentPreset.name,currentPreset.effects,PRESET_COUNT,unsigned(mode),estimatedMa+Config::ESP_RESERVE_MA,startupResult);
+ Serial.printf("dragon=%s name=%s effects=%u presets=%u mode=%u estimate=%umA result=%s\n",currentPreset.id,currentPreset.name,currentPreset.effects,PRESET_COUNT,unsigned(mode),estimatedMa+runtimeReserve(operatingTotal),startupResult);
 }
 void printHelp() {
  Serial.println("Dragon: tap=next/wake, double tap=on/off, hold=brightness. Touch preserves automatic light adjustment.");
@@ -405,9 +464,22 @@ void printHelp() {
  Serial.printf("brightness 0 or 10..100 (ten steps) | palette 0..%u | dragon ID | dragons | color R G B | power status | status | help\n",PRESET_COUNT-1);
 }
 void handleCommand(char* line) {
+ if(networkSerialCommand(line))return;
  char* args[8];int n=0;char* ctx=nullptr;
  for(char* t=strtok_r(line," \t",&ctx);t;t=strtok_r(nullptr," \t",&ctx)){if(n==8){Serial.println("Too many arguments");return;}args[n++]=t;}
  if(!n)return;int a,b,c;bool ok=false;
+ if(n==2&&!strcmp(args[0],"alarm")){
+  if(!strcmp(args[1],"preview"))sunrise.startPreview(millis());
+  else if(!strcmp(args[1],"stop"))sunrise.stop();
+  else if(!strcmp(args[1],"disable")){
+   auto value=sunrise.settings;value.enabled=false;
+   if(!saveAlarmSettings(value)){Serial.println("Alarm disable failed: settings were not saved.");return;}
+  }
+  else if(strcmp(args[1],"status")){Serial.println("Alarm command: preview, stop, disable or status.");return;}
+  Serial.printf("alarm_status active=%u preview=%u progress=%u clock_ready=%u enabled=%u\n",
+   sunrise.active,sunrise.preview,sunrise.level/10,DragonAlarm::clockReady(sunrise.settings,alarmEpoch()),sunrise.settings.enabled);
+  return;
+ }
  if(n==1&&!strcmp(args[0],"sensors")){printSensors();return;}
  if(n==2&&!strcmp(args[0],"auto")&&(!strcmp(args[1],"on")||!strcmp(args[1],"off"))){
   bool enable=!strcmp(args[1],"on");
@@ -424,7 +496,7 @@ void handleCommand(char* line) {
   Serial.println(saveLightSettings(candidate.dark,candidate.bright)?"Light calibration saved":"Light settings save failed");return;
  }
  if(n==1&&!strcmp(args[0],"dragons")){
-  for(int i=0;i<PRESET_COUNT;i++)Serial.printf("%u %s - %s\n",i,DRAGON_PRESETS[i].id,DRAGON_PRESETS[i].name);
+  for(int i=0;i<PRESET_COUNT;i++)if(!PRESET_RETIRED[i])Serial.printf("%u %s - %s\n",i,DRAGON_PRESETS[i].id,DRAGON_PRESETS[i].name);
   return;
  }
  if(!strcmp(args[0],"help")){printHelp();return;}
@@ -433,7 +505,7 @@ void handleCommand(char* line) {
  if(n==2&&!strcmp(args[0],"brightness")&&readNumber(args[1],0,100,a)){setBrightness(a);ok=true;}
  else if(n==2&&!strcmp(args[0],"palette")&&readNumber(args[1],0,PRESET_COUNT-1,a)){setPalette(a);mode=ZONE_VIEW;ok=true;}
  else if(n==2&&!strcmp(args[0],"dragon")){
-  for(int i=0;i<PRESET_COUNT;i++)if(!strcmp(args[1],DRAGON_PRESETS[i].id)){setPalette(i);mode=ZONE_VIEW;ok=true;break;}
+  for(int i=0;i<PRESET_COUNT;i++)if(!PRESET_RETIRED[i]&&!strcmp(args[1],DRAGON_PRESETS[i].id)){setPalette(i);mode=ZONE_VIEW;ok=true;break;}
  }
  else if(n==4&&!strcmp(args[0],"color")&&readNumber(args[1],0,255,a)&&readNumber(args[2],0,255,b)&&readNumber(args[3],0,255,c)){solidColor={uint8_t(a),uint8_t(b),uint8_t(c)};mode=SOLID;ok=true;}
  else if(n==2&&!strcmp(args[0],"mode")){
@@ -455,9 +527,11 @@ void readSerial() {
 
 #ifdef ARDUINO
 #include "DragonWeb.h"
+bool networkSerialCommand(char* line){return DragonWeb::serialControl(line);}
 #else
 // Host lighting tests have no radio; connection policy is tested separately.
 namespace DragonWeb { constexpr bool ap=false; void begin(bool){} void update(uint32_t){} }
+bool networkSerialCommand(char*){return false;}
 #endif
 
 void setup() {
@@ -471,6 +545,7 @@ void setup() {
  analogSetPinAttenuation(Config::VOLTAGE_PIN,ADC_11db);
  loadSavedFailure();
  loadLightSettings();
+ loadAlarmSettings();
  library.begin();
  for(int i=0;i<ZONE_COUNT;i++)zoneGain[i]=100;for(int i=0;i<64;i++)pixelGain[i]=100;
  // Calibrate once per boot; ambient and touch percentages are session-local.
@@ -478,13 +553,16 @@ void setup() {
  ambient.update(analogRead(Config::LIGHT_PIN),millis());startupCheck();
  const auto& profile=library.data.profiles[library.data.active];
  setPalette(library.next(255));mode=DragonLibrary::contains(library.data,palette,library.data.active)?ZONE_VIEW:OFF;setBrightness(profile.brightness);rememberLighting();
- if(operatingTotal)DragonWeb::begin(setupRequested);
+ if(networkBudgetAvailable(operatingTotal))DragonWeb::begin(setupRequested);
+ else if(operatingTotal)Serial.println("Touch-only power fallback: Wi-Fi remains off at this session ceiling.");
  if(DragonWeb::ap&&operatingTotal){
   clear(frame);frame[logicalIndex(3,2,wiring)]={8,0,8};showFrame();delay(700);
  }
 }
 void loop() {
- uint32_t now=millis();readSerial();DragonWeb::update(now);
+ readSerial();DragonWeb::update(millis());
+ uint32_t now=millis();
+ sunrise.update(alarmEpoch(),now);
  // Once a computer is seen, keep the conservative ceiling until the next boot.
  if(!computerUsbMode&&uint32_t(now-lastUsbCheck)>=250){
   lastUsbCheck=now;

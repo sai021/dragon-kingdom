@@ -1,20 +1,33 @@
-# Dragon Den
+# Dragon Kingdom
 
-A touch-controlled dragon lightbox with a phone interface for children and
-their parents. An ESP32-S3 drives an 8×8 RGB LED matrix behind a dragon face.
+A touch-controlled dragon lightbox for one child, with a phone interface for
+the child and their parents. An ESP32-S3 drives an 8×8 RGB LED matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
-**Current state: working development prototype, documented 15 October 2026.**
-The firmware is installed on the wired prototype. Phone workflows have been
-tested with simulated responses, and hardware startup has been observed. PCB
-manufacturing, optical fit, the complete physical-phone test matrix, and the
-deployed external power supply have outstanding checks.
+**Current state: working development prototype, updated 19 October 2026.**
+The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates
+the unpublished improvements, renamed assets and verified S3/C3 firmware builds.
+Board-specific downloads are available from
+[GitHub releases](https://github.com/sai021/dragon-kingdom/releases).
+Updated devices use `Dragon-Kingdom-XXXXXX` for setup Wi-Fi and their `.local`
+name; update old bookmarks/setup cards. Saved collections and home Wi-Fi remain.
+The [19 October reliability repairs](docs/RELIABILITY-FIXES-2026-10-19.md) add
+saved-data safeguards, browser recovery and bounded HTTP handling. Those changes
+have software verification; live installation remains a separate step.
+The wired S3 prototype has previously passed USB startup, visible lighting/touch/sensor,
+sunrise scheduling, live local web controls and saved-data reset checks. Router
+and house Wi-Fi connect with the tested lower transmit-power setting. Live desktop embedded-page checks also cover controls, alarm save/reload,
+Wi-Fi scanning and profile/custom/favourite saves. See the
+[release checkpoint](docs/RELEASE-CHECKPOINT-2026-10-18.md) for the frozen software
+checks and remaining limits. C3
+hardware, final PCB/mechanical and optical fit, the complete physical-phone test
+matrix, long-duration reliability and the deployed supply have outstanding checks.
 
 ## What works
 
 - Tap for the next dragon, double tap for sleep/wake, hold for brightness.
-- 81 supplied dragon palettes, plus eight saved custom creations.
+- 79 selectable supplied dragon palettes (81 stable storage slots), plus eight saved custom creations.
 - Four profiles: protected **All** and three named collections.
 - Named profiles show favourites plus their own creations; physical taps use
   the same collection. Empty profiles invite you to add or create dragons.
@@ -26,6 +39,8 @@ deployed external power supply have outstanding checks.
 - On-device Wi-Fi setup, nearby network search and saved home-network details.
   Everyday play does not require internet or an account.
 - Automatic ambient dimming and startup selection of an estimated power ceiling.
+- Daylight lighting stays on; a saved daily sunrise alarm gradually brightens
+  the wings toward a chosen wake-up time, with a phone preview and stop control.
 
 Weather animations, a parent PIN, firmware updates through the web interface,
 and export/import backups are not implemented yet.
@@ -35,11 +50,13 @@ and export/import backups are not implemented yet.
 | Reader | Guide |
 | --- | --- |
 | Parents testing a prepared device | [Phone and touch guide](docs/PARENT-GUIDE.md) |
-| End users and families | [Printable user manual](output/pdf/dragon-den-user-manual.pdf) / [editable text](docs/USER-MANUAL.md) |
+| Child and grown-ups | [Printable user manual](output/pdf/dragon-kingdom-user-manual.pdf) / [editable text](docs/USER-MANUAL.md) |
 | Developers setting up another computer | [Build and test](docs/DEVELOPMENT.md) |
+| Continuing live device and web testing | [Testing handover](docs/TESTING-HANDOVER.md) |
 | Hardware assembly and power | [Hardware wiring](dragon-firmware/HARDWARE-WIRING.md) |
 | Profiles and custom dragons | [Collections and editing](dragon-firmware/PROFILES-AND-CREATIONS.md) |
 | Wi-Fi setup and recovery | [Web setup](dragon-firmware/WEB-SETUP.md) |
+| Current manual edition | 0.5, 19 October 2026; eight A4 pages |
 | Current evidence and unfinished checks | [Project status](docs/PROJECT-STATUS.md) |
 | System design and API | [Architecture](docs/ARCHITECTURE.md) |
 | Optical/CAD prototype | [Mechanical assets](docs/MECHANICAL-ASSETS.md) |
@@ -92,6 +109,13 @@ python tools/dev.py upload --port YOUR_PORT
 Use the actual detected port, not a port copied from a test log. Close serial
 monitors before uploading. Build uses Arduino-ESP32 3.2.1, Adafruit NeoPixel
 1.12.5, 4 MB flash, 2 MB PSRAM and the supplied custom partitions.
+
+To program several boards, double-click `dragon-firmware/Flash Dragons.cmd`.
+The [batch flasher guide](docs/BATCH-FLASHING.md) covers building once,
+swapping boards, and manual Boot/Reset steps.
+The flasher supports mixed S3/C3 batches by reading the connected chip identity
+and choosing a separate saved firmware image. C3 uses the matching eight-pin
+header map; physical C3 fit, sensor, power and startup checks remain outstanding.
 
 The build regenerates palette and embedded-page headers. Keep
 `DragonPrototype/build_opt.h`: its network-event locking fixed a reproduced

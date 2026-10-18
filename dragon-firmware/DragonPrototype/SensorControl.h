@@ -45,7 +45,8 @@ struct AmbientLight {
  }
  uint8_t targetGain() const {
   if(!ready)return 100;
-  if(!night)return 0;
+  // Bright daylight should look awake, not switch the dragon off.
+  if(!night)return 100;
   return step*10;
  }
  bool calibrate(uint16_t covered,uint16_t uncovered) {

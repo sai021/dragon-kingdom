@@ -6,6 +6,10 @@ permissions:
   contents: read
 jobs:
   regressions:
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [python, native]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -17,16 +21,27 @@ jobs:
           python-version: '3.12'
       - name: Install Tk/display dependencies
         run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
-      - name: Python and native firmware tests
-        run: xvfb-run -a python tools/run_tests.py --cxx g++
+      - name: Python or native firmware tests
+        run: xvfb-run -a python tools/run_tests.py --group ${{ matrix.group }} --cxx g++
+  browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dragon-firmware
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install browser test tools
-        run: npm install && npx playwright install --with-deps chromium
+        run: npm ci && npx playwright install --with-deps chromium
       - name: Simulated phone checks
         run: npm run test:web
   firmware:
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [s3, c3]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,4 +55,14 @@ jobs:
       - name: Install pinned firmware libraries
         run: python tools/dev.py setup
       - name: Build firmware and enforce partition size
-        run: python tools/dev.py build
+        run: python tools/dev.py build --board ${{ matrix.board }}
+      - name: Keep board-specific firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: dragon-kingdom-${{ matrix.board }}
+          path: |
+            dragon-firmware/build/${{ matrix.board }}/DragonPrototype.ino.bin
+            dragon-firmware/build/${{ matrix.board }}/DragonPrototype.ino.bootloader.bin
+            dragon-firmware/build/${{ matrix.board }}/DragonPrototype.ino.partitions.bin
+            dragon-firmware/build/${{ matrix.board }}/build.options.json
+          if-no-files-found: error

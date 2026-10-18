@@ -2,13 +2,15 @@
 
 ESP32-S3 SuperMini, 8×8 WS2812B matrix on GPIO12, TTP223 on GPIO11, LDR divider on GPIO9, supply divider on GPIO10. Microphone capture, I2S, audio effects, speech recognition and voice commands have been removed.
 
-The new Dragon Den connection prototype adds phone controls and local Wi-Fi
+The new Dragon Kingdom connection prototype adds phone controls and local Wi-Fi
 setup. See [WEB-SETUP.md](WEB-SETUP.md) for access credentials, the power-on
 touch gesture, recovery behaviour and outstanding hardware acceptance checks.
-Networking starts after a successful startup power selection. Normal rendering
-now leaves an additional provisional 50 mA allowance for Wi-Fi.
+Networking starts when the selected ceiling can cover controller, radio reserve
+and panel idle. The 300 mA fallback keeps Wi-Fi off and retains touch lighting.
+At higher passing levels, rendering leaves a provisional 50 mA Wi-Fi allowance.
+The 400 mA estimated computer-USB ceiling is unchanged.
 
-Profiles and on-device custom dragons are now available through Dragon Den.
+Profiles and on-device custom dragons are now available through Dragon Kingdom.
 See [PROFILES-AND-CREATIONS.md](PROFILES-AND-CREATIONS.md) for editing, saved
 startup preferences and the physical tap sequence based on favourites.
 
@@ -37,19 +39,24 @@ The renderer first caps the dragon to the session power ceiling, then multiplies
 
 Both controls have ten nonzero targets: 10%, 20%, … 100%, with a separate off state. Intermediate values exist only during fades. Targets fade by one percentage point per 30 ms (300 ms for an adjacent step).
 
-The LDR is sampled four times per second, only when automation is on. Ten ADC bins provide hybrid ambient lighting: in dark surroundings the LEDs dim to a gentle 10% floor, in normal room light output scales smoothly up to 100% so the dragon is clear and vivid, and superbright daylight switches output off after a five-second dwell. Boundary hysteresis (24 ADC counts) and a one-second dwell prevent chatter. The saved calibration sets the dark floor and daylight shutoff thresholds. `auto off` disables light automation explicitly (fixed 100% ambient gain). Touch never bypasses the ambient or power ceiling.
+The LDR is sampled four times per second, only when automation is on. Ten ADC bins provide hybrid ambient lighting: in dark surroundings the LEDs dim to a gentle 10% floor, in normal room light output scales smoothly up to 100% so the dragon is clear and vivid, and superbright daylight stays at 100% ambient gain rather than switching off. Boundary hysteresis (24 ADC counts) and a one-second dwell prevent chatter. The saved calibration sets the dark floor and bright-room thresholds. `auto off` disables light automation explicitly (fixed 100% ambient gain). Touch never bypasses the ambient or power ceiling.
 
 ## Controls
 
 - Single tap: next dragon; if off, restore previous lighting.
 - Double tap: off/on.
 - Hold: change touch brightness by 10 percentage points every 400 ms; direction alternates on release. Minimum is 10%; use double tap for off.
-- Preset, touch and light percentages reset each boot. Only explicit LDR calibration is saved to flash.
+- The active profile, its starting glow, favourites and creations survive restart,
+  along with Wi-Fi details, explicit LDR calibration and the sunrise schedule.
+  Temporary play effects and glow changes do not replace the saved profile
+  settings. Ambient and touch gains are recalculated during startup.
 
-The 81 dragons come from the supplied CSV. Wing edges and interiors are separate, editable regions. See DRAGON-PALETTES.md for import details and SENSORS.md for wiring.
+The catalog has 79 selectable dragons in 81 stable slots, based on the supplied
+CSV with later documented colour corrections. IDs and order are locked for
+saved-data compatibility; make additional creations through the phone editor. Wing edges and interiors are separate, editable regions. See DRAGON-PALETTES.md for import details and SENSORS.md for wiring.
 
 Serial: 115200 baud, newline termination. Commands: `status`, `power status`, `sensors`, `dragons`, `dragon blue`, `palette 0..80`, `brightness 0..100` (rounded to ten-step targets), `auto on|off`, `light DARK BRIGHT`, `light calibrate COVERED ROOM`, `color R G B`, `mode zones|breathe|colorcycle|glitter|incendio|leviosa|solid|corners|chase|off`, `help`. `power status` prints the current run followed by the checksum-validated last saved failure.
 
-Build with `python tools/dev.py build`; upload with `python tools/dev.py upload --port COM17`. The helper regenerates presets. Arduino-ESP32 3.2.1, Adafruit NeoPixel 1.12.5, 4 MB flash, 2 MB PSRAM, custom partitions. The former speech-model area is reserved and unused; no model is built, uploaded or read.
+Build with `python tools/dev.py build`; upload with `python tools/dev.py upload --port YOUR_PORT` after checking `ports`. The helper regenerates presets. Arduino-ESP32 3.2.1, Adafruit NeoPixel 1.12.5, 4 MB flash, 2 MB PSRAM, custom partitions. The former speech-model area is reserved and unused; no model is built, uploaded or read.
 
 For an external-supply-only test, disconnect the ESP32 USB cable before restarting on the external supply. A connected computer USB cable may contribute power and invalidate the external-only result. The breakout, ESP32 5V/VBUS input, matrix and divider must share the intended supply and common ground.

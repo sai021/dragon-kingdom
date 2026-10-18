@@ -9,26 +9,40 @@ bool parseList(const String& text,uint16_t* output,uint8_t maximum,uint8_t& coun
  while(start<int(text.length())){if(count>=maximum)return false;int end=text.indexOf(',',start);if(end<0)end=text.length();String part=text.substring(start,end);if(!part.length()||part.length()>5)return false;char buffer[8];part.toCharArray(buffer,sizeof(buffer));int value;if(!readNumber(buffer,0,high,value))return false;output[count++]=value;if(end==int(text.length()))return true;start=end+1;if(start==int(text.length()))return false;}
  return true;
 }
+// Bind writes to the collection the form actually loaded, including after a
+// lost response or another tab changing the active profile. Storage is unchanged.
+bool libraryContext(){
+ int profile;String value=server.arg("generation");uint32_t generation=0;
+ bool valid=numberArgument("profile",0,DragonLibrary::PROFILE_LIMIT-1,profile)&&value.length()>0&&value.length()<=10;
+ for(size_t i=0;valid&&i<value.length();i++){
+  char c=value[i];if(c<'0'||c>'9'||generation>(UINT32_MAX-uint32_t(c-'0'))/10u)valid=false;
+  else generation=generation*10u+uint32_t(c-'0');
+ }
+ if(!valid||profile!=library.data.active||generation!=library.data.generation){
+  server.send(409,"text/plain","Your collection changed. Reload the page before saving. Your changes have not been saved.");return false;
+ }
+ return true;
+}
 void registerLibraryRoutes(){
  server.on("/api/delete-profile",HTTP_POST,[]{
-  if(!authorize())return;int id;auto candidate=library.data;
+  if(!authorize()||!libraryContext())return;int id;auto candidate=library.data;
   if(!numberArgument("id",1,DragonLibrary::PROFILE_LIMIT-1,id)||!DragonLibrary::eraseProfile(candidate,id)){server.send(403,"text/plain","All is protected. Choose another existing profile.");return;}
   if(!library.save(candidate)){server.send(500,"text/plain","Profile could not be deleted. Your profiles were kept.");return;}
   const auto& p=library.data.profiles[library.data.active];setPalette(library.next(255));mode=DragonLibrary::contains(library.data,palette,library.data.active)?ZONE_VIEW:OFF;setBrightness(p.brightness);rememberLighting();reply(200,"{}");
  });
  server.on("/api/delete-custom",HTTP_POST,[]{
-  if(!authorize())return;int id;auto candidate=library.data;
+  if(!authorize()||!libraryContext())return;int id;auto candidate=library.data;
   if(!numberArgument("id",PRESET_COUNT,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1,id)||!DragonLibrary::eraseCustom(candidate,id,candidate.active)){server.send(403,"text/plain","Only your own custom dragons can be deleted.");return;}
   if(!library.save(candidate)){server.send(500,"text/plain","Dragon could not be deleted. Try again.");return;}
   if(palette==id){setPalette(library.next(255));mode=DragonLibrary::contains(library.data,palette,library.data.active)?ZONE_VIEW:OFF;rememberLighting();}reply(200,"{}");
  });
  server.on("/api/library",HTTP_GET,[]{
-  if(!authorize())return;String out="{\"active\":"+String(library.data.active)+",\"profiles\":[";unsigned added=0;
+  if(!authorize())return;String out="{\"active\":"+String(library.data.active)+",\"generation\":"+String(library.data.generation)+",\"profiles\":[";unsigned added=0;
   for(uint8_t i=0;i<DragonLibrary::PROFILE_LIMIT;i++){const auto& p=library.data.profiles[i];if(!p.used)continue;if(added++)out+=',';out+="{\"id\":"+String(i)+",\"name\":"+quote(p.name)+",\"brightness\":"+String(p.brightness)+",\"favorites\":"+idList(p.favorites,p.count)+"}";}
   reply(200,out+"],\"customLimit\":"+String(DragonLibrary::CUSTOM_LIMIT)+"}");
  });
  server.on("/api/profile",HTTP_POST,[]{
-  if(!authorize())return;auto candidate=library.data;String action=server.arg("action");int id=candidate.active;
+  if(!authorize()||!libraryContext())return;auto candidate=library.data;String action=server.arg("action");int id=candidate.active;
   if(action=="select"){
    if(!numberArgument("id",0,DragonLibrary::PROFILE_LIMIT-1,id)||!candidate.profiles[id].used){server.send(400,"text/plain","Choose an existing profile.");return;}candidate.active=id;
   }else if(action=="create"||action=="update"){
@@ -36,7 +50,7 @@ void registerLibraryRoutes(){
    auto& p=candidate.profiles[id];int glow;if((id!=0&&!nameArgument(p.name))||!numberArgument("brightness",10,100,glow)||glow%10){server.send(400,"text/plain","Use a name up to 32 bytes and a glow in steps of 10%.");return;}if(id!=0&&String(p.name).equalsIgnoreCase("All")){server.send(400,"text/plain","All is reserved for the complete collection. Choose another name.");return;}p.brightness=glow;
    uint16_t ids[DragonLibrary::FAVORITE_LIMIT];uint8_t count;
    if(!parseList(server.arg("favorites"),ids,DragonLibrary::FAVORITE_LIMIT,count,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1)){server.send(400,"text/plain","Choose up to twelve favourites.");return;}
-   p.count=count;for(uint8_t i=0;i<count;i++){if(!DragonLibrary::available(candidate,ids[i],id)){server.send(400,"text/plain","That dragon is no longer available.");return;}for(uint8_t j=0;j<i;j++)if(ids[j]==ids[i]){server.send(400,"text/plain","A favourite was selected twice.");return;}p.favorites[i]=ids[i];}
+   p.count=count;for(uint8_t i=0;i<count;i++){if(!DragonLibrary::selectable(candidate,ids[i],id)){server.send(400,"text/plain","That dragon is no longer available.");return;}for(uint8_t j=0;j<i;j++)if(ids[j]==ids[i]){server.send(400,"text/plain","A favourite was selected twice.");return;}p.favorites[i]=ids[i];}
   }else{server.send(400,"text/plain","Unknown profile action.");return;}
   if(!library.save(candidate)){server.send(500,"text/plain","Profile could not be saved. Your current profile was kept.");return;}
   const auto& p=library.data.profiles[library.data.active];setPalette(library.next(255));mode=DragonLibrary::contains(library.data,palette,library.data.active)?ZONE_VIEW:OFF;setBrightness(p.brightness);rememberLighting();reply(200,"{}");
@@ -44,14 +58,14 @@ void registerLibraryRoutes(){
  server.on("/api/dragon-detail",HTTP_GET,[]{
   if(!authorize())return;int id;if(!numberArgument("id",0,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1,id)||!DragonLibrary::available(library.data,id,library.data.active)){server.send(404,"text/plain","Dragon not found in this profile.");return;}
   const auto p=library.resolve(id);bool custom=id>=PRESET_COUNT;uint8_t base=custom?library.data.customs[id-PRESET_COUNT].base:id;
-  String out="{\"id\":"+String(id)+",\"base\":"+String(base)+",\"name\":"+quote(p.name)+",\"colorMask\":"+String(custom?library.data.customs[id-PRESET_COUNT].colorMask:0)+",\"canEdit\":"+(custom&&library.data.customs[id-PRESET_COUNT].owner==library.data.active?"true":"false")+",\"colors\":[";
+  String out="{\"profile\":"+String(library.data.active)+",\"generation\":"+String(library.data.generation)+",\"id\":"+String(id)+",\"base\":"+String(base)+",\"name\":"+quote(p.name)+",\"colorMask\":"+String(custom?library.data.customs[id-PRESET_COUNT].colorMask:0)+",\"canEdit\":"+(custom&&library.data.customs[id-PRESET_COUNT].owner==library.data.active?"true":"false")+",\"colors\":[";
   for(uint8_t z=0;z<ZONE_COUNT;z++){if(z)out+=',';out+=quote(colorHex(p.zones[z]));}out+="],\"pixels\":[";
   for(uint8_t i=0;i<64;i++){if(i)out+=',';out+=quote(colorHex(p.pixels[i]));}out+="],\"zones\":[";
   for(uint8_t i=0;i<64;i++){if(i)out+=',';out+=String(unsigned(ZONES[i/8][i%8]));}out+="],\"effectZones\":[";
   for(uint8_t e=0;e<4;e++){if(e)out+=',';out+=String((p.effects&(1u<<e))?(p.effectZones[e]&p.animatedZones):0);}reply(200,out+"]}");
  });
  server.on("/api/custom",HTTP_POST,[]{
-  if(!authorize())return;int id,base,mask;
+  if(!authorize()||!libraryContext())return;int id,base,mask;
   if(!numberArgument("id",-1,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1,id)||!numberArgument("base",0,PRESET_COUNT-1,base)||!numberArgument("colorMask",0,(1<<ZONE_COUNT)-1,mask)){server.send(400,"text/plain","Invalid dragon settings.");return;}
   auto candidate=library.data;int slot=id<0?-1:id-PRESET_COUNT;
   if(id<0){for(uint8_t i=0;i<DragonLibrary::CUSTOM_LIMIT;i++)if(!candidate.customs[i].used){slot=i;break;}}

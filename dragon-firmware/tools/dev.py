@@ -8,9 +8,10 @@ import subprocess
 import sys
 from palettes import generate as generate_palettes
 from embed_web import generate as generate_web
+from board_targets import TARGETS, detect_board
 
 ROOT = Path(__file__).resolve().parents[1]
-FQBN = 'esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=cdc,FlashSize=4M,PSRAM=enabled,PartitionScheme=custom'
+FQBN = TARGETS['s3']
 INDEX = 'https://espressif.github.io/arduino-esp32/package_esp32_index.json'
 
 def main():
@@ -18,8 +19,11 @@ def main():
     parser.add_argument('action', choices=['setup', 'ports', 'build', 'upload', 'monitor'])
     parser.add_argument('--port', help='For example COM5 or /dev/cu.usbmodem123')
     parser.add_argument('--cli', default=os.environ.get('ARDUINO_CLI', 'arduino-cli'))
-    parser.add_argument('--fqbn', default=FQBN, help='Override for your verified board configuration')
+    parser.add_argument('--board', choices=['s3', 'c3', 'auto'], default='s3', help='auto probes the connected chip for upload')
+    parser.add_argument('--fqbn', help='Override for your verified board configuration')
     args = parser.parse_args()
+    if args.board == 'auto' and args.fqbn:
+        parser.error('--fqbn cannot override automatic chip selection')
     if args.action in ('upload', 'monitor') and not args.port:
         parser.error('--port is required; run ports first')
     cli = shutil.which(args.cli)
@@ -36,15 +40,19 @@ def main():
     elif args.action == 'monitor':
         run('monitor', '-p', args.port, '--config', 'baudrate=115200')
     else:
+        if args.board == 'auto' and (args.action != 'upload' or not args.port):
+            parser.error('--board auto requires upload --port PORT')
+        board = detect_board(cli, args.port) if args.board == 'auto' else args.board
+        fqbn = args.fqbn or TARGETS[board]
         generate_palettes()
         generate_web()
-        build = ROOT / 'build'
-        run('compile', '--fqbn', args.fqbn, '--build-path', str(build), str(ROOT / 'DragonPrototype'))
+        build = ROOT / 'build' / board
+        run('compile', '--fqbn', fqbn, '--build-path', str(build), str(ROOT / 'DragonPrototype'))
         app = build / 'DragonPrototype.ino.bin'
-        if app.exists() and app.stat().st_size > 0x180000:
-            parser.error(f'application is {app.stat().st_size} bytes; custom app partition is 0x180000 bytes')
+        if not app.is_file() or not 0 < app.stat().st_size <= 0x180000:
+            parser.error('application is missing, empty or exceeds the custom 0x180000-byte app partition')
         if args.action == 'upload':
-            run('upload', '--fqbn', args.fqbn, '--port', args.port,
+            run('upload', '--fqbn', fqbn, '--port', args.port,
                 '--input-dir', str(build), str(ROOT / 'DragonPrototype'))
 
 if __name__ == '__main__':

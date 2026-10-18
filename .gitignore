@@ -30,3 +30,6 @@ dragon-masks/light-guide/geometry-grid.npz
 **/*-backups/
 .DS_Store
 Thumbs.db
+
+# Local document-review renders (the finished manual is versioned)
+output/pdf/manual-review-*.png

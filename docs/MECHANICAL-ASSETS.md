@@ -40,8 +40,8 @@ not prove physical fit, printed light isolation or slicer feasibility.
 ## Integration discrepancy to resolve
 
 The older masks assign 10 LEDs to background, 9 to the left wing and 10 to the
-right wing. Current firmware assigns 6 to background, 11 to the left wing and
-12 to the right wing. Edge/horn/face/body/tail counts otherwise agree. Do not
+right wing. Current firmware assigns 0 to background, 13 to the left wing and
+16 to the right wing. Edge/horn/face/body/tail counts otherwise agree. Do not
 assume these two revisions have the same map. Review the final masks/mesh with
 the firmware's `ZONES` grid and update them together after a physical check.
 

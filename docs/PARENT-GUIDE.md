@@ -1,7 +1,9 @@
-# Using Dragon Den
+# Using Dragon Kingdom
 
-This guide is for a family with a prepared prototype and its printed setup card.
-No app, account or coding is needed for normal play.
+This guide is for one child and their grown-ups using a prepared prototype.
+Keep its printed setup card. No app, account or coding is needed for normal play.
+The printable [user manual](../output/pdf/dragon-kingdom-user-manual.pdf) is edition
+0.5, dated 19 October 2026; the [editable source](USER-MANUAL.md) covers the same steps.
 
 ## Touch play
 
@@ -22,15 +24,27 @@ power, so 100% does not necessarily mean the LEDs' maximum possible output.
 4. Open `http://192.168.4.1` in the phone browser.
 5. Log in as `parent`, using the setup card's password.
 
+The 18 October 2026 firmware update uses **dragon123** for both the
+dragon Wi-Fi and this login. It replaces earlier random passwords after flashing;
+older printed cards may still show the previous password. Your home Wi-Fi keeps
+its own password.
+
 Play directly through this network, or open **For grown-ups · Wi-Fi & help**.
 **Find my Wi-Fi** offers nearby 2.4 GHz home networks. Choose a network or type
 its name, enter its password, and connect. After success, rejoin home Wi-Fi and
 use the dragon address displayed on the page. Save that address as a bookmark.
 Home Wi-Fi is optional. Internet features are not required for ordinary play.
+Guest or isolated networks can prevent the phone reaching the dragon, even by
+numeric address. Use a network that allows local devices to communicate, or
+reopen the dragon's direct setup network. Wait for each control change or save
+to finish before tapping the next control. The page shows **Please wait for your
+dragon** and temporarily disables conflicting controls while an action is pending.
 
 ## Profiles and creations
 
-**All** shows the complete collection and cannot be renamed or deleted. Add a
+**All** shows the complete collection and cannot be renamed or deleted. You
+can use it without creating a profile. Optional profiles hold different favourite
+collections for the same child. Add a
 named profile in **My favourites & starting glow**. Choose its favourites and
 starting glow, then save. **My dragon** shows those favourites plus the
 profile's own creations. A new empty profile invites you to add or create one.
@@ -42,7 +56,27 @@ physical dragon. Cancel leaves the device unchanged.
 
 You can edit a creation you own or save a new copy. The original supplied
 dragons remain intact. Deleting a profile moves its creations into All.
-There are three named profile spaces and eight custom dragon spaces.
+There are three named profile spaces and eight custom dragon spaces shared
+across the device. Play controls stay unavailable for an empty profile until
+you add favourites or a creation.
+
+If a save fails, the editor keeps its draft. If the page says the collection
+changed, note your unsaved choices before reloading, then check what is saved
+before trying again. Reload the page after installing a firmware update.
+
+## Sunrise alarm
+
+Open **Sunrise alarm**, wait for its saved fields to load, choose a wake-up time
+and a 1-120 minute sunrise, tick **Wake me every day**, then **Save alarm**.
+It lights the whole wings while the dragon is asleep, holds for 30 minutes and
+returns to the previous lighting. Preview takes 30 seconds; Stop/touch/play
+cancels the current sunrise. Untick and save to disable the daily schedule.
+
+If loading fails, the page retries. **Set clock from my phone** can recover the
+saved fields and clock. Check the time, duration and checkbox before saving.
+After a power cut, internet time or reopening the page is needed. Open and save
+the alarm at least once a year and after changing time zone to refresh saved
+clock rules. This is a light alarm without sound.
 
 ## Reconnect or change home Wi-Fi
 
@@ -60,6 +94,10 @@ This is the current prototype guide, not a finished consumer-product manual.
 For the developer's laptop test, external/main power stays disconnected. Do
 not connect laptop power and main power simultaneously with the current circuit.
 Follow the prepared device's power instructions rather than changing its wiring.
+A low-power startup can leave Wi-Fi off while touch play still works. If setup
+never appears, ask the maker to check the specified supply and cable.
 
-Keep the setup card: replacing a lost setup password through a parent-friendly
-factory-reset flow has not been implemented.
+Keep the setup card for the device's network name and address. For this firmware,
+the shared setup password is **dragon123**. Older firmware with a lost random
+password needs the maker's help or an update; a parent-friendly factory-reset
+flow has not been implemented.

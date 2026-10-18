@@ -1,0 +1,1545 @@
+{
+  "date": "2026-10-18",
+  "method": "Book-referenced character descriptions; regional RGBs and sparse markings are lightbox approximations, not official colour specifications. Retired slots retained for storage compatibility.",
+  "presets": [
+    {
+      "slot": 0,
+      "id": "blue",
+      "name": "Blue",
+      "tribe": "SilkWing",
+      "status": "corrected",
+      "reason": "Azure and violet; cerulean-blue/purple wings, not orange flamesilk.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Blue",
+      "zones": {
+        "background": "#168BD2",
+        "edges": "#168BD2",
+        "horns": "#C0C0C0",
+        "face": "#8955C7",
+        "body": "#1689E8",
+        "tail": "#6951C4",
+        "wings": "#168BD2"
+      },
+      "changed": true
+    },
+    {
+      "slot": 1,
+      "id": "sundew",
+      "name": "Sundew",
+      "tribe": "LeafWing",
+      "status": "corrected",
+      "reason": "Dark forest green with gold snout and wing edges.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Sundew",
+      "zones": {
+        "background": "#245C30",
+        "edges": "#D8AD35",
+        "horns": "#8B5A2B",
+        "face": "#246138",
+        "body": "#174D28",
+        "tail": "#24552D",
+        "wings": "#245C30"
+      },
+      "changed": true
+    },
+    {
+      "slot": 2,
+      "id": "pearl",
+      "name": "Pearl",
+      "tribe": "SeaWing",
+      "status": "retained-approximation",
+      "reason": "Reviewed: text does not establish exact scale colours; existing teal/pearl interpretation retained, not certified as exact.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Pearl_(L1)",
+      "zones": {
+        "background": "#4DD0E1",
+        "edges": "#70D9E7",
+        "horns": "#005F6A",
+        "face": "#E0F7FA",
+        "body": "#00838F",
+        "tail": "#005F6A",
+        "wings": "#4DD0E1"
+      },
+      "changed": false
+    },
+    {
+      "slot": 3,
+      "id": "bumblebee",
+      "name": "Bumblebee",
+      "tribe": "HiveWing",
+      "status": "corrected",
+      "reason": "Bright yellow and near-black stripes, including wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Bumblebee",
+      "zones": {
+        "background": "#FFD42A",
+        "edges": "#FFD42A",
+        "horns": "#14151B",
+        "face": "#F5C52C",
+        "body": "#FFD42A",
+        "tail": "#FFD42A",
+        "wings": "#FFD42A"
+      },
+      "changed": true
+    },
+    {
+      "slot": 4,
+      "id": "cricket",
+      "name": "Cricket",
+      "tribe": "HiveWing",
+      "status": "corrected",
+      "reason": "Buttercup yellow/orange-gold with dark speckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Cricket",
+      "zones": {
+        "background": "#EAA126",
+        "edges": "#EAA126",
+        "horns": "#14151B",
+        "face": "#FFD136",
+        "body": "#F9BE27",
+        "tail": "#EAA126",
+        "wings": "#EAA126"
+      },
+      "changed": true
+    },
+    {
+      "slot": 5,
+      "id": "wasp",
+      "name": "Wasp",
+      "tribe": "HiveWing",
+      "status": "corrected",
+      "reason": "Yellow and near-black stripes.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Wasp",
+      "zones": {
+        "background": "#D9B329",
+        "edges": "#D9B329",
+        "horns": "#14151B",
+        "face": "#E3C138",
+        "body": "#D9B329",
+        "tail": "#D9B329",
+        "wings": "#D9B329"
+      },
+      "changed": true
+    },
+    {
+      "slot": 6,
+      "id": "katydid",
+      "name": "Katydid",
+      "tribe": "HiveWing",
+      "status": "corrected",
+      "reason": "Yellow-orange with dark freckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Katydid",
+      "zones": {
+        "background": "#EDAE39",
+        "edges": "#EDAE39",
+        "horns": "#14151B",
+        "face": "#F4BA45",
+        "body": "#E9A52D",
+        "tail": "#E9A52D",
+        "wings": "#EDAE39"
+      },
+      "changed": true
+    },
+    {
+      "slot": 7,
+      "id": "ceddle",
+      "name": "Cadelle",
+      "tribe": "HiveWing",
+      "status": "corrected",
+      "reason": "Cadelle: tangerine with dark triangular markings; HiveWing.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Cadelle",
+      "zones": {
+        "background": "#E87524",
+        "edges": "#E87524",
+        "horns": "#14151B",
+        "face": "#F38A2A",
+        "body": "#E87524",
+        "tail": "#D86622",
+        "wings": "#E87524"
+      },
+      "changed": true
+    },
+    {
+      "slot": 8,
+      "id": "belinda",
+      "name": "Belinda",
+      "tribe": "SilkWing",
+      "status": "retired",
+      "reason": "Unidentified/noncanonical entry removed from selection at user request; stable slot retained for saved custom bases.",
+      "source": null,
+      "zones": {
+        "background": "#FFB6C1",
+        "edges": "#FFC4CD",
+        "horns": "#9370DB",
+        "face": "#E0EEEE",
+        "body": "#48D1CC",
+        "tail": "#40E0D0",
+        "wings": "#FFB6C1"
+      },
+      "changed": true
+    },
+    {
+      "slot": 9,
+      "id": "hermeloch",
+      "name": "Hemlock",
+      "tribe": "LeafWing",
+      "status": "corrected",
+      "reason": "Hemlock: deep green; LeafWing.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Hemlock",
+      "zones": {
+        "background": "#174B29",
+        "edges": "#174B29",
+        "horns": "#11041B",
+        "face": "#184B28",
+        "body": "#123B20",
+        "tail": "#123B20",
+        "wings": "#174B29"
+      },
+      "changed": true
+    },
+    {
+      "slot": 10,
+      "id": "willow",
+      "name": "Willow",
+      "tribe": "LeafWing",
+      "status": "corrected",
+      "reason": "Pale fern green, paler wings and darker leaf markings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Willow",
+      "zones": {
+        "background": "#B3D68D",
+        "edges": "#B3D68D",
+        "horns": "#5C4033",
+        "face": "#A0C77E",
+        "body": "#8FBD71",
+        "tail": "#8FBD71",
+        "wings": "#B3D68D"
+      },
+      "changed": true
+    },
+    {
+      "slot": 11,
+      "id": "clay",
+      "name": "Clay",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Warm mahogany/tree-bark brown with amber undertones.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Clay",
+      "zones": {
+        "background": "#89502D",
+        "edges": "#89502D",
+        "horns": "#282828",
+        "face": "#A46435",
+        "body": "#89502D",
+        "tail": "#89502D",
+        "wings": "#89502D"
+      },
+      "changed": true
+    },
+    {
+      "slot": 12,
+      "id": "tsunami",
+      "name": "Tsunami",
+      "tribe": "SeaWing",
+      "status": "corrected",
+      "reason": "Deep royal blue; azure wings and pale green light scales.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Tsunami",
+      "zones": {
+        "background": "#2375C9",
+        "edges": "#2375C9",
+        "horns": "#00008B",
+        "face": "#2352B2",
+        "body": "#2352B2",
+        "tail": "#2352B2",
+        "wings": "#2375C9"
+      },
+      "changed": true
+    },
+    {
+      "slot": 13,
+      "id": "glory",
+      "name": "Glory",
+      "tribe": "RainWing",
+      "status": "corrected",
+      "reason": "Common emerald-green state with orange wing undersides.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Glory",
+      "zones": {
+        "background": "#E87927",
+        "edges": "#E87927",
+        "horns": "#FF00FF",
+        "face": "#23884A",
+        "body": "#197B43",
+        "tail": "#197B43",
+        "wings": "#E87927"
+      },
+      "changed": true
+    },
+    {
+      "slot": 14,
+      "id": "sunny",
+      "name": "Sunny",
+      "tribe": "Sand-Night",
+      "status": "corrected",
+      "reason": "Bright golden yellow rather than beige.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Sunny",
+      "zones": {
+        "background": "#F4CF3C",
+        "edges": "#F4CF3C",
+        "horns": "#FFD700",
+        "face": "#F8DA55",
+        "body": "#F4CF3C",
+        "tail": "#F4CF3C",
+        "wings": "#F4CF3C"
+      },
+      "changed": true
+    },
+    {
+      "slot": 15,
+      "id": "starflight",
+      "name": "Starflight",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Midnight near-black with blue/purple hints and silver wing stars.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Starflight",
+      "zones": {
+        "background": "#11121B",
+        "edges": "#11121B",
+        "horns": "#14151B",
+        "face": "#12121C",
+        "body": "#12121C",
+        "tail": "#12121C",
+        "wings": "#11121B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 16,
+      "id": "cobra",
+      "name": "Cobra",
+      "tribe": "SandWing",
+      "status": "retained-approximation",
+      "reason": "Reviewed: snake-pattern SandWing; existing sand/tan colour family retained; exact regional shades unspecified.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Cobra",
+      "zones": {
+        "background": "#FFE4B5",
+        "edges": "#FFE9C3",
+        "horns": "#2A2A2A",
+        "face": "#F4A460",
+        "body": "#D2B48C",
+        "tail": "#F4A460",
+        "wings": "#FFE4B5"
+      },
+      "changed": false
+    },
+    {
+      "slot": 17,
+      "id": "moonwatcher",
+      "name": "Moonwatcher",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Purplish near-black with blue/green hints; silver eye scales.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Moonwatcher",
+      "zones": {
+        "background": "#11131B",
+        "edges": "#11131B",
+        "horns": "#14151B",
+        "face": "#171C29",
+        "body": "#161B28",
+        "tail": "#161B28",
+        "wings": "#11131B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 18,
+      "id": "strongwings",
+      "name": "Strongwings",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Near-black rather than a saturated purple body.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Strongwings",
+      "zones": {
+        "background": "#13141A",
+        "edges": "#13141A",
+        "horns": "#14151B",
+        "face": "#13141A",
+        "body": "#13141A",
+        "tail": "#13141A",
+        "wings": "#13141A"
+      },
+      "changed": true
+    },
+    {
+      "slot": 19,
+      "id": "darkstalker",
+      "name": "Darkstalker",
+      "tribe": "Night-Ice",
+      "status": "corrected",
+      "reason": "Near-black NightWing appearance with pale hybrid accents.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Darkstalker_(L1)",
+      "zones": {
+        "background": "#11141B",
+        "edges": "#11141B",
+        "horns": "#050505",
+        "face": "#10131A",
+        "body": "#10131A",
+        "tail": "#10131A",
+        "wings": "#11141B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 20,
+      "id": "whiteout",
+      "name": "Whiteout",
+      "tribe": "Night-Ice",
+      "status": "corrected",
+      "reason": "Dark sapphire-black body/head and icy-blue, dark-spotted wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Whiteout",
+      "zones": {
+        "background": "#B8DAF0",
+        "edges": "#B8DAF0",
+        "horns": "#D7EAF4",
+        "face": "#17233C",
+        "body": "#111B31",
+        "tail": "#111B31",
+        "wings": "#B8DAF0"
+      },
+      "changed": true
+    },
+    {
+      "slot": 21,
+      "id": "stonemover",
+      "name": "Stonemover",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Black/gray, with stone-gray wing edges and tail.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Stonemover",
+      "zones": {
+        "background": "#181B22",
+        "edges": "#62656B",
+        "horns": "#14151B",
+        "face": "#62656B",
+        "body": "#1D2026",
+        "tail": "#575B60",
+        "wings": "#181B22"
+      },
+      "changed": true
+    },
+    {
+      "slot": 22,
+      "id": "qibli",
+      "name": "Qibli",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Light sandy yellow with brown snout freckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Qibli",
+      "zones": {
+        "background": "#EBD083",
+        "edges": "#EBD083",
+        "horns": "#333333",
+        "face": "#E8CB86",
+        "body": "#E7C87D",
+        "tail": "#E7C87D",
+        "wings": "#EBD083"
+      },
+      "changed": true
+    },
+    {
+      "slot": 23,
+      "id": "peril",
+      "name": "Peril",
+      "tribe": "SkyWing",
+      "status": "corrected",
+      "reason": "Metallic copper-orange and gold; not a red body/yellow wing scheme.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Peril",
+      "zones": {
+        "background": "#DE792E",
+        "edges": "#DE792E",
+        "horns": "#11041B",
+        "face": "#F18A36",
+        "body": "#ED7627",
+        "tail": "#DD6B24",
+        "wings": "#DE792E"
+      },
+      "changed": true
+    },
+    {
+      "slot": 24,
+      "id": "winter",
+      "name": "Winter",
+      "tribe": "IceWing",
+      "status": "corrected",
+      "reason": "Pale icy blue and silver-white, darker wing edges.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Winter",
+      "zones": {
+        "background": "#BBD6EB",
+        "edges": "#8FAEC9",
+        "horns": "#BCCFDF",
+        "face": "#D6ECF7",
+        "body": "#D1E8F5",
+        "tail": "#C5DDEB",
+        "wings": "#BBD6EB"
+      },
+      "changed": true
+    },
+    {
+      "slot": 25,
+      "id": "kinkajou",
+      "name": "Kinkajou",
+      "tribe": "RainWing",
+      "status": "corrected",
+      "reason": "Common bright yellow/pink state; no permanent green body.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Kinkajou",
+      "zones": {
+        "background": "#F26ABC",
+        "edges": "#F26ABC",
+        "horns": "#FFFF00",
+        "face": "#FFD736",
+        "body": "#FFD736",
+        "tail": "#F7BD3B",
+        "wings": "#F26ABC"
+      },
+      "changed": true
+    },
+    {
+      "slot": 26,
+      "id": "battlewinner",
+      "name": "Battlewinner",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Polished near-black with icy-blue throat accents.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Battlewinner",
+      "zones": {
+        "background": "#12141B",
+        "edges": "#12141B",
+        "horns": "#14151B",
+        "face": "#171A24",
+        "body": "#12141B",
+        "tail": "#12141B",
+        "wings": "#12141B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 27,
+      "id": "greatness",
+      "name": "Greatness",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Near-black NightWing; diamonds are accents, not purple scales.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Greatness",
+      "zones": {
+        "background": "#181A22",
+        "edges": "#181A22",
+        "horns": "#14151B",
+        "face": "#15161D",
+        "body": "#15161D",
+        "tail": "#15161D",
+        "wings": "#181A22"
+      },
+      "changed": true
+    },
+    {
+      "slot": 28,
+      "id": "umber",
+      "name": "Umber",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Warm mahogany brown.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Umber",
+      "zones": {
+        "background": "#98704F",
+        "edges": "#98704F",
+        "horns": "#3E2723",
+        "face": "#956044",
+        "body": "#805137",
+        "tail": "#805137",
+        "wings": "#98704F"
+      },
+      "changed": true
+    },
+    {
+      "slot": 29,
+      "id": "reed",
+      "name": "Reed",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Clay-like brown with amber tones; exact shades approximate.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Reed",
+      "zones": {
+        "background": "#A77945",
+        "edges": "#A77945",
+        "horns": "#4E342E",
+        "face": "#A16C40",
+        "body": "#8A5B38",
+        "tail": "#8A5B38",
+        "wings": "#A77945"
+      },
+      "changed": true
+    },
+    {
+      "slot": 30,
+      "id": "sora",
+      "name": "Sora",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Brown, similar to Clay.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Sora",
+      "zones": {
+        "background": "#94715B",
+        "edges": "#94715B",
+        "horns": "#3E2723",
+        "face": "#89654D",
+        "body": "#73503B",
+        "tail": "#73503B",
+        "wings": "#94715B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 31,
+      "id": "marsh",
+      "name": "Marsh",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Brown, similar to Clay; removes incorrect purple body/tail.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Marsh",
+      "zones": {
+        "background": "#A77B4E",
+        "edges": "#A77B4E",
+        "horns": "#5D4037",
+        "face": "#9E6B40",
+        "body": "#8B5B35",
+        "tail": "#8B5B35",
+        "wings": "#A77B4E"
+      },
+      "changed": true
+    },
+    {
+      "slot": 32,
+      "id": "crane",
+      "name": "Crane",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Brown MudWing; precise regional shades are approximate.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Crane_(TDP)",
+      "zones": {
+        "background": "#B68459",
+        "edges": "#B68459",
+        "horns": "#3E2723",
+        "face": "#AA7451",
+        "body": "#98613F",
+        "tail": "#98613F",
+        "wings": "#B68459"
+      },
+      "changed": true
+    },
+    {
+      "slot": 33,
+      "id": "queen-morahan",
+      "name": "Queen Moorhen",
+      "tribe": "MudWing",
+      "status": "corrected",
+      "reason": "Queen Moorhen: russet-brown MudWing, not a teal SeaWing.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Moorhen",
+      "zones": {
+        "background": "#9E5D3F",
+        "edges": "#9E5D3F",
+        "horns": "#008B8B",
+        "face": "#9E5335",
+        "body": "#8D472F",
+        "tail": "#8D472F",
+        "wings": "#9E5D3F"
+      },
+      "changed": true
+    },
+    {
+      "slot": 34,
+      "id": "six-claws",
+      "name": "Six-Claws",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Light yellowish brown.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Six-Claws",
+      "zones": {
+        "background": "#D2BA83",
+        "edges": "#D2BA83",
+        "horns": "#4A3B2C",
+        "face": "#D4B97F",
+        "body": "#C8AC70",
+        "tail": "#C8AC70",
+        "wings": "#D2BA83"
+      },
+      "changed": true
+    },
+    {
+      "slot": 35,
+      "id": "smolder",
+      "name": "Smolder",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale yellow with dark diamond markings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Smolder",
+      "zones": {
+        "background": "#E8CF83",
+        "edges": "#E8CF83",
+        "horns": "#2A2A2A",
+        "face": "#F0D993",
+        "body": "#EDD58B",
+        "tail": "#EDD58B",
+        "wings": "#E8CF83"
+      },
+      "changed": true
+    },
+    {
+      "slot": 36,
+      "id": "blaze",
+      "name": "Blaze",
+      "tribe": "SandWing",
+      "status": "retained-approximation",
+      "reason": "Reviewed: existing pale cream/white-gold family is consistent.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Blaze",
+      "zones": {
+        "background": "#FFFFF0",
+        "edges": "#FFFFF3",
+        "horns": "#11041B",
+        "face": "#FFF8DC",
+        "body": "#FFFDD0",
+        "tail": "#FFF8DC",
+        "wings": "#FFFFF0"
+      },
+      "changed": false
+    },
+    {
+      "slot": 37,
+      "id": "blister",
+      "name": "Blister",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale yellow/white-gold with dark diamond markings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Blister",
+      "zones": {
+        "background": "#ECDC9C",
+        "edges": "#ECDC9C",
+        "horns": "#11041B",
+        "face": "#F1DFA5",
+        "body": "#E8D590",
+        "tail": "#E8D590",
+        "wings": "#ECDC9C"
+      },
+      "changed": true
+    },
+    {
+      "slot": 38,
+      "id": "burn",
+      "name": "Burn",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale yellow/gold rather than dark ochre.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Burn",
+      "zones": {
+        "background": "#E9D183",
+        "edges": "#E9D183",
+        "horns": "#11041B",
+        "face": "#EBD180",
+        "body": "#E4C66C",
+        "tail": "#E4C66C",
+        "wings": "#E9D183"
+      },
+      "changed": true
+    },
+    {
+      "slot": 39,
+      "id": "thorn",
+      "name": "Thorn",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale sandy yellow with small brown speckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Thorn",
+      "zones": {
+        "background": "#E9D797",
+        "edges": "#E9D797",
+        "horns": "#3A2F2F",
+        "face": "#EBD799",
+        "body": "#E4CD86",
+        "tail": "#E4CD86",
+        "wings": "#E9D797"
+      },
+      "changed": true
+    },
+    {
+      "slot": 40,
+      "id": "onyx",
+      "name": "Onyx",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale yellow with dark horn/neck lines and wing diamonds.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Onyx",
+      "zones": {
+        "background": "#EBD891",
+        "edges": "#EBD891",
+        "horns": "#11041B",
+        "face": "#EBD58C",
+        "body": "#E6CF83",
+        "tail": "#E6CF83",
+        "wings": "#EBD891"
+      },
+      "changed": true
+    },
+    {
+      "slot": 41,
+      "id": "palm",
+      "name": "Palm",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale yellow and sand wings with light brown freckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Palm",
+      "zones": {
+        "background": "#D9C58D",
+        "edges": "#D9C58D",
+        "horns": "#332A22",
+        "face": "#EDDFA9",
+        "body": "#E8D798",
+        "tail": "#E8D798",
+        "wings": "#D9C58D"
+      },
+      "changed": true
+    },
+    {
+      "slot": 42,
+      "id": "prickle",
+      "name": "Prickle",
+      "tribe": "SandWing",
+      "status": "corrected",
+      "reason": "Pale yellow with light brown freckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Prickle",
+      "zones": {
+        "background": "#E4D397",
+        "edges": "#E4D397",
+        "horns": "#2D251E",
+        "face": "#E5D396",
+        "body": "#DDCA84",
+        "tail": "#DDCA84",
+        "wings": "#E4D397"
+      },
+      "changed": true
+    },
+    {
+      "slot": 43,
+      "id": "kestrel",
+      "name": "Kestrel",
+      "tribe": "SkyWing",
+      "status": "corrected",
+      "reason": "Rust/red-gold scales, red wings and tail.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Kestrel",
+      "zones": {
+        "background": "#C44327",
+        "edges": "#C44327",
+        "horns": "#2B0A0A",
+        "face": "#D1542C",
+        "body": "#BA4628",
+        "tail": "#C44327",
+        "wings": "#C44327"
+      },
+      "changed": true
+    },
+    {
+      "slot": 44,
+      "id": "scarlet",
+      "name": "Scarlet",
+      "tribe": "SkyWing",
+      "status": "corrected",
+      "reason": "Dark orange scales and orange wings, not scarlet-red/yellow.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Scarlet",
+      "zones": {
+        "background": "#DC6A28",
+        "edges": "#DC6A28",
+        "horns": "#11041B",
+        "face": "#E36B29",
+        "body": "#D75C20",
+        "tail": "#D75C20",
+        "wings": "#DC6A28"
+      },
+      "changed": true
+    },
+    {
+      "slot": 45,
+      "id": "ruby",
+      "name": "Ruby",
+      "tribe": "SkyWing",
+      "status": "corrected",
+      "reason": "Deep dark red scales and wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Ruby",
+      "zones": {
+        "background": "#941F30",
+        "edges": "#941F30",
+        "horns": "#3A0F1A",
+        "face": "#A12539",
+        "body": "#851D2C",
+        "tail": "#851D2C",
+        "wings": "#941F30"
+      },
+      "changed": true
+    },
+    {
+      "slot": 46,
+      "id": "cliff",
+      "name": "Cliff",
+      "tribe": "SkyWing",
+      "status": "corrected",
+      "reason": "Dark red dragonet, not pale salmon.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Cliff",
+      "zones": {
+        "background": "#B4313E",
+        "edges": "#B4313E",
+        "horns": "#4A1A25",
+        "face": "#B7313C",
+        "body": "#A62835",
+        "tail": "#A62835",
+        "wings": "#B4313E"
+      },
+      "changed": true
+    },
+    {
+      "slot": 47,
+      "id": "flame",
+      "name": "Flame",
+      "tribe": "SkyWing",
+      "status": "corrected",
+      "reason": "Ruby-red scales and red wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Flame",
+      "zones": {
+        "background": "#C52F35",
+        "edges": "#C52F35",
+        "horns": "#1C0505",
+        "face": "#D3393E",
+        "body": "#C42C31",
+        "tail": "#C42C31",
+        "wings": "#C52F35"
+      },
+      "changed": true
+    },
+    {
+      "slot": 48,
+      "id": "turtle",
+      "name": "Turtle",
+      "tribe": "SeaWing",
+      "status": "corrected",
+      "reason": "Dark emerald green with lighter green underscales/lights.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Turtle",
+      "zones": {
+        "background": "#1A714A",
+        "edges": "#1A714A",
+        "horns": "#1A331A",
+        "face": "#1A774A",
+        "body": "#176B46",
+        "tail": "#176B46",
+        "wings": "#1A714A"
+      },
+      "changed": true
+    },
+    {
+      "slot": 49,
+      "id": "anemone",
+      "name": "Anemone",
+      "tribe": "SeaWing",
+      "status": "corrected",
+      "reason": "Pale blue/white-pink with pink-tinted wings and horns.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Anemone",
+      "zones": {
+        "background": "#F1D9E6",
+        "edges": "#F1D9E6",
+        "horns": "#EAC2D8",
+        "face": "#E4EAF2",
+        "body": "#D9ECF5",
+        "tail": "#DCEAF2",
+        "wings": "#F1D9E6"
+      },
+      "changed": true
+    },
+    {
+      "slot": 50,
+      "id": "fathom",
+      "name": "Fathom",
+      "tribe": "SeaWing",
+      "status": "corrected",
+      "reason": "Sea-green/emerald rather than blue-teal.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Fathom",
+      "zones": {
+        "background": "#309A72",
+        "edges": "#309A72",
+        "horns": "#002244",
+        "face": "#24936B",
+        "body": "#20875E",
+        "tail": "#20875E",
+        "wings": "#309A72"
+      },
+      "changed": true
+    },
+    {
+      "slot": 51,
+      "id": "coral",
+      "name": "Coral",
+      "tribe": "SeaWing",
+      "status": "corrected",
+      "reason": "Blue like Tsunami, not turquoise-green.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Coral",
+      "zones": {
+        "background": "#326BC3",
+        "edges": "#326BC3",
+        "horns": "#003F5C",
+        "face": "#2D62BD",
+        "body": "#2857B5",
+        "tail": "#2857B5",
+        "wings": "#326BC3"
+      },
+      "changed": true
+    },
+    {
+      "slot": 52,
+      "id": "riptide",
+      "name": "Riptide",
+      "tribe": "SeaWing",
+      "status": "corrected",
+      "reason": "Metallic sky blue, lighter than Tsunami, dark-blue horns.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Riptide",
+      "zones": {
+        "background": "#77B6DC",
+        "edges": "#77B6DC",
+        "horns": "#203F78",
+        "face": "#78B7D9",
+        "body": "#65A7D2",
+        "tail": "#65A7D2",
+        "wings": "#77B6DC"
+      },
+      "changed": true
+    },
+    {
+      "slot": 53,
+      "id": "tamarin",
+      "name": "Tamarin",
+      "tribe": "RainWing",
+      "status": "corrected",
+      "reason": "Common blue-and-gold state, not purple/green.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Tamarin",
+      "zones": {
+        "background": "#E9C34F",
+        "edges": "#E9C34F",
+        "horns": "#EE82EE",
+        "face": "#5B9DD3",
+        "body": "#4689C5",
+        "tail": "#4689C5",
+        "wings": "#E9C34F"
+      },
+      "changed": true
+    },
+    {
+      "slot": 54,
+      "id": "orchid",
+      "name": "Orchid",
+      "tribe": "RainWing",
+      "status": "corrected",
+      "reason": "Chosen happy pink reunion state; captive gray is not the only state.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Orchid",
+      "zones": {
+        "background": "#F1A4CC",
+        "edges": "#F1A4CC",
+        "horns": "#DA70D6",
+        "face": "#F19BC8",
+        "body": "#EB83BA",
+        "tail": "#EB83BA",
+        "wings": "#F1A4CC"
+      },
+      "changed": true
+    },
+    {
+      "slot": 55,
+      "id": "bromeliad",
+      "name": "Bromeliad",
+      "tribe": "RainWing",
+      "status": "corrected",
+      "reason": "Dark burgundy with scarlet ruff accents.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Bromeliad",
+      "zones": {
+        "background": "#80283E",
+        "edges": "#A72E35",
+        "horns": "#8B008B",
+        "face": "#8F2B42",
+        "body": "#6F243C",
+        "tail": "#6F243C",
+        "wings": "#80283E"
+      },
+      "changed": true
+    },
+    {
+      "slot": 56,
+      "id": "jambu",
+      "name": "Jambu",
+      "tribe": "RainWing",
+      "status": "corrected",
+      "reason": "Raspberry pink with pale pink whorls; no cyan face/yellow wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Jambu",
+      "zones": {
+        "background": "#E76AA2",
+        "edges": "#E76AA2",
+        "horns": "#FF00FF",
+        "face": "#E3639D",
+        "body": "#D83C83",
+        "tail": "#D83C83",
+        "wings": "#E76AA2"
+      },
+      "changed": true
+    },
+    {
+      "slot": 57,
+      "id": "lynx",
+      "name": "Lynx",
+      "tribe": "IceWing",
+      "status": "corrected",
+      "reason": "Silver/white with dark-blue snout and wing freckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Lynx",
+      "zones": {
+        "background": "#EAF0F5",
+        "edges": "#EAF0F5",
+        "horns": "#A9A9A9",
+        "face": "#EAF0F5",
+        "body": "#E2E9EF",
+        "tail": "#DBE4ED",
+        "wings": "#EAF0F5"
+      },
+      "changed": true
+    },
+    {
+      "slot": 58,
+      "id": "hailstorm",
+      "name": "Hailstorm",
+      "tribe": "IceWing",
+      "status": "corrected",
+      "reason": "Silvery white and blue.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Hailstorm",
+      "zones": {
+        "background": "#E7F0F7",
+        "edges": "#E7F0F7",
+        "horns": "#D3D3D3",
+        "face": "#E5EEF5",
+        "body": "#DCE8F3",
+        "tail": "#D3E1ED",
+        "wings": "#E7F0F7"
+      },
+      "changed": true
+    },
+    {
+      "slot": 59,
+      "id": "icicle",
+      "name": "Icicle",
+      "tribe": "IceWing",
+      "status": "corrected",
+      "reason": "Gleaming white; blue/silver details are LED approximations.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Icicle_(MR)",
+      "zones": {
+        "background": "#E9F1F6",
+        "edges": "#E9F1F6",
+        "horns": "#8899A6",
+        "face": "#F4F8FA",
+        "body": "#F1F6F8",
+        "tail": "#DBE6EE",
+        "wings": "#E9F1F6"
+      },
+      "changed": true
+    },
+    {
+      "slot": 60,
+      "id": "snowfall",
+      "name": "Snowfall",
+      "tribe": "IceWing",
+      "status": "corrected",
+      "reason": "Shiny white scales and white wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Snowfall",
+      "zones": {
+        "background": "#F3F7F9",
+        "edges": "#F3F7F9",
+        "horns": "#B0C4DE",
+        "face": "#F5F8FA",
+        "body": "#F1F5F8",
+        "tail": "#E4EDF3",
+        "wings": "#F3F7F9"
+      },
+      "changed": true
+    },
+    {
+      "slot": 61,
+      "id": "arctic",
+      "name": "Arctic",
+      "tribe": "IceWing",
+      "status": "corrected",
+      "reason": "Polished silvery white with pale-blue hints.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Arctic",
+      "zones": {
+        "background": "#E3EDF5",
+        "edges": "#E3EDF5",
+        "horns": "#D3E2EF",
+        "face": "#F0F5F9",
+        "body": "#EBF2F7",
+        "tail": "#D6E6F1",
+        "wings": "#E3EDF5"
+      },
+      "changed": true
+    },
+    {
+      "slot": 62,
+      "id": "tundra",
+      "name": "Tundra",
+      "tribe": "IceWing",
+      "status": "retained-approximation",
+      "reason": "Reviewed: exact regional scale colours unavailable; existing pale IceWing interpretation retained.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Tundra",
+      "zones": {
+        "background": "#BCC6CC",
+        "edges": "#C9D1D6",
+        "horns": "#5A6570",
+        "face": "#D2E3EB",
+        "body": "#EEF2F5",
+        "tail": "#5A6570",
+        "wings": "#BCC6CC"
+      },
+      "changed": false
+    },
+    {
+      "slot": 63,
+      "id": "narwhal",
+      "name": "Narwhal",
+      "tribe": "IceWing",
+      "status": "retained-approximation",
+      "reason": "Reviewed: exact regional scale colours unavailable; existing pale IceWing interpretation retained.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Narwhal",
+      "zones": {
+        "background": "#C3D1DA",
+        "edges": "#CFDAE1",
+        "horns": "#697684",
+        "face": "#DBE7EE",
+        "body": "#F0F4F7",
+        "tail": "#697684",
+        "wings": "#C3D1DA"
+      },
+      "changed": false
+    },
+    {
+      "slot": 64,
+      "id": "deathbringer",
+      "name": "Deathbringer",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Near-black body/wings with scattered silver wing scales.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Deathbringer",
+      "zones": {
+        "background": "#13151D",
+        "edges": "#13151D",
+        "horns": "#14151B",
+        "face": "#14151D",
+        "body": "#14151D",
+        "tail": "#14151D",
+        "wings": "#13151D"
+      },
+      "changed": true
+    },
+    {
+      "slot": 65,
+      "id": "clearsight",
+      "name": "Clearsight",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Near-black scales/wings; purple is an eye colour, not whole wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Clearsight",
+      "zones": {
+        "background": "#13141C",
+        "edges": "#13141C",
+        "horns": "#14151B",
+        "face": "#14151D",
+        "body": "#14151D",
+        "tail": "#14151D",
+        "wings": "#13141C"
+      },
+      "changed": true
+    },
+    {
+      "slot": 66,
+      "id": "jewel",
+      "name": "Jewel",
+      "tribe": "HiveWing",
+      "status": "corrected",
+      "reason": "Bright gold with thin dark wing veins and facial lines.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Jewel_(THQ)",
+      "zones": {
+        "background": "#EBC03B",
+        "edges": "#EBC03B",
+        "horns": "#14151B",
+        "face": "#F2CE4D",
+        "body": "#EBC03B",
+        "tail": "#EBC03B",
+        "wings": "#EBC03B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 67,
+      "id": "ladybug",
+      "name": "Ladybug",
+      "tribe": "HiveWing",
+      "status": "retired",
+      "reason": "Unidentified/noncanonical entry removed from selection at user request; stable slot retained for saved custom bases.",
+      "source": null,
+      "zones": {
+        "background": "#F5DEB3",
+        "edges": "#F7E4C2",
+        "horns": "#11041B",
+        "face": "#B28344",
+        "body": "#11041B",
+        "tail": "#11041B",
+        "wings": "#F5DEB3"
+      },
+      "changed": true
+    },
+    {
+      "slot": 68,
+      "id": "luna",
+      "name": "Luna",
+      "tribe": "SilkWing",
+      "status": "corrected",
+      "reason": "Pale pearly green wings/body with gold flecks, not pink flamesilk wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Luna",
+      "zones": {
+        "background": "#B6E59A",
+        "edges": "#B6E59A",
+        "horns": "#D4AF37",
+        "face": "#B4E195",
+        "body": "#A5D887",
+        "tail": "#A5D887",
+        "wings": "#B6E59A"
+      },
+      "changed": true
+    },
+    {
+      "slot": 69,
+      "id": "swordtail",
+      "name": "Swordtail",
+      "tribe": "SilkWing",
+      "status": "corrected",
+      "reason": "Deep blue wings/body with orange splotches and blue/orange tail.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Swordtail",
+      "zones": {
+        "background": "#224B9B",
+        "edges": "#224B9B",
+        "horns": "#0044AA",
+        "face": "#2E5BA8",
+        "body": "#204A9A",
+        "tail": "#D87228",
+        "wings": "#224B9B"
+      },
+      "changed": true
+    },
+    {
+      "slot": 70,
+      "id": "io",
+      "name": "Io",
+      "tribe": "SilkWing",
+      "status": "corrected",
+      "reason": "Iridescent purple with indigo wings and aquamarine speckles.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Io",
+      "zones": {
+        "background": "#352D79",
+        "edges": "#352D79",
+        "horns": "#8A2BE2",
+        "face": "#966DC0",
+        "body": "#8057AA",
+        "tail": "#8057AA",
+        "wings": "#352D79"
+      },
+      "changed": true
+    },
+    {
+      "slot": 71,
+      "id": "cinnabar",
+      "name": "Cinnabar",
+      "tribe": "SilkWing",
+      "status": "corrected",
+      "reason": "Burnt orange with dark-red wing/spine accents.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Cinnabar_(THQ)",
+      "zones": {
+        "background": "#AF492D",
+        "edges": "#AF492D",
+        "horns": "#555555",
+        "face": "#D17A3C",
+        "body": "#C36731",
+        "tail": "#C36731",
+        "wings": "#AF492D"
+      },
+      "changed": true
+    },
+    {
+      "slot": 72,
+      "id": "admiral",
+      "name": "Admiral",
+      "tribe": "SilkWing",
+      "status": "corrected",
+      "reason": "Blue-green with purple wing streaks and white spots; not brown.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Admiral",
+      "zones": {
+        "background": "#389D9C",
+        "edges": "#389D9C",
+        "horns": "#7A5F43",
+        "face": "#43A9A4",
+        "body": "#329999",
+        "tail": "#329999",
+        "wings": "#389D9C"
+      },
+      "changed": true
+    },
+    {
+      "slot": 73,
+      "id": "hazel",
+      "name": "Hazel",
+      "tribe": "LeafWing",
+      "status": "corrected",
+      "reason": "Green scales and wings; exact regional shades approximate.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Hazel",
+      "zones": {
+        "background": "#5E9C52",
+        "edges": "#5E9C52",
+        "horns": "#6B4423",
+        "face": "#66A157",
+        "body": "#4A8D47",
+        "tail": "#4A8D47",
+        "wings": "#5E9C52"
+      },
+      "changed": true
+    },
+    {
+      "slot": 74,
+      "id": "sequoia",
+      "name": "Sequoia",
+      "tribe": "LeafWing",
+      "status": "corrected",
+      "reason": "Dark green, not an olive/yellow dominant palette.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Sequoia",
+      "zones": {
+        "background": "#345F37",
+        "edges": "#345F37",
+        "horns": "#3E2511",
+        "face": "#2A5832",
+        "body": "#204C2D",
+        "tail": "#204C2D",
+        "wings": "#345F37"
+      },
+      "changed": true
+    },
+    {
+      "slot": 75,
+      "id": "belladonna",
+      "name": "Belladonna",
+      "tribe": "LeafWing",
+      "status": "corrected",
+      "reason": "Dark green, lighter than Sundew, with brown patches.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Belladonna",
+      "zones": {
+        "background": "#3B7046",
+        "edges": "#3B7046",
+        "horns": "#4A2E1B",
+        "face": "#397749",
+        "body": "#2B633B",
+        "tail": "#2B633B",
+        "wings": "#3B7046"
+      },
+      "changed": true
+    },
+    {
+      "slot": 76,
+      "id": "typhoon",
+      "name": "Typhoon",
+      "tribe": "Sea-Ice",
+      "status": "corrected",
+      "reason": "Cobalt blue with a white underside; SeaWing-IceWing, not Sea-Night.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Typhoon",
+      "zones": {
+        "background": "#3067C4",
+        "edges": "#3067C4",
+        "horns": "#112233",
+        "face": "#3469C1",
+        "body": "#2854B9",
+        "tail": "#2854B9",
+        "wings": "#3067C4"
+      },
+      "changed": true
+    },
+    {
+      "slot": 77,
+      "id": "peacemaker",
+      "name": "Peacemaker",
+      "tribe": "Rain-Night",
+      "status": "corrected",
+      "reason": "Near-black dragon with rainbow wing speckles, not solid purple wings.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Peacemaker",
+      "zones": {
+        "background": "#151720",
+        "edges": "#151720",
+        "horns": "#4B0082",
+        "face": "#14151D",
+        "body": "#14151D",
+        "tail": "#14151D",
+        "wings": "#151720"
+      },
+      "changed": true
+    },
+    {
+      "slot": 78,
+      "id": "hope",
+      "name": "Hope",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Near-black with dark green underscales.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Hope",
+      "zones": {
+        "background": "#111619",
+        "edges": "#111619",
+        "horns": "#14151B",
+        "face": "#13241C",
+        "body": "#11181A",
+        "tail": "#11181A",
+        "wings": "#111619"
+      },
+      "changed": true
+    },
+    {
+      "slot": 79,
+      "id": "firefly",
+      "name": "Firefly",
+      "tribe": "Night-Rain",
+      "status": "corrected",
+      "reason": "Dark purple; exact regional colours are not specified.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Firefly",
+      "zones": {
+        "background": "#422756",
+        "edges": "#422756",
+        "horns": "#1A122C",
+        "face": "#44255B",
+        "body": "#39214E",
+        "tail": "#39214E",
+        "wings": "#422756"
+      },
+      "changed": true
+    },
+    {
+      "slot": 80,
+      "id": "mightyclaws",
+      "name": "Mightyclaws",
+      "tribe": "NightWing",
+      "status": "corrected",
+      "reason": "Near-black; removes unsupported bright-purple emphasis.",
+      "source": "https://mirror.wingsoffire.wiki/wiki/Mightyclaws",
+      "zones": {
+        "background": "#14151C",
+        "edges": "#14151C",
+        "horns": "#14151B",
+        "face": "#14151C",
+        "body": "#14151C",
+        "tail": "#14151C",
+        "wings": "#14151C"
+      },
+      "changed": true
+    }
+  ]
+}

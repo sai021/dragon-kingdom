@@ -27,7 +27,11 @@ def load_catalog(source=SOURCE):
             # Preserve separate edges with a modest lighter tint, keeping off pixels off.
             if grid[i] in ('LE','RE') and any(rgb): rgb=[v+(255-v)*gain//(255*5) for v in rgb]
             pixels.append('#'+''.join(f'{v:02X}' for v in rgb))
-        zones={group:pixels[next(i for i,z in enumerate(grid) if palettes.ZONE_GROUPS[palettes.ZONES.index(z)]==group)] for group in palettes.GROUPS}
+        # Retain the legacy background field even though no physical pixel uses it.
+        zones={}
+        for group in palettes.GROUPS:
+            index=next((i for i,z in enumerate(grid) if palettes.ZONE_GROUPS[palettes.ZONES.index(z)]==group),None)
+            zones[group]=pixels[index] if index is not None else '#000000'
         desc=row['Area Lighting Effects'];effect_zones={}
         for regions,words in re.findall(r'([A-Z /]+):\s*([^.:]+)',desc):
             regions=regions.strip();words=words.lower()

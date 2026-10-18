@@ -4,6 +4,8 @@
 using namespace Dragon;
 int main(){
  assert(MAX_TOTAL_MA==2400&&BASE_TOTAL_MA==264);
+ assert(!networkBudgetAvailable(0)&&!networkBudgetAvailable(300)&&networkBudgetAvailable(400));
+ assert(runtimeReserve(300)==200&&runtimeReserve(400)==250);
  RGB f[PHYSICAL_COUNT];
  for(int budget=Config::PANEL_IDLE_MA;budget<=MAX_TOTAL_MA;budget++){
   clear(f);for(int i=0;i<64;i++)f[i]={204,uint8_t(i%205),uint8_t((i*3)%205)};

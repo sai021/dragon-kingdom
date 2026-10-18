@@ -1,13 +1,14 @@
-# Profiles and custom dragons — 15 October 2026
+# Collections and custom dragons — 19 October 2026
 
-Dragon Den now supports four local profiles and eight custom dragons shared
-across the device. The supplied 81 dragons remain unchanged and available to
-the protected All profile. Custom dragons belong to their creator's active
+Dragon Kingdom is intended for one child. All is ready to use, and three optional
+named profiles can hold different favourite collections. Eight custom dragon
+spaces are shared across the device. The 79 selectable supplied dragons retain
+their original 81 storage slots and are available through protected All. Custom dragons belong to their creator's active
 profile and can also be chosen as favourites in another profile.
 
 ## Using the phone interface
 
-Refresh the Dragon Den page after updating firmware. Use **My profile** to
+Refresh the Dragon Kingdom page after updating firmware. Use **My profile** to
 switch. Open **My favourites & starting glow** to name a profile, create another,
 choose startup glow, and select up to twelve favourites. Favourites retain the
 order in which you check them. Uncheck and recheck a dragon to move it to the end.
@@ -26,7 +27,7 @@ effect and brightness changes do not write profile preferences automatically.
 Select a starting dragon and tap **Make a dragon**. Tap a region in the 8×8
 picture, or select a part by name. Wing edges and interiors are separate. Choose
 a colour, give that part an effect, and name the dragon. Regions you leave alone
-retain their imported per-pixel colours, including stripes and off pixels.
+retain their imported per-pixel colours, including their current per-pixel variations.
 Existing mixed effects are retained until explicitly changed for that region.
 
 The preview shows the base colours at the actual 64 logical pixels. It is a
@@ -59,8 +60,16 @@ and diagnostic history keep their existing namespaces.
 
 Creation capacity is eight across all profiles. Existing creations can be
 edited in place or deleted to make room. There is no export/import backup interface in this version. Snapshot recovery is not an
-external backup. IDs depend on the supplied catalog order; catalog replacement
-or reordering needs a migration before existing saved creations are carried over.
+external backup. IDs depend on the supplied catalog count/order, which is now
+fixed by `presets/catalog-ids.json` and build validation. Additions, removal,
+reordering and ID renaming require an explicit migration; ordinary colour edits
+remain supported.
+
+Collection writes carry the profile and generation loaded by the form. The API
+returns 409 for stale/missing context before writing. This is request validation;
+it does not change version-1 stored record layouts. A failed save retains its
+draft. Note unsaved choices before reloading, then check the saved collection
+before retrying, particularly after a lost response.
 
 ## Verification
 
@@ -76,3 +85,13 @@ ESP32 NVS persistence. Check those by creating a dragon on the phone, choosing
 it as the first favourite, unplugging/replugging using laptop USB alone, and
 confirming the chosen profile/dragon returns. Keep external power disconnected
 during this laptop test.
+
+## Whole-wing allocation
+
+All physical pixels outside face, body, horns and tail belong to the left or
+right wing, including the six former background pixels at the bottom. Wing
+edges remain separately editable; sunrise lights interiors and edges together.
+BG retains its numeric ID for saved-data compatibility but has no physical
+pixels and is omitted from the phone region picker. Existing BG-only custom
+overrides remain stored but no longer affect physical output; edit the relevant
+wing region to recolour those pixels. Other saved region IDs are unchanged.
