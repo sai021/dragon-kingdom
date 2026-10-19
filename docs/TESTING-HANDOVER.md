@@ -1,6 +1,10 @@
 Software and documentation follow-up - 19 October 2026
 
 Latest: [Dragon Kingdom release verification](KINGDOM-RELEASE-2026-10-19.md).
+Current S3 follow-up: [readiness repair and final state](WIFI-READINESS-2026-10-19.md).
+S3 is on home Wi-Fi with setup AP open, Blue/All/100% automatic glow, no
+temporary creations and a disabled alarm. Radio setting and 400 mA ceiling are
+confirmed; repeated-reset reliability remains open.
 The renamed S3/C3 pair supersedes the prepared images below. Setup Wi-Fi and
 mDNS change to `Dragon-Kingdom-XXXXXX`; saved data stays compatible. The S3 on
 COM17 was ROM-identified and the 0.2.3 image installed under confirmed

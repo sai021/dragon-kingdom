@@ -229,3 +229,16 @@ startup. Test profiles/customs have been removed. No firmware source or binary
 was changed during the C3 physical follow-up; both published v0.2.2 board
 archives and checksums remain the same. The separate S3 reconnect issue and
 external-supply/final-design/endurance gates remain open.
+
+
+## S3 reconnected after the C3 tests
+
+The user reconnected S3 on COM17. The subsequent
+[station-readiness investigation](WIFI-READINESS-2026-10-19.md) identified an
+unapplied transmit-power limit, repaired its readiness/return-value handling,
+and verified the intended setting physically. Installation and one reset
+connected and served HTTP; a later reset and a matrix-off join trial failed.
+The current S3 image is v0.2.3, with unchanged storage/partitions and the
+400 mA USB ceiling. The earlier S3 reconnect gate remains open. Earlier C3
+physical results remain specifically v0.2.2 evidence; the new paired C3 image
+is build-tested only.

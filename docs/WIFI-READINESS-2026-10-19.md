@@ -59,3 +59,34 @@ The paired source fingerprint is
 Raw logs, saved settings, endpoints and release archives remain in ignored
 `dragon-firmware/.tools/s3-reconnect-20261019/`. Never connect laptop USB and
 external/main power simultaneously in this circuit.
+
+
+A further trusted-USB join trial used the intended locally saved network
+credentials with manual glow temporarily set to zero. No join was confirmed
+within 90 seconds; normal 100% glow was restored in the cleanup path. This
+trial does not support treating matrix load alone as the cause. Setup-AP
+recovery and the S3 antenna/placement comparison are the next diagnostics.
+
+
+Opening setup AP through USB was followed by a saved-home-network connection
+99.91 seconds into the recovery observation. This is a successful recovery path,
+not proof of causation. The actual 0.2.3 embedded page then passed authenticated
+controls, alarm save/reload/restore and preview/stop, scan, protected All,
+empty-profile reload, custom save/copy/delete, favourites and profile-deletion
+rehoming in headless Edge. No page errors were captured. Temporary entries were
+removed and original settings restored.
+
+Final USB status at uptime 420–424 seconds confirms home Wi-Fi connected with
+setup AP open, `tx_quarter_dbm=34 sta_started=1`, ready All, zero customs, Blue,
+normal 100% glow, automatic dimming, disabled alarm, ready clock and the 400 mA
+USB ceiling. The last disconnect reason remained 202 despite current connectivity.
+Final RSSI was -79 dBm; the user was asked about antenna type and whether the
+S3 occupied the same carrier/position as the successful C3. No antenna fault or
+supply diagnosis is inferred from these observations.
+
+All five GitHub CI jobs passed on the release-tag run for commit `6501b93`.
+A separate main-branch run of the same commit timed out waiting for the simulated
+initial alarm-error state (`test_web.cjs:139`); its failed browser job passed
+on rerun, leaving all five jobs successful for main as well.
+The local simulated checks and actual-device UI checks above passed separately.
+Uploaded SHA-256 digests matched all five published release assets.
