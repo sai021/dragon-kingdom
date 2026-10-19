@@ -90,3 +90,38 @@ initial alarm-error state (`test_web.cjs:139`); its failed browser job passed
 on rerun, leaving all five jobs successful for main as well.
 The local simulated checks and actual-device UI checks above passed separately.
 Uploaded SHA-256 digests matched all five published release assets.
+
+
+## Placement follow-up
+
+The user confirmed an onboard antenna and moved the USB-powered S3 away from
+the laptop with the antenna clear of nearby metal/bundled wiring. A 34-sample
+continuous connection capture contained no disconnects and RSSI -65 to -53 dBm;
+the first/last ten connected samples averaged -57.0/-53.8 dBm. Physical movement
+preceded the user's acknowledgement by an unknown interval, so these windows
+are not a precisely timed before/after experiment. The earlier final capture
+had reported -79 dBm.
+
+The first esptool reset attempt reported `Guru Meditation Error detected
+(IllegalInstruction)` while connecting. A subsequent attempt identified the S3
+but timed out writing the temporary flasher helper. A serial probe also stalled
+on an unbounded write and was stopped. No firmware or flash write was attempted
+in this placement session. The captured tool error has no firmware backtrace;
+it remains a separate unexplained reset/USB observation, not a demonstrated
+normal-running firmware crash or a passed reset trial.
+
+A ROM-only reset (`--no-stub`) then succeeded. The unchanged 0.2.3 image joined
+at about 8.6 seconds uptime with RSSI around -53 dBm and the intended radio
+setting/USB ceiling intact. Subsequent reset tests use ROM-only identity/reset
+commands to avoid uploading the helper. This changes the test procedure, so
+placement alone is not established as the cause of any improvement.
+
+
+All five ROM-only reset trials in the new position passed saved-network
+reconnection and authenticated HTTP: 7.42, 8.58, 8.20, 8.56 and 7.44 seconds of
+post-reset serial observation, with RSSI -51, -51, -53, -51 and -50 dBm. Each
+confirmed the station-started flag, 8.5 dBm driver setting and the 400 mA USB
+ceiling. The setup AP was not requested during these normal starts. This is
+five successful trials under the changed placement/procedure, not proof of
+reliability in the earlier position or longer endurance. A user-operated USB
+power-off/on test is the next check; no source/binary was changed.

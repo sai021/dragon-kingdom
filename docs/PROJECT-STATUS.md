@@ -5,7 +5,10 @@ renamed interface/assets/manual, all accumulated improvements, both verified
 firmware builds and board-specific download bundles. Software checks passed.
 The 0.2.3 S3 image is installed under confirmed USB-only power.
 The [radio readiness repair](WIFI-READINESS-2026-10-19.md) now verifies the
-intended 8.5 dBm setting, but a repeated-reset failure remains unresolved. The 0.2.1
+intended 8.5 dBm setting, but a repeated-reset failure remains unresolved.
+A later clearer-antenna placement passed five ROM-only reset/HTTP trials in
+7.4–8.6 seconds; a manual cold power cycle is pending. These changed conditions
+do not establish the cause of the earlier failures. The 0.2.1
 embedded-page workflows passed, but repeated reset testing found intermittent
 home-Wi-Fi authentication/reconnection failures that remain unresolved.
 The user confirmed tap/double-tap and
