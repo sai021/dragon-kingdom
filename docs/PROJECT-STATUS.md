@@ -3,8 +3,10 @@
 The latest checkpoint is the [Dragon Kingdom release](KINGDOM-RELEASE-2026-10-19.md):
 renamed interface/assets/manual, all accumulated improvements, both verified
 firmware builds and board-specific download bundles. Software checks passed.
-The corrected 0.2.1 S3 image is installed under confirmed USB-only power and
-passed live embedded-page workflows. The user confirmed tap/double-tap and
+The 0.2.2 S3 image is installed under confirmed USB-only power. The 0.2.1
+embedded-page workflows passed, but repeated reset testing found intermittent
+home-Wi-Fi authentication/reconnection failures that remain unresolved.
+The user confirmed tap/double-tap and
 that minimum glow stays lit with the LDR covered. See the
 [19 October physical record](HARDWARE-TEST-2026-10-19.md); C3 was unavailable.
 The dated evidence below describes earlier images.

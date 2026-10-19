@@ -132,6 +132,15 @@ access. The same 400 mA estimated USB ceiling applies.
 `alarm disable` stops the sunrise and saves the daily alarm as disabled;
 `alarm stop` only cancels the current occurrence.
 
+For supervised low-light measurements, USB serial `testglow 1` through
+`testglow 10` temporarily applies that raw percentage to the already session-
+limited frame. It bypasses automatic/manual dimming and the one-count visibility
+floor so integer-output extinction can be observed. It never increases the
+session ceiling or saves a profile/setting. `testglow 0` ends the test; normal
+brightness, dragon, touch and web play controls also cancel it. Status reports
+the test percentage, nonzero pixel count and channel sum, not measured light or
+electrical current. Restore normal brightness and `auto on` after testing.
+
 Wi-Fi transmit power is limited to 8.5 dBm by
 `Config::WIFI_TX_QUARTER_DBM` (34 quarter-dBm units), reapplied when starting
 a station connection. On the USB-powered S3, a Wi-Fi-only comparison at this

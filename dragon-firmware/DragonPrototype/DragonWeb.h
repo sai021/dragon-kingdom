@@ -36,8 +36,9 @@ void connect(const Credentials& credentials){
  WiFi.enableSTA(false);
  if(!WiFi.enableSTA(true)){connecting=false;message="Could not start home Wi-Fi. Try again.";retryAt=millis();return;}
  WiFi.setHostname(deviceName.c_str());
- auto result=WiFi.begin(credentials.ssid,credentials.password);
+ // Apply the tested radio limit before any association frames are sent.
  WiFi.setTxPower(wifi_power_t(Config::WIFI_TX_QUARTER_DBM));
+ auto result=WiFi.begin(credentials.ssid,credentials.password);
  started=millis();connecting=result!=WL_CONNECT_FAILED;
  if(!connecting){message="Could not start home Wi-Fi. Try again.";retryAt=started;}
 }
@@ -82,7 +83,7 @@ bool serialControl(char* line){
    Serial.println("Wi-Fi request rejected: invalid credentials.");return true;
   }
   if(!ready||connecting||joinAfterReply||forgetAfterReply||WiFi.scanComplete()==WIFI_SCAN_RUNNING){Serial.println("Wi-Fi request rejected: networking busy or unavailable.");return true;}
-  pending=candidate;message="Trying home Wi-Fi…";
+  pending=candidate;message="Trying home Wi-Fiâ€¦";
   Serial.println("Wi-Fi request accepted; credentials are not echoed.");
   connect(pending);return true;
  }
@@ -97,7 +98,10 @@ void begin(bool requested){
  // Only the device access key changes; saved home Wi-Fi and library data remain intact.
  password="dragon123";if(store.getString("access","")!=password){if(store.putString("access",password)!=password.length()){ready=false;return;}}
  if(store.getBytesLength("home")==sizeof(saved)&&store.getBytes("home",&saved,sizeof(saved))==sizeof(saved)&&memchr(saved.ssid,0,sizeof(saved.ssid))&&memchr(saved.password,0,sizeof(saved.password))&&saved.ssid[0])configured=true;
- WiFi.persistent(false);WiFi.mode(WIFI_STA);WiFi.setHostname(deviceName.c_str());WiFi.setAutoReconnect(true);
+ // connect()/openAP() starts the required interface once. Starting STA here
+ // would immediately tear it down again in connect() on every saved-network
+ // boot, needlessly cycling the pinned core's asynchronous event/netif setup.
+ WiFi.persistent(false);WiFi.setHostname(deviceName.c_str());WiFi.setAutoReconnect(true);
  WiFi.onEvent([](arduino_event_id_t event,arduino_event_info_t info){
   if(event==ARDUINO_EVENT_WIFI_STA_DISCONNECTED)lastDisconnectReason=info.wifi_sta_disconnected.reason;
  });
@@ -134,8 +138,8 @@ void begin(bool requested){
   }
   reply(200,data+"]}");
  });
- server.on("/api/wifi",HTTP_POST,[]{if(!authorize())return;if(WiFi.scanComplete()==WIFI_SCAN_RUNNING){server.send(409,"text/plain","Wait for the Wi-Fi search to finish.");return;}if(connecting){server.send(409,"text/plain","Already trying Wi-Fi. Please wait.");return;}String ssid=server.arg("ssid"),key=server.arg("password");bool validKey=key.length()==0||(key.length()>=8&&key.length()<=63);if(key.length()==64){validKey=true;for(size_t i=0;i<64;i++)if(!isxdigit(key[i]))validKey=false;}if(!ssid.length()||ssid.length()>32||!validKey){server.send(400,"text/plain","Check the Wi-Fi name and password length.");return;}pending={};ssid.toCharArray(pending.ssid,sizeof(pending.ssid));key.toCharArray(pending.password,sizeof(pending.password));message="Trying home Wi-Fi…";reply(202,"{}");joinAfterReply=true;});
- server.on("/api/play",HTTP_POST,[]{if(!authorize())return;if(!DragonLibrary::contains(library.data,library.next(255),library.data.active)){server.send(409,"text/plain","Add favourites or make a dragon for this profile first.");return;}String action=server.arg("action"),value=server.arg("value");bool ok=false;int number=0;char buffer[16];value.toCharArray(buffer,sizeof(buffer));if(action=="dragon"&&value.length()<sizeof(buffer)&&readNumber(buffer,0,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1,number)&&DragonLibrary::contains(library.data,number,library.data.active)){if(mode==OFF||!brightness)wakeLighting();setPalette(number);mode=ZONE_VIEW;ok=true;}else if(action=="brightness"&&value.length()<sizeof(buffer)&&readNumber(buffer,0,100,number)){if(number&&mode==OFF)wakeLighting();setBrightness(number);ok=true;}else if(action=="toggle"){toggleLighting();ok=true;}else if(action=="effect"){const char* names[]={"zones","breathe","colorcycle","glitter","incendio","leviosa"};for(int i=0;i<6;i++)if(value==names[i]){if(mode==OFF||!brightness)wakeLighting();mode=Mode(i);ok=true;}}if(ok){sunrise.stop();rememberLighting();reply(200,"{}");}else server.send(400,"text/plain","Unknown dragon control.");});
+ server.on("/api/wifi",HTTP_POST,[]{if(!authorize())return;if(WiFi.scanComplete()==WIFI_SCAN_RUNNING){server.send(409,"text/plain","Wait for the Wi-Fi search to finish.");return;}if(connecting){server.send(409,"text/plain","Already trying Wi-Fi. Please wait.");return;}String ssid=server.arg("ssid"),key=server.arg("password");bool validKey=key.length()==0||(key.length()>=8&&key.length()<=63);if(key.length()==64){validKey=true;for(size_t i=0;i<64;i++)if(!isxdigit(key[i]))validKey=false;}if(!ssid.length()||ssid.length()>32||!validKey){server.send(400,"text/plain","Check the Wi-Fi name and password length.");return;}pending={};ssid.toCharArray(pending.ssid,sizeof(pending.ssid));key.toCharArray(pending.password,sizeof(pending.password));message="Trying home Wi-Fiâ€¦";reply(202,"{}");joinAfterReply=true;});
+ server.on("/api/play",HTTP_POST,[]{if(!authorize())return;if(!DragonLibrary::contains(library.data,library.next(255),library.data.active)){server.send(409,"text/plain","Add favourites or make a dragon for this profile first.");return;}String action=server.arg("action"),value=server.arg("value");bool ok=false;int number=0;char buffer[16];value.toCharArray(buffer,sizeof(buffer));if(action=="dragon"&&value.length()<sizeof(buffer)&&readNumber(buffer,0,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1,number)&&DragonLibrary::contains(library.data,number,library.data.active)){if(mode==OFF||!brightness)wakeLighting();setPalette(number);mode=ZONE_VIEW;ok=true;}else if(action=="brightness"&&value.length()<sizeof(buffer)&&readNumber(buffer,0,100,number)){if(number&&mode==OFF)wakeLighting();setBrightness(number);ok=true;}else if(action=="toggle"){toggleLighting();ok=true;}else if(action=="effect"){const char* names[]={"zones","breathe","colorcycle","glitter","incendio","leviosa"};for(int i=0;i<6;i++)if(value==names[i]){if(mode==OFF||!brightness)wakeLighting();mode=Mode(i);ok=true;}}if(ok){rawGlowTest=0;sunrise.stop();rememberLighting();reply(200,"{}");}else server.send(400,"text/plain","Unknown dragon control.");});
  server.on("/api/forget-wifi",HTTP_POST,[]{
   if(!authorize())return;
   if(!openAP()){server.send(503,"text/plain","Could not open setup Wi-Fi. Saved settings were kept.");return;}

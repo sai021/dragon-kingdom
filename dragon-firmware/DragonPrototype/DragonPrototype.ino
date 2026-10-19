@@ -82,6 +82,7 @@ bool setupRequested=false;
 DragonConnection::StartupHold setupHold;
 uint8_t touchGain=100;
 uint8_t ambientGain=100;
+uint8_t rawGlowTest=0; // USB-only transient measurement; zero uses normal dimming.
 uint32_t lastLight=0,lastFade=0,lastUsbCheck=0,touchPresses=0;
 
 Preferences lightStore,diagnosticStore;
@@ -117,6 +118,7 @@ struct LightingState {Mode mode;uint8_t brightness,palette;RGB solid;};
 LightingState resumeState={ZONE_VIEW,100,0,{255,160,80}};
 
 void setPalette(uint8_t p) {
+ rawGlowTest=0;
  sunrise.stop();
  palette=DragonLibrary::selectable(library.data,p,library.data.active)?p:DEFAULT_PRESET;
  currentPreset=library.resolve(palette);
@@ -124,11 +126,12 @@ void setPalette(uint8_t p) {
 }
 
 void setBrightness(uint8_t value) {
+ rawGlowTest=0;
  sunrise.stop();
  brightness=value?min(100,((int(value)+5)/10)*10):0;
  if(value&&brightness==0)brightness=10;
 }
-void manualControl(){autoLight=false;ambientGain=100;}
+void manualControl(){rawGlowTest=0;autoLight=false;ambientGain=100;}
 void rememberLighting(){if(mode!=OFF&&brightness)resumeState={mode,brightness,palette,solidColor};}
 void wakeLighting(){
  mode=resumeState.mode;setPalette(resumeState.palette);solidColor=resumeState.solid;
@@ -255,6 +258,7 @@ void composeFrame(uint32_t now) {
  else capVisibleCurrent(frame,operatingTotal-runtimeReserve(operatingTotal));
  // Exactly one scaling per hierarchy level: session power -> ambient -> touch.
  if(!sunrise.active)for(auto& pixel:frame){
+  if(rawGlowTest){pixel=scaled(pixel,rawGlowTest,100);continue;}
   // Keep an awake, already power-limited pixel visible at the lowest gains.
   // Zero gains and intentionally black pixels remain black; output never
   // exceeds the frame that passed the session current cap above.
@@ -458,11 +462,13 @@ void printStatus() {
  unsigned customCount=0;for(const auto& c:library.data.customs)customCount+=c.used!=0;
  Serial.printf("library_ready=%u profile=%u profile_name=%s customs=%u generation=%lu\n",library.isReady(),library.data.active,library.data.profiles[library.data.active].name,customCount,(unsigned long)library.data.generation);
  Serial.printf("dragon=%s name=%s effects=%u presets=%u mode=%u estimate=%umA result=%s\n",currentPreset.id,currentPreset.name,currentPreset.effects,PRESET_COUNT,unsigned(mode),estimatedMa+runtimeReserve(operatingTotal),startupResult);
+ if(rawGlowTest){unsigned lit=0;for(auto pixel:frame)lit+=bool(pixel.r||pixel.g||pixel.b);Serial.printf("test_glow percent=%u lit_pixels=%u channel_sum=%lu\n",rawGlowTest,lit,(unsigned long)channelSum(frame));}
 }
 void printHelp() {
  Serial.println("Dragon: tap=next/wake, double tap=on/off, hold=brightness. Touch preserves automatic light adjustment.");
  Serial.println("sensors | auto on|off | light DARK BRIGHT (0..4095)");
  Serial.println("light calibrate COVERED UNCOVERED (stable readings; saved across restarts)");
+ Serial.println("testglow 1..10: transient raw percent after session cap; 0 ends test; no settings saved");
  Serial.println("mode zones|breathe|colorcycle|glitter|incendio|leviosa|solid|corners|chase|off");
  Serial.printf("brightness 0 or 10..100 (ten steps) | palette 0..%u | dragon ID | dragons | color R G B | power status | status | help\n",PRESET_COUNT-1);
 }
@@ -471,6 +477,10 @@ void handleCommand(char* line) {
  char* args[8];int n=0;char* ctx=nullptr;
  for(char* t=strtok_r(line," \t",&ctx);t;t=strtok_r(nullptr," \t",&ctx)){if(n==8){Serial.println("Too many arguments");return;}args[n++]=t;}
  if(!n)return;int a,b,c;bool ok=false;
+ if(n==2&&!strcmp(args[0],"testglow")&&readNumber(args[1],0,10,a)){
+  if(a&&(mode==OFF||!brightness))wakeLighting();sunrise.stop();rawGlowTest=a;
+  Serial.printf("test_glow percent=%u saved=0 session_max=%umA\n",rawGlowTest,operatingTotal);return;
+ }
  if(n==2&&!strcmp(args[0],"alarm")){
   if(!strcmp(args[1],"preview"))sunrise.startPreview(millis());
   else if(!strcmp(args[1],"stop"))sunrise.stop();
@@ -485,6 +495,7 @@ void handleCommand(char* line) {
  }
  if(n==1&&!strcmp(args[0],"sensors")){printSensors();return;}
  if(n==2&&!strcmp(args[0],"auto")&&(!strcmp(args[1],"on")||!strcmp(args[1],"off"))){
+  rawGlowTest=0;
   bool enable=!strcmp(args[1],"on");
   if(enable){if(mode==OFF||brightness==0)wakeLighting();rememberLighting();autoLight=true;}
   else manualControl();
@@ -515,6 +526,7 @@ void handleCommand(char* line) {
   const char* names[]={"zones","breathe","colorcycle","glitter","incendio","leviosa","solid","corners","chase","off"};
   for(int i=0;i<10;i++)if(!strcmp(args[1],names[i])){if(i==OFF)rememberLighting();mode=Mode(i);ok=true;}
  }
+ if(ok)rawGlowTest=0;
  Serial.println(ok?"OK":"Invalid command; type help");
 }
 void readSerial() {

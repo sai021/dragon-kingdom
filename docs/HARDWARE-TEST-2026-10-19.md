@@ -1,5 +1,10 @@
 # S3 physical test record — 19 October 2026
 
+**Acceptance remains open: home-Wi-Fi reconnection after reset is intermittent.**
+The latest installed image is 0.2.2, application SHA-256
+`ae257d57571cb5e37065ef440b6a7fd5ad4482a0cb78ecbb6279ab5ba22b8ff1`.
+The successful checks below must be read together with the failed restart trials.
+
 The user confirmed **laptop USB power only, external/main power disconnected**,
 with only an S3 available. ROM probing identified ESP32-S3 on the currently
 enumerated COM17. The 0x9000–0xdfff NVS region was backed up privately before
@@ -81,6 +86,38 @@ image at 10% manual glow, the user confirmed that covering the LDR kept the
 matrix lit and confirmed tap/double-tap operation. They saw no brightness
 change at that minimum; both dim levels can quantize to the retained minimal
 LED output. This confirms the floor, not calibrated optical brightness.
+
+The user then requested a stepped minimum-brightness test within the laptop USB
+ceiling. With automation off, normal 10% manual glow was clearly visible. A
+temporary serial `testglow` diagnostic was added to bypass both gain controls
+and the visibility floor after the session cap, without saving settings.
+At raw 10%, telemetry reached zero lit pixels/channel sum and the user confirmed
+the matrix was off. Lower raw percentages were not run because output was
+already zero. The comparison identifies the smallest retained nonzero LED
+level as a usable minimum for this USB-powered pattern; it is not a calibrated
+optical percentage or a minimum for a different supply/palette. The diagnostic
+was ended and normal 100% glow/automatic dimming restored.
+
+## Final restart failures and connection changes
+
+A later reset retained the temporary verification profile/creation in USB status,
+but HTTP did not reconnect within the test's 70-second window. A further recovery
+capture also failed to connect. Logged disconnect reasons included 4, 8 and 202;
+these are radio/association outcomes, not proof of the underlying electrical,
+router or firmware cause. USB status continued with the 400 mA estimated ceiling
+and no observed panic.
+
+The initial STA start in `begin()` was removed because `connect()` immediately
+stopped/restarted it. The next installation connected in 8.2 seconds, but the
+following reset did not connect within 90 seconds. A temporary Wi-Fi sleep-off
+diagnostic was accepted but did not establish a connection in its observation
+window. The existing 8.5 dBm TX limit was then moved before `WiFi.begin()` so it
+applies before association begins. That final installed image also failed its
+90-second home-network test. Neither change is claimed to solve the failure.
+
+The final image matches the paired release manifest's S3 application hash.
+Saved configuration remains present. Further network/radio and supply evidence
+is needed before closing the home-Wi-Fi acceptance gate.
 
 ## Remaining physical limits
 

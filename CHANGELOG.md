@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2-prototype — 19 October 2026
+
+- Added transient USB `testglow` measurements below the normal 10% control
+  minimum. The user's comparison confirmed raw 10% extinguishes the USB-limited
+  pattern while the retained minimal nonzero output is clearly visible.
+- Removed the redundant STA start/stop cycle before the first saved-network
+  connection. Later connection replacements still stop a pending station.
+- Updated the S3 hardware evidence, firmware bundles and developer instructions.
+
 ## 0.2.1-prototype — 19 October 2026
 
 - Live S3 testing found that saving/copying a custom dragon could leave the

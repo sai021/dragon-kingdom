@@ -27,6 +27,21 @@ int main(){
   }
  }
  operatingTotal=400;mode=SOLID;solidColor={0,0,0};composeFrame(100);assert(channelSum(frame)==0);
+ // Fine USB measurement uses raw scaling, bypassing the visibility floor and
+ // both user/ambient gains, without modifying profiles or raising power limits.
+ auto diagnosticWrites=storeWrites;solidColor={255,255,255};cmd("testglow 5");assert(rawGlowTest==5);
+ ambientGain=touchGain=10;
+ for(uint16_t limit:{300,400,500,800,1600,2400}){
+  operatingTotal=limit;rawGlowTest=0;ambientGain=touchGain=100;composeFrame(100);memcpy(base,frame,sizeof(frame));
+  ambientGain=touchGain=10;
+  for(uint8_t percent=1;percent<=10;percent++){
+   rawGlowTest=percent;composeFrame(100);
+   for(int i=0;i<64;i++){auto expected=scaled(base[i],percent,100);assert(!memcmp(&frame[i],&expected,sizeof(RGB)));}
+   assert(estimatedMa+runtimeReserve(limit)<=limit);
+  }
+ }
+ cmd("testglow 0");assert(rawGlowTest==0);cmd("testglow 4");cmd("brightness 10");assert(rawGlowTest==0);
+ assert(storeWrites==diagnosticWrites);
  operatingTotal=1600;
  for(int b=1;b<=100;b++){setBrightness(b);assert(brightness>=10&&brightness<=100&&brightness%10==0);}
  autoLight=false;setBrightness(50);touchGain=100;lastFade=lastLight=fakeTime=0;lightReads=0;
