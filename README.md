@@ -14,7 +14,9 @@ Updated devices use `Dragon-Kingdom-XXXXXX` for setup Wi-Fi and their `.local`
 name; update old bookmarks/setup cards. Saved collections and home Wi-Fi remain.
 **Open acceptance issue:** the current USB-powered S3 has intermittent home-Wi-Fi
 reconnection after reset. Some starts connect, while later attempts can fail
-authentication. See the [19 October hardware record](docs/HARDWARE-TEST-2026-10-19.md).
+authentication. The [0.2.3 readiness repair](docs/WIFI-READINESS-2026-10-19.md)
+corrects an unapplied transmit-power limit, but subsequent reset results remain
+mixed. See the [19 October hardware record](docs/HARDWARE-TEST-2026-10-19.md).
 The project remains a development prototype pending this and the physical gates below.
 The [19 October reliability repairs](docs/RELIABILITY-FIXES-2026-10-19.md) add
 saved-data safeguards, browser recovery and bounded HTTP handling. Those changes

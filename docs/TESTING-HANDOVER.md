@@ -3,7 +3,7 @@ Software and documentation follow-up - 19 October 2026
 Latest: [Dragon Kingdom release verification](KINGDOM-RELEASE-2026-10-19.md).
 The renamed S3/C3 pair supersedes the prepared images below. Setup Wi-Fi and
 mDNS change to `Dragon-Kingdom-XXXXXX`; saved data stays compatible. The S3 on
-COM17 was ROM-identified and the 0.2.2 image installed under confirmed
+COM17 was ROM-identified and the 0.2.3 image installed under confirmed
 USB-only power. See the [19 October physical record](HARDWARE-TEST-2026-10-19.md)
 for live API/UI/persistence tests, touch/LDR evidence and the two fixes found.
 The user confirmed tap/double-tap and that covered-LDR minimum glow stays lit.
@@ -14,7 +14,10 @@ and matching telemetry. Cold USB boot, live embedded-page workflows and three sa
 reset cycles also passed. Startup with touch held also passed: the user confirmed normal lighting and
 phone visibility of setup Wi-Fi; post-boot serial and HTTP confirmed AP active,
 home Wi-Fi connected and the retained USB ceiling.
-Repeated final reset tests exposed intermittent home-Wi-Fi reconnect failures.
+The [0.2.3 radio readiness repair](WIFI-READINESS-2026-10-19.md) verified the
+intended TX setting, but repeated S3 resets still exposed intermittent
+home-Wi-Fi reconnect failures. C3 physical evidence above is for 0.2.2; the
+updated C3 image is build-tested only.
 Do not treat the earlier successful reconnect as proof this is resolved.
 
 The [reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are built and saved as

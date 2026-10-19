@@ -1,7 +1,11 @@
 # Dragon Kingdom release verification — 19 October 2026
 
-`v0.2.2-prototype` consolidates the work since the original GitHub publication
-and the fixes/diagnostics from live S3 testing. It supersedes 0.2.0/0.2.1.
+`v0.2.3-prototype` consolidates the work since the original GitHub publication
+and the fixes/diagnostics from live S3 testing. It supersedes 0.2.0–0.2.2.
+The [Wi-Fi readiness repair](WIFI-READINESS-2026-10-19.md) waits for the station
+start event and checks the existing radio limit before association. Physical
+status confirmed the old image could report 20 dBm instead of the intended
+8.5 dBm. Correcting this setting did not eliminate every reconnect failure.
 **Physical acceptance remains open:** repeated S3 resets exposed intermittent
 home-Wi-Fi authentication/reconnection failures. Some starts work; this is not
 a final reliability sign-off.
@@ -45,18 +49,18 @@ Tests using native fakes and simulated HTTP are separate from device tests.
 
 | Target | Compiler application bytes | Upload image bytes | Static RAM bytes |
 | --- | ---: | ---: | ---: |
-| ESP32-S3 | 1,154,466 | 1,154,608 | 54,988 |
-| ESP32-C3 | 1,179,132 | 1,179,280 | 45,944 |
+| ESP32-S3 | 1,154,842 | 1,154,992 | 54,988 |
+| ESP32-C3 | 1,179,362 | 1,179,504 | 45,944 |
 
 Both upload images fit the actual 1,572,864-byte application partition.
 
 Source fingerprint, unchanged through the final paired builds:
-`d49d95e459b38c316db9ba64da96480e7f5b1dcd02e41cb8d9203e486f56db2d`.
+`4c20fe7d4d16b924a49b54e342d2961e48a941ce924a926b80609bcee3dc2496`.
 
 Application SHA-256:
 
-- S3: `ae257d57571cb5e37065ef440b6a7fd5ad4482a0cb78ecbb6279ab5ba22b8ff1`
-- C3: `84ae7b8df838da10ea595fe84d1ed395d1315b1ef7325ba425fe9d1d93c6e391`
+- S3: `ceaf3b1eddc8932e7fe1534dccc9764d9c2b78544d574aef5885f7cd9f914a98`
+- C3: `bb3c18307bf958fd6aa86aa771b3c7b2937a33193f21d351d83271e2f9858a80`
 
 Each board-specific release ZIP includes its application, bootloader, partition
 table, pinned `boot_app0.bin`, flashing instructions and a hash/offset manifest.
@@ -95,5 +99,9 @@ longer endurance and power-cut/NTP recovery are still outstanding.
 
 Raw local release evidence is in ignored
 `dragon-firmware/.tools/kingdom-release-20261019/`. Paired immutable flasher
-bundles are `20261019-kingdom-d49d95e459b3-s3` and
-`20261019-kingdom-d49d95e459b3-c3` under `.tools/batch-flash/`.
+bundles are `20261019-kingdom-4c20fe7d4d16-s3` and
+`20261019-kingdom-4c20fe7d4d16-c3` under `.tools/batch-flash/`.
+
+The current S3 image is 0.2.3; its radio-setting correction and mixed reset
+results are detailed in the linked readiness repair. The C3 physical results
+above apply to 0.2.2. The updated 0.2.3 C3 image is build-tested only.

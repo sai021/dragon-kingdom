@@ -34,10 +34,14 @@ void connect(const Credentials& credentials){
  // configuration; keep the setup AP and all saved credentials intact.
  WiFi.setAutoReconnect(false);
  WiFi.enableSTA(false);
- if(!WiFi.enableSTA(true)){connecting=false;message="Could not start home Wi-Fi. Try again.";retryAt=millis();return;}
+ // STA.begin(false) waits for the asynchronous START event in the pinned core.
+ // enableSTA(true) alone can return before setTxPower() is permitted.
+ if(!WiFi.STA.begin(false)){connecting=false;message="Could not start home Wi-Fi. Try again.";retryAt=millis();return;}
  WiFi.setHostname(deviceName.c_str());
  // Apply the tested radio limit before any association frames are sent.
- WiFi.setTxPower(wifi_power_t(Config::WIFI_TX_QUARTER_DBM));
+ if(!WiFi.setTxPower(wifi_power_t(Config::WIFI_TX_QUARTER_DBM))){
+  WiFi.enableSTA(false);connecting=false;message="Could not apply Wi-Fi power limit. Try again.";retryAt=millis();return;
+ }
  auto result=WiFi.begin(credentials.ssid,credentials.password);
  started=millis();connecting=result!=WL_CONNECT_FAILED;
  if(!connecting){message="Could not start home Wi-Fi. Try again.";retryAt=started;}
@@ -56,9 +60,10 @@ bool serialControl(char* line){
   Serial.printf("network_power_save changed=%u mode=%u\n",changed,unsigned(WiFi.getSleep()));return true;
  }
  if(action&&!strcmp(action,"status")){
-  Serial.printf("network_status connected=%u configured=%u access_point=%u ip=%s hostname=%s.local status=%u disconnect_reason=%u rssi=%d joining=%u join_saved=%u\n",
+  Serial.printf("network_status connected=%u configured=%u access_point=%u ip=%s hostname=%s.local status=%u disconnect_reason=%u rssi=%d joining=%u join_saved=%u tx_quarter_dbm=%d sta_started=%u\n",
    WiFi.status()==WL_CONNECTED,configured,ap,WiFi.localIP().toString().c_str(),deviceName.c_str(),
-   unsigned(WiFi.status()),unsigned(lastDisconnectReason),WiFi.RSSI(),connecting,lastJoinSaved);return true;
+   unsigned(WiFi.status()),unsigned(lastDisconnectReason),WiFi.RSSI(),connecting,lastJoinSaved,
+   int(WiFi.getTxPower()),WiFi.STA.started());return true;
  }
  if(action&&!strcmp(action,"scan")){
   int count=WiFi.scanComplete();
