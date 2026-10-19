@@ -8,7 +8,9 @@ embedded-page workflows passed, but repeated reset testing found intermittent
 home-Wi-Fi authentication/reconnection failures that remain unresolved.
 The user confirmed tap/double-tap and
 that minimum glow stays lit with the LDR covered. See the
-[19 October physical record](HARDWARE-TEST-2026-10-19.md); C3 was unavailable.
+[19 October physical record](HARDWARE-TEST-2026-10-19.md). A subsequently connected
+C3 on the carrier now has the published 0.2.2 image installed and passed USB
+startup/library/400 mA checks; gesture, LDR-response and network tests are ongoing.
 The dated evidence below describes earlier images.
 
 The [19 October reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are the

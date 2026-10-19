@@ -155,3 +155,27 @@ remain prototypes. No simultaneous USB/external-power test was performed.
 
 Raw captures, pre-update NVS, endpoints, logs and screenshots are kept under
 ignored `dragon-firmware/.tools/kingdom-release-20261019/`. Do not publish them.
+
+
+## C3 carrier follow-up
+
+Later on 19 October, the user connected a C3 on the carrier and confirmed the
+8-pin orientation (5V, GND, 3V3, GPIO4, GPIO3, GPIO2, GPIO1, GPIO0). Testing
+continues under the previously confirmed laptop-USB-only power arrangement.
+ROM detection identified ESP32-C3 on COM61; flash identification reported 4 MB.
+The 20,480-byte NVS partition was backed up privately. A larger full-flash read
+failed with a serial-stream error, and an application read timed out; neither
+is claimed as a complete backup. The saved settings backup did succeed.
+
+The checksum-verified published v0.2.2 C3 bundle was installed without a
+whole-chip erase. The uploader verified the written flash hash. Startup then
+passed with increasing uptime, a ready library, protected All, zero customs,
+Blue selected, and the 400 mA computer-USB ceiling. The device reports the new
+Dragon Kingdom hostname, an open setup AP and no saved home-network credentials.
+Initial LDR readings were approximately 1,400–1,700; touch was initially idle.
+These readings establish sensor input, not yet a cover/uncover or touch pass.
+Visual lighting, touch gestures, LDR response, Wi-Fi and cold-boot strapping
+checks are pending in this follow-up. The earlier S3 Wi-Fi failure remains open.
+
+C3 raw logs and saved settings are in ignored
+`dragon-firmware/.tools/c3-hardware-20261019/`.

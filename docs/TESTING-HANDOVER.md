@@ -7,7 +7,9 @@ COM17 was ROM-identified and the 0.2.2 image installed under confirmed
 USB-only power. See the [19 October physical record](HARDWARE-TEST-2026-10-19.md)
 for live API/UI/persistence tests, touch/LDR evidence and the two fixes found.
 The user confirmed tap/double-tap and that covered-LDR minimum glow stays lit.
-C3 remains build-tested only; no C3 hardware was available.
+A C3 was subsequently connected on the carrier (COM61), ROM-identified and
+flashed with the published 0.2.2 C3 image. USB startup/library/400 mA checks passed;
+visual, gesture, LDR-response, Wi-Fi and cold-boot strapping checks are ongoing.
 Repeated final reset tests exposed intermittent home-Wi-Fi reconnect failures.
 Do not treat the earlier successful reconnect as proof this is resolved.
 
