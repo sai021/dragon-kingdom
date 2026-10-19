@@ -11,7 +11,9 @@ A C3 was subsequently connected on the carrier (COM61), ROM-identified and
 flashed with the published 0.2.2 C3 image. USB startup/library/400 mA checks passed;
 visible lighting, gestures and LDR response also passed with user confirmation
 and matching telemetry. Cold USB boot, live embedded-page workflows and three saved-Wi-Fi/HTTP
-reset cycles also passed. Startup with touch held remains pending.
+reset cycles also passed. Startup with touch held also passed: the user confirmed normal lighting and
+phone visibility of setup Wi-Fi; post-boot serial and HTTP confirmed AP active,
+home Wi-Fi connected and the retained USB ceiling.
 Repeated final reset tests exposed intermittent home-Wi-Fi reconnect failures.
 Do not treat the earlier successful reconnect as proof this is resolved.
 

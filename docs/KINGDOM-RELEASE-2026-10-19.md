@@ -81,14 +81,16 @@ orientation. Its published 0.2.2 image is installed with flash hash verification
 and passed USB startup/library/400 mA checks. User-confirmed visible lighting,
 tap, double-tap, hold brightness and LDR response agree with captured telemetry.
 Cold USB boot, live embedded-page workflows and three saved-Wi-Fi/HTTP
-reset cycles also passed. Startup with touch held remains pending.
+reset cycles also passed. Startup with touch held also passed: the user confirmed normal lighting and
+phone visibility of setup Wi-Fi; post-boot serial and HTTP confirmed AP active,
+home Wi-Fi connected and the retained USB ceiling.
 The final image also includes the transient `testglow` measurement command,
 avoids the redundant first STA start/stop, and applies the existing 8.5 dBm
 limit before association starts. These connection-path changes did not resolve
 all repeated-reset failures; the hardware record retains the failed trials.
 
 External-only supply/current/thermal tests require laptop USB disconnected.
-Final prints, photographs and Gerbers, optical fit, C3 startup with touch held,
+Final prints, photographs and Gerbers, optical fit,
 longer endurance and power-cut/NTP recovery are still outstanding.
 
 Raw local release evidence is in ignored

@@ -209,3 +209,23 @@ the loader reset. The serial observations retained the 400 mA USB ceiling.
 These three C3 trials passed; they do not resolve or supersede the S3 failures.
 Cold startup with the touch pad held (GPIO2 strapping/setup gesture) remains
 the next physical check.
+
+
+The user completed the final C3 cold-start test while holding touch for about
+five seconds: normal lighting and phone visibility of `Dragon-Kingdom-7c263d`
+were confirmed. The 120-second recorder had completed before this cycle, so it
+contains the preceding AP-off runtime, not the held-boot transition. A fresh
+post-boot capture at uptime 59–63 seconds independently confirmed AP active,
+home Wi-Fi connected, ready All library with zero customs, Blue, normal 100%
+glow, automatic light adjustment, disabled alarm, a ready clock and the 400 mA
+USB ceiling. The network's last disconnect reason was 202 despite the current
+connected state; no transition timing or cause is inferred from that field.
+Authenticated HTTP state/library/alarm reads then passed. This closes the
+normal/held cold-boot and setup-AP visibility checks on this tested C3 carrier.
+It does not establish setup-AP browser access or physical phone browser coverage.
+
+The C3 remains on saved home Wi-Fi with its setup AP open following the held
+startup. Test profiles/customs have been removed. No firmware source or binary
+was changed during the C3 physical follow-up; both published v0.2.2 board
+archives and checksums remain the same. The separate S3 reconnect issue and
+external-supply/final-design/endurance gates remain open.

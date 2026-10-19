@@ -44,8 +44,10 @@ LDR GPIO0/ADC1_CH0 and voltage GPIO1/ADC1_CH1; GPIO4 is unused. Power pins are
 5V, GND and 3V3. C3 GPIO2 is a strapping pin: cold-start/setup-gesture behaviour
 with the TTP223 must be checked physically. On 19 October the user-confirmed
 carrier pin orientation, normal cold USB startup, visible lighting, touch, LDR
-response and 400 mA USB limiting passed; startup with touch held is still
-pending. This evidence applies to the tested prototype carrier, not final PCB
+response and 400 mA USB limiting passed. Startup with touch held also passed:
+the user saw normal lighting and setup Wi-Fi on their phone, and post-boot
+serial/HTTP confirmed the AP and home connection. This evidence applies to
+the tested prototype carrier, not final PCB
 fit or external-supply validation. See [physical results](../docs/HARDWARE-TEST-2026-10-19.md).
 
 | ESP32-S3 pin | Function |
