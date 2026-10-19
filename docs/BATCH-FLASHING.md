@@ -1,5 +1,11 @@
 # Flashing a batch of Dragon Kingdom boards
 
+On the completed enclosure, the bottom USB-C port is power only. Flashing is a
+maker/service operation requiring access to the internal ESP32 USB connector,
+which is not accessible to normal users. Disconnect the external product supply
+before connecting laptop USB; never connect both powered inputs together.
+
+
 The [19 October repair checkpoint](RELIABILITY-FIXES-2026-10-19.md) records
 the current verified paired S3/C3 bundles, checksums and remaining live tests.
 The earlier [18 October checkpoint](RELEASE-CHECKPOINT-2026-10-18.md) is historical.

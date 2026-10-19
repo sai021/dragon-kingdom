@@ -28,7 +28,7 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
     assert(Number(data.get('count'))>=2&&Number(data.get('count'))<=4);clockSyncs++;alarm.clockReady=true;return json(alarm);
    }
    if(url.pathname==='/api/alarm'){
-    if(request.method()==='GET'&&alarmGetFailures>0){alarmGetFailures--;return route.fulfill({status:503,body:'Temporary alarm failure'})}
+    if(request.method()==='GET'&&alarmGetFailures!==0){if(alarmGetFailures>0)alarmGetFailures--;return route.fulfill({status:503,body:'Temporary alarm failure'})}
     if(request.method()==='POST'){
      if(data.get('duration')==='13')return route.fulfill({status:500,body:'Alarm could not be saved. Try again.'});
      Object.assign(alarm,{enabled:data.get('enabled')==='1',minute:Number(data.get('minute')),duration:Number(data.get('duration'))});
@@ -85,7 +85,32 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   await page.click('#sleep');await page.getByRole('button',{name:'Wake my dragon',exact:true}).waitFor();
   await page.click('#sleep');await page.getByRole('button',{name:'Put dragon to sleep',exact:true}).waitFor();
   await page.click('#profile-settings summary');assert.equal(await page.locator('#delete-profile').isVisible(),false);await page.fill('#new-profile-name','Test');await page.click('#new-profile');await page.waitForFunction(()=>document.querySelector('#feedback').textContent==='Your new profile is ready.');assert.equal(await page.locator('#dragon').isDisabled(),true);
+  // Filtering must hide rendered rows and retain hidden selections.
+  await page.fill('#favorite-search','blue');
+  assert.equal(await page.locator('#favorites .check:visible').count(),1);
+  await page.check('#favorite-0');await page.fill('#favorite-search','sundew');
+  assert.equal(await page.locator('#favorites .check:visible').count(),1);
+  assert.equal(await page.locator('#favorite-0').isVisible(),false);
+  assert.equal(await page.locator('#favorite-0').isChecked(),true);
+  await page.fill('#favorite-search','no matching dragon');
+  assert.equal(await page.locator('#favorites .check:visible').count(),0);
+  assert.equal(await page.locator('#favorite-search-status').textContent(),'No dragons match your search.');
+  await page.fill('#favorite-search','');await page.uncheck('#favorite-0');
+  assert.equal(await page.locator('#favorites .check:visible').count(),2);
   await page.click('#create-dragon');await page.locator('#editor:not([hidden])').waitFor();
+  await page.waitForFunction(()=>draft!==null&&!commandBusy);
+  assert.equal(await page.locator('[data-view]').count(),0);
+  // Every illustrated part is selectable at phone scale; background taps do
+  // not select invisible LED cells. Selection preserves original markings.
+  const originalPixels=await page.evaluate(()=>[...draft.originalPixels]);
+  for(const zone of [1,2,3,4,5,6,7,8,9]){
+   await page.locator('#preview').evaluate((canvas,z)=>{const b=canvas.getBoundingClientRect(),[x,y]=zoneCenters[z];canvas.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:b.left+x*b.width/320,clientY:b.top+y*b.height/320}))},zone);
+   assert.equal(await page.inputValue('#region'),String(zone));
+  }
+  await page.locator('#preview').evaluate(canvas=>{const b=canvas.getBoundingClientRect();canvas.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:b.left+1,clientY:b.top+1}))});
+  assert.equal(await page.inputValue('#region'),'9');
+  assert.equal(await page.evaluate(()=>draft.colorMask),0);
+  assert.deepEqual(await page.evaluate(()=>draft.originalPixels),originalPixels);
   await page.fill('#custom-name','My Spark');await page.selectOption('#region','5');
   await page.locator('#region-color').evaluate(input=>{input.value='#ff6600';input.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.selectOption('#region-effect','3');
@@ -96,6 +121,7 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   // must follow the newly saved selection, without waiting for a polling tick.
   await page.evaluate(()=>clearInterval(pollTimer));
   assert.equal(await page.inputValue('#dragon'),'81');
+  assert.equal(await page.locator('#create-dragon').textContent(),'Edit or copy custom dragon');
   await page.click('#create-dragon');await page.waitForFunction(()=>!commandBusy&&draft?.id===81);
   await page.fill('#custom-name','My Spark copy');await page.click('#copy-custom');await page.waitForFunction(()=>!commandBusy&&draft===null);
   assert.equal(await page.inputValue('#dragon'),'82');
@@ -135,14 +161,15 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   await page.reload();await page.waitForFunction(()=>collection?.active===2&&document.querySelector('#brightness').options.length===11);
   assert.equal(await page.locator('#dragon').isDisabled(),true);assert.equal(await page.locator('#brightness').isDisabled(),true);
   // A transient initial alarm failure retries; clock sync can also safely hydrate the form.
-  Object.assign(alarm,{enabled:true,minute:365,duration:35});alarmGetFailures=2;
+  Object.assign(alarm,{enabled:true,minute:365,duration:35});alarmGetFailures=-1;
   await page.reload();await page.waitForFunction(()=>collection!==null&&!loading&&document.querySelector('#alarm-status').textContent.startsWith('Could not load'));
   assert.equal(await page.locator('#save-alarm').isDisabled(),true);
-  await page.evaluate(()=>refresh());await page.waitForFunction(()=>alarmFieldsLoaded);
+  alarmGetFailures=0;await page.evaluate(()=>refresh());await page.waitForFunction(()=>alarmFieldsLoaded);
   assert.equal(await page.inputValue('#alarm-time'),'06:05');assert.equal(await page.inputValue('#alarm-duration'),'35');assert.equal(await page.isChecked('#alarm-enabled'),true);
-  alarmGetFailures=2;await page.reload();await page.waitForFunction(()=>collection!==null&&!loading&&document.querySelector('#alarm-status').textContent.startsWith('Could not load'));
+  alarmGetFailures=-1;await page.reload();await page.waitForFunction(()=>collection!==null&&!loading&&document.querySelector('#alarm-status').textContent.startsWith('Could not load'));
   await page.click('#alarm summary');await page.click('#sync-alarm');await page.waitForFunction(()=>!commandBusy&&alarmFieldsLoaded);
   assert.equal(await page.inputValue('#alarm-time'),'06:05');assert.equal(await page.inputValue('#alarm-duration'),'35');assert.equal(await page.isChecked('#alarm-enabled'),true);
+  alarmGetFailures=0;
   // A pending play request visibly disables conflicting controls; a synthetic
   // onchange is also rejected without leaving a misleading selected profile.
   state.profile=0;generation++;await page.reload();await page.waitForFunction(()=>collection?.active===0&&alarmFieldsLoaded);

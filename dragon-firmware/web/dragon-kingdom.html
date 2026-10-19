@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#19182d"><title>Dragon Kingdom</title>
 <style>
-*{box-sizing:border-box}body{font:18px system-ui,sans-serif;background:#19182d;color:#fff9ef;max-width:560px;margin:auto;padding:22px 18px 40px}h1{font-size:38px;color:#ffda8e;margin:8px 0}h2{font-size:24px;margin:0 0 16px}p{line-height:1.5}.eyebrow{color:#b6b4d2;font-size:14px;letter-spacing:2px;margin:0}section,details{background:#292740;padding:20px;border-radius:22px;margin:20px 0}button,input,select{font:inherit;min-height:52px;padding:13px;border-radius:14px;border:0;width:100%}input,select{background:#fff9ef;color:#19182d;margin:7px 0 16px}button{background:#c2edf0;color:#19182d;cursor:pointer;font-weight:650}button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffda8e;outline-offset:3px}.magic{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 16px}.magic button{min-height:88px}.magic span{display:block;font-size:28px;margin-bottom:4px}.fire{background:#ffd0a9}.glitter{background:#e1ceff}.magic button[aria-pressed=true]{box-shadow:inset 0 0 0 3px #ffda8e}.secondary{background:#45415e;color:#fff9ef;margin:12px 0}label{display:block}small{display:block;color:#cecbdf;font-size:14px;line-height:1.6}.status{font-size:15px;color:#d4f3ed;min-height:44px}.notice{background:#36314b;padding:14px;border-radius:14px;font-size:16px}summary{cursor:pointer;font-weight:650;min-height:32px}.parent{padding-top:20px}a{color:#c2edf0;overflow-wrap:anywhere}.check{display:flex;align-items:center;gap:10px;margin-bottom:18px}.check input{width:22px;min-height:22px;margin:0}.check label{font-size:15px}
+*{box-sizing:border-box}[hidden]{display:none!important}body{font:18px system-ui,sans-serif;background:#19182d;color:#fff9ef;max-width:560px;margin:auto;padding:22px 18px 40px}h1{font-size:38px;color:#ffda8e;margin:8px 0}h2{font-size:24px;margin:0 0 16px}p{line-height:1.5}.eyebrow{color:#ffda8e;font-size:13px;font-weight:650;letter-spacing:2.2px;margin:0;opacity:.92}section,details{background:#292740;padding:20px;border-radius:22px;margin:20px 0}button,input,select{font:inherit;min-height:52px;padding:13px;border-radius:14px;border:0;width:100%}input,select{background:#fff9ef;color:#19182d;margin:7px 0 16px}button{background:#c2edf0;color:#19182d;cursor:pointer;font-weight:650}button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffda8e;outline-offset:3px}.magic{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 16px}.magic button{min-height:88px}.magic span{display:block;font-size:28px;margin-bottom:4px}.fire{background:#ffd0a9}.glitter{background:#e1ceff}.magic button[aria-pressed=true]{box-shadow:inset 0 0 0 3px #ffda8e}.secondary{background:#45415e;color:#fff9ef;margin:12px 0}label{display:block}small{display:block;color:#cecbdf;font-size:14px;line-height:1.6}.status{font-size:15px;color:#d4f3ed;min-height:44px}.notice{background:#36314b;padding:14px;border-radius:14px;font-size:16px}summary{cursor:pointer;font-weight:650;min-height:32px}.parent{padding-top:20px}a{color:#c2edf0;overflow-wrap:anywhere}.check{display:flex;align-items:center;gap:10px;margin-bottom:18px}.check input{width:22px;min-height:22px;margin:0}.check label{font-size:15px}hr{border:0;border-top:1px solid #45415e;margin:22px 0}
 </style></head><body>
-<p class="eyebrow">YOUR LITTLE WORLD OF MAGIC</p><h1>Dragon Kingdom</h1>
-<p id="status" class="status" role="status" aria-live="polite">Finding your dragon…</p>
+<p class="eyebrow">THE CARE &amp; TRAINING OF YOUR WALL DRAGON</p><h1>Dragon Kingdom</h1>
+<p id="status" class="status" role="status" aria-live="polite">Waking your dragon…</p>
 <p id="home-address" class="notice" role="status" aria-live="polite" hidden></p>
 <p id="feedback" class="notice" role="status" aria-live="polite" hidden></p>
 <p id="busy-status" class="status" role="status" hidden>Please wait for your dragon…</p>
@@ -17,9 +17,9 @@
 <button data-effect="colorcycle" aria-pressed="false"><span aria-hidden="true">🌈</span>Rainbow</button></div>
 <button id="return" class="secondary">Back to my dragon</button><button id="sleep">Put dragon to sleep</button>
 <label for="brightness" style="margin-top:20px">Glow</label><select id="brightness" disabled></select>
-<small>Your dragon adjusts its glow to the room and stays lit in daylight. Use Sleep to turn it off.</small><button id="create-dragon" class="secondary">Make a dragon</button></section>
-<section id="editor" hidden><h2>Create your dragon</h2><small>Tap a part in the picture or choose it below. The picture shows the real 64 lights. Save to see it on your dragon.</small>
-<canvas id="preview" width="320" height="320" style="width:100%;max-width:320px;display:block;margin:16px auto;touch-action:manipulation" aria-label="Eight by eight dragon colour preview"></canvas>
+<small>Your dragon gently adjusts its glow to the room. Your Glow setting and available power still apply. Use Sleep to turn it off.</small><button id="create-dragon" class="secondary">Make a dragon</button></section>
+<section id="editor" hidden><h2>Make or edit your dragon</h2><small>Tap a body part on the dragon, or choose Dragon part below. Pick its colour and magic, then save to see it on your wall. The picture is a colour guide.</small>
+<canvas id="preview" width="320" height="320" style="width:100%;max-width:320px;display:block;margin:14px auto 10px;border-radius:16px;touch-action:manipulation" role="img" aria-label="Dragon colour preview. Tap a body part or use Dragon part below."></canvas>
 <label for="starting-dragon">Start from</label><select id="starting-dragon"></select><label for="custom-name">Dragon name</label><input id="custom-name" maxlength="32">
 <label for="region">Dragon part</label><select id="region"></select>
 <label for="region-color">Colour</label><input id="region-color" type="color" style="padding:5px">
@@ -27,30 +27,30 @@
 <label for="region-effect">Magic on this part</label><select id="region-effect"><option value="keep">Existing magic</option><option value="none">Still</option><option value="0">Rainbow</option><option value="1">Breathe</option><option value="2">Shimmer</option><option value="3">Glitter</option></select>
 <button id="save-custom">Save my dragon</button><button id="copy-custom" class="secondary">Save a new copy</button><button id="cancel-custom" class="secondary">Cancel</button><button id="delete-custom" class="secondary" hidden>Delete this custom dragon</button>
 </section>
-<details id="profile-settings"><summary>My favourites &amp; starting glow</summary><div class="parent"><label for="profile-name">Profile name</label><input id="profile-name" maxlength="32"><label for="profile-glow">Starting glow</label><select id="profile-glow"></select><p id="favorites-help">Choose up to 12 favourites. Tapping your dragon cycles through them in the order you choose. The first is your starting dragon. Leave this empty to cycle through the whole collection.</p><p id="favorite-order" class="status"></p><div id="favorites" style="max-height:280px;overflow:auto"></div><button id="save-profile">Save profile</button><button id="delete-profile" class="secondary" hidden>Delete this profile</button><hr><label for="new-profile-name">New profile name</label><input id="new-profile-name" maxlength="32"><button id="new-profile">Add profile</button></div></details>
+<details id="profile-settings"><summary>My favourites &amp; starting glow</summary><div class="parent"><label for="profile-name">Profile name</label><input id="profile-name" maxlength="32"><label for="profile-glow">Starting glow</label><select id="profile-glow"></select><p id="favorites-help">Choose up to 12 favourites. Patting your dragon cycles through them in the order you choose. The first greets you at startup.</p><p id="favorite-order" class="status"></p><input id="favorite-search" type="search" placeholder="Search dragons by name…" aria-label="Search dragons by name" hidden><small id="favorite-search-status" role="status" aria-live="polite" hidden></small><div id="favorites" style="max-height:280px;overflow:auto"></div><button id="save-profile">Save profile</button><button id="delete-profile" class="secondary" hidden>Delete this profile</button><hr><label for="new-profile-name">New profile name</label><input id="new-profile-name" maxlength="32"><button id="new-profile">Add profile</button></div></details>
 <details id="alarm"><summary>Sunrise alarm</summary><div class="parent">
-<p>Wake up with your dragon. Its wings slowly glow from deep orange to warm sunrise light.</p>
+<p>Rooster duty (without the crowing). Your dragon's wings slowly warm the wall from deep ember-orange to morning gold.</p>
 <form id="alarm-form"><div class="check"><input id="alarm-enabled" type="checkbox"><label for="alarm-enabled">Wake me every day</label></div>
 <label for="alarm-time">Wake-up time</label><input id="alarm-time" type="time" value="07:00" required>
 <label for="alarm-duration">Sunrise length (minutes)</label><input id="alarm-duration" type="number" min="1" max="120" step="1" value="20" required>
-<small>The sunrise starts this many minutes before your wake-up time. It works while the dragon is asleep and stays bright for 30 minutes afterwards, then returns to your previous lighting.</small>
+<small>The sunrise starts this many minutes before your wake-up time. It works while the dragon is asleep and holds its morning glow for 30 minutes afterwards, then returns to your previous lighting.</small>
 <button id="save-alarm" style="margin-top:16px" disabled>Save alarm</button></form>
 <p id="alarm-status" class="status" role="status" aria-live="polite">Loading alarm…</p>
 <button id="preview-alarm" class="secondary">Try a 30-second sunrise</button><button id="stop-alarm" class="secondary" hidden>Stop sunrise</button>
 <button id="sync-alarm" class="secondary">Set clock from my phone</button>
-<small>Keep the dragon powered for its alarm. Saving uses your phone's time and daylight-saving rules. After a power cut, it needs internet time or this page opened again. A touch or play control stops the current sunrise.</small>
+<small>Keep your dragon powered for its alarm. Saving borrows your phone's time and daylight-saving rules. After a power cut, it needs internet time or this page opened again. A pat or play button stops the current sunrise.</small>
 </div></details>
 <details id="parents"><summary>For grown-ups · Wi-Fi &amp; help</summary><div class="parent">
-<h2>Connect to home Wi-Fi</h2><p>Internet is optional. You can play while connected directly to your dragon.</p>
+<h2>Teach your dragon home Wi-Fi</h2><p>Internet is optional. You can always play by touch or while connected directly to your dragon.</p>
 <button id="scan" type="button">Find my Wi-Fi</button><p id="scan-status" class="status" role="status"></p>
 <form id="wifi"><label for="ssid">Home Wi-Fi name</label><input id="ssid" name="ssid" list="networks" maxlength="32" required autocomplete="off" autocapitalize="none" spellcheck="false"><datalist id="networks"></datalist>
 <label for="wifi-password">Wi-Fi password</label><input id="wifi-password" name="password" type="password" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false">
 <div class="check"><input id="show-password" type="checkbox"><label for="show-password">Show password</label></div>
 <button id="connect">Connect my dragon</button></form>
 <small>Choose a 2.4 GHz network. If your Wi-Fi name doesn't appear, type it yourself. Leave the password blank only for an open network.</small>
-<h2 style="margin-top:26px">Need to reconnect?</h2>
-<small>Hold the dragon's touch pad while plugging it in. Keep holding through the blue startup pulses, then release when you see purple. Join the dragon network using your setup card and open <a href="http://192.168.4.1/">192.168.4.1</a>.<br><br>If your phone says the dragon network has no internet, choose to stay connected.</small>
-<button id="forget" class="secondary">Forget home Wi-Fi</button><small>This keeps your dragon's setup-network password.</small>
+<h2 style="margin-top:26px">Open setup Wi-Fi again</h2>
+<small>Hold the touch button on the right side while connecting the bottom USB-C power port. Keep holding through the five blue eye-blinks, then release when its scales turn purple. Join the dragon network using your setup card and open <a href="http://192.168.4.1/">192.168.4.1</a>.<br><br>If your phone says the dragon network has no internet, choose to stay connected.</small>
+<button id="forget" class="secondary">Forget home Wi-Fi</button><small>This keeps your creations and your dragon's setup-network password (dragon123).</small>
 </div></details>
 <script>
 const $=selector=>document.querySelector(selector),effects=['zones','breathe','colorcycle','glitter','incendio','leviosa'];
@@ -110,6 +110,7 @@ function render(state){
  if(document.activeElement!==$('#dragon')&&Array.from($('#dragon').options).some(option=>option.value===String(state.dragon)))$('#dragon').value=state.dragon;if(document.activeElement!==$('#brightness'))$('#brightness').value=state.brightness;
  const asleep=state.mode===9||state.brightness===0;$('#sleep').textContent=asleep?'Wake my dragon':'Put dragon to sleep';
  for(const button of document.querySelectorAll('[data-effect]'))button.setAttribute('aria-pressed',String(!asleep&&effects[state.mode]===button.dataset.effect));
+ if(typeof updateCreateButtonLabel==='function')updateCreateButtonLabel();
  updateControls();
  if(state.message.startsWith('Could not')||state.message.includes('could not be saved'))feedback(state.message);
  if(state.connected){const hostname='http://'+state.hostname+'.local/',ip='http://'+state.ip+'/';try{sessionStorage.setItem('dragon-home',JSON.stringify({hostname,ip}))}catch(e){}showHomeAddress({hostname,ip})}

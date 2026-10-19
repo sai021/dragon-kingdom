@@ -1,5 +1,10 @@
 # Project checkpoint — 19 October 2026
 
+Latest: [keeper edition 0.2.4](KEEPER-EDITION-2026-10-19.md), with a dragon-only
+editor, fixed favourites search, manual edition 0.6 and user-confirmed enclosure
+layout. Both firmware targets are rebuilt; the updated C3 image is installed
+and its embedded web workflows checked. The 0.2.3 physical history follows.
+
 The latest [Dragon Kingdom release](KINGDOM-RELEASE-2026-10-19.md) includes the
 renamed interface/assets/manual, all accumulated improvements and separate
 checksum-verified S3/C3 firmware downloads. Both published 0.2.3 images are now
@@ -33,7 +38,7 @@ no board was flashed during the repairs. The intended product has one child,
 with optional favourite collections.
 
 Documentation was updated after those repairs. The [user manual](USER-MANUAL.md)
-and [printable PDF](../output/pdf/dragon-kingdom-user-manual.pdf) are edition 0.5,
+and [printable PDF](../output/pdf/dragon-kingdom-user-manual.pdf) are edition 0.6 (keeper edition),
 19 October 2026, covering busy controls, alarm recovery and interrupted saves.
 The software images and earlier physical evidence retain their recorded hashes.
 

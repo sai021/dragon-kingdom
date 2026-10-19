@@ -3,10 +3,10 @@
 const char page[] PROGMEM=R"DRAGONWEB(<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#19182d"><title>Dragon Kingdom</title>
 <style>
-*{box-sizing:border-box}body{font:18px system-ui,sans-serif;background:#19182d;color:#fff9ef;max-width:560px;margin:auto;padding:22px 18px 40px}h1{font-size:38px;color:#ffda8e;margin:8px 0}h2{font-size:24px;margin:0 0 16px}p{line-height:1.5}.eyebrow{color:#b6b4d2;font-size:14px;letter-spacing:2px;margin:0}section,details{background:#292740;padding:20px;border-radius:22px;margin:20px 0}button,input,select{font:inherit;min-height:52px;padding:13px;border-radius:14px;border:0;width:100%}input,select{background:#fff9ef;color:#19182d;margin:7px 0 16px}button{background:#c2edf0;color:#19182d;cursor:pointer;font-weight:650}button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffda8e;outline-offset:3px}.magic{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 16px}.magic button{min-height:88px}.magic span{display:block;font-size:28px;margin-bottom:4px}.fire{background:#ffd0a9}.glitter{background:#e1ceff}.magic button[aria-pressed=true]{box-shadow:inset 0 0 0 3px #ffda8e}.secondary{background:#45415e;color:#fff9ef;margin:12px 0}label{display:block}small{display:block;color:#cecbdf;font-size:14px;line-height:1.6}.status{font-size:15px;color:#d4f3ed;min-height:44px}.notice{background:#36314b;padding:14px;border-radius:14px;font-size:16px}summary{cursor:pointer;font-weight:650;min-height:32px}.parent{padding-top:20px}a{color:#c2edf0;overflow-wrap:anywhere}.check{display:flex;align-items:center;gap:10px;margin-bottom:18px}.check input{width:22px;min-height:22px;margin:0}.check label{font-size:15px}
+*{box-sizing:border-box}[hidden]{display:none!important}body{font:18px system-ui,sans-serif;background:#19182d;color:#fff9ef;max-width:560px;margin:auto;padding:22px 18px 40px}h1{font-size:38px;color:#ffda8e;margin:8px 0}h2{font-size:24px;margin:0 0 16px}p{line-height:1.5}.eyebrow{color:#ffda8e;font-size:13px;font-weight:650;letter-spacing:2.2px;margin:0;opacity:.92}section,details{background:#292740;padding:20px;border-radius:22px;margin:20px 0}button,input,select{font:inherit;min-height:52px;padding:13px;border-radius:14px;border:0;width:100%}input,select{background:#fff9ef;color:#19182d;margin:7px 0 16px}button{background:#c2edf0;color:#19182d;cursor:pointer;font-weight:650}button:disabled{opacity:.55;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #ffda8e;outline-offset:3px}.magic{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 16px}.magic button{min-height:88px}.magic span{display:block;font-size:28px;margin-bottom:4px}.fire{background:#ffd0a9}.glitter{background:#e1ceff}.magic button[aria-pressed=true]{box-shadow:inset 0 0 0 3px #ffda8e}.secondary{background:#45415e;color:#fff9ef;margin:12px 0}label{display:block}small{display:block;color:#cecbdf;font-size:14px;line-height:1.6}.status{font-size:15px;color:#d4f3ed;min-height:44px}.notice{background:#36314b;padding:14px;border-radius:14px;font-size:16px}summary{cursor:pointer;font-weight:650;min-height:32px}.parent{padding-top:20px}a{color:#c2edf0;overflow-wrap:anywhere}.check{display:flex;align-items:center;gap:10px;margin-bottom:18px}.check input{width:22px;min-height:22px;margin:0}.check label{font-size:15px}hr{border:0;border-top:1px solid #45415e;margin:22px 0}
 </style></head><body>
-<p class="eyebrow">YOUR LITTLE WORLD OF MAGIC</p><h1>Dragon Kingdom</h1>
-<p id="status" class="status" role="status" aria-live="polite">Finding your dragon…</p>
+<p class="eyebrow">THE CARE &amp; TRAINING OF YOUR WALL DRAGON</p><h1>Dragon Kingdom</h1>
+<p id="status" class="status" role="status" aria-live="polite">Waking your dragon…</p>
 <p id="home-address" class="notice" role="status" aria-live="polite" hidden></p>
 <p id="feedback" class="notice" role="status" aria-live="polite" hidden></p>
 <p id="busy-status" class="status" role="status" hidden>Please wait for your dragon…</p>
@@ -19,9 +19,9 @@ const char page[] PROGMEM=R"DRAGONWEB(<!doctype html>
 <button data-effect="colorcycle" aria-pressed="false"><span aria-hidden="true">🌈</span>Rainbow</button></div>
 <button id="return" class="secondary">Back to my dragon</button><button id="sleep">Put dragon to sleep</button>
 <label for="brightness" style="margin-top:20px">Glow</label><select id="brightness" disabled></select>
-<small>Your dragon adjusts its glow to the room and stays lit in daylight. Use Sleep to turn it off.</small><button id="create-dragon" class="secondary">Make a dragon</button></section>
-<section id="editor" hidden><h2>Create your dragon</h2><small>Tap a part in the picture or choose it below. The picture shows the real 64 lights. Save to see it on your dragon.</small>
-<canvas id="preview" width="320" height="320" style="width:100%;max-width:320px;display:block;margin:16px auto;touch-action:manipulation" aria-label="Eight by eight dragon colour preview"></canvas>
+<small>Your dragon gently adjusts its glow to the room. Your Glow setting and available power still apply. Use Sleep to turn it off.</small><button id="create-dragon" class="secondary">Make a dragon</button></section>
+<section id="editor" hidden><h2>Make or edit your dragon</h2><small>Tap a body part on the dragon, or choose Dragon part below. Pick its colour and magic, then save to see it on your wall. The picture is a colour guide.</small>
+<canvas id="preview" width="320" height="320" style="width:100%;max-width:320px;display:block;margin:14px auto 10px;border-radius:16px;touch-action:manipulation" role="img" aria-label="Dragon colour preview. Tap a body part or use Dragon part below."></canvas>
 <label for="starting-dragon">Start from</label><select id="starting-dragon"></select><label for="custom-name">Dragon name</label><input id="custom-name" maxlength="32">
 <label for="region">Dragon part</label><select id="region"></select>
 <label for="region-color">Colour</label><input id="region-color" type="color" style="padding:5px">
@@ -29,30 +29,30 @@ const char page[] PROGMEM=R"DRAGONWEB(<!doctype html>
 <label for="region-effect">Magic on this part</label><select id="region-effect"><option value="keep">Existing magic</option><option value="none">Still</option><option value="0">Rainbow</option><option value="1">Breathe</option><option value="2">Shimmer</option><option value="3">Glitter</option></select>
 <button id="save-custom">Save my dragon</button><button id="copy-custom" class="secondary">Save a new copy</button><button id="cancel-custom" class="secondary">Cancel</button><button id="delete-custom" class="secondary" hidden>Delete this custom dragon</button>
 </section>
-<details id="profile-settings"><summary>My favourites &amp; starting glow</summary><div class="parent"><label for="profile-name">Profile name</label><input id="profile-name" maxlength="32"><label for="profile-glow">Starting glow</label><select id="profile-glow"></select><p id="favorites-help">Choose up to 12 favourites. Tapping your dragon cycles through them in the order you choose. The first is your starting dragon. Leave this empty to cycle through the whole collection.</p><p id="favorite-order" class="status"></p><div id="favorites" style="max-height:280px;overflow:auto"></div><button id="save-profile">Save profile</button><button id="delete-profile" class="secondary" hidden>Delete this profile</button><hr><label for="new-profile-name">New profile name</label><input id="new-profile-name" maxlength="32"><button id="new-profile">Add profile</button></div></details>
+<details id="profile-settings"><summary>My favourites &amp; starting glow</summary><div class="parent"><label for="profile-name">Profile name</label><input id="profile-name" maxlength="32"><label for="profile-glow">Starting glow</label><select id="profile-glow"></select><p id="favorites-help">Choose up to 12 favourites. Patting your dragon cycles through them in the order you choose. The first greets you at startup.</p><p id="favorite-order" class="status"></p><input id="favorite-search" type="search" placeholder="Search dragons by name…" aria-label="Search dragons by name" hidden><small id="favorite-search-status" role="status" aria-live="polite" hidden></small><div id="favorites" style="max-height:280px;overflow:auto"></div><button id="save-profile">Save profile</button><button id="delete-profile" class="secondary" hidden>Delete this profile</button><hr><label for="new-profile-name">New profile name</label><input id="new-profile-name" maxlength="32"><button id="new-profile">Add profile</button></div></details>
 <details id="alarm"><summary>Sunrise alarm</summary><div class="parent">
-<p>Wake up with your dragon. Its wings slowly glow from deep orange to warm sunrise light.</p>
+<p>Rooster duty (without the crowing). Your dragon's wings slowly warm the wall from deep ember-orange to morning gold.</p>
 <form id="alarm-form"><div class="check"><input id="alarm-enabled" type="checkbox"><label for="alarm-enabled">Wake me every day</label></div>
 <label for="alarm-time">Wake-up time</label><input id="alarm-time" type="time" value="07:00" required>
 <label for="alarm-duration">Sunrise length (minutes)</label><input id="alarm-duration" type="number" min="1" max="120" step="1" value="20" required>
-<small>The sunrise starts this many minutes before your wake-up time. It works while the dragon is asleep and stays bright for 30 minutes afterwards, then returns to your previous lighting.</small>
+<small>The sunrise starts this many minutes before your wake-up time. It works while the dragon is asleep and holds its morning glow for 30 minutes afterwards, then returns to your previous lighting.</small>
 <button id="save-alarm" style="margin-top:16px" disabled>Save alarm</button></form>
 <p id="alarm-status" class="status" role="status" aria-live="polite">Loading alarm…</p>
 <button id="preview-alarm" class="secondary">Try a 30-second sunrise</button><button id="stop-alarm" class="secondary" hidden>Stop sunrise</button>
 <button id="sync-alarm" class="secondary">Set clock from my phone</button>
-<small>Keep the dragon powered for its alarm. Saving uses your phone's time and daylight-saving rules. After a power cut, it needs internet time or this page opened again. A touch or play control stops the current sunrise.</small>
+<small>Keep your dragon powered for its alarm. Saving borrows your phone's time and daylight-saving rules. After a power cut, it needs internet time or this page opened again. A pat or play button stops the current sunrise.</small>
 </div></details>
 <details id="parents"><summary>For grown-ups · Wi-Fi &amp; help</summary><div class="parent">
-<h2>Connect to home Wi-Fi</h2><p>Internet is optional. You can play while connected directly to your dragon.</p>
+<h2>Teach your dragon home Wi-Fi</h2><p>Internet is optional. You can always play by touch or while connected directly to your dragon.</p>
 <button id="scan" type="button">Find my Wi-Fi</button><p id="scan-status" class="status" role="status"></p>
 <form id="wifi"><label for="ssid">Home Wi-Fi name</label><input id="ssid" name="ssid" list="networks" maxlength="32" required autocomplete="off" autocapitalize="none" spellcheck="false"><datalist id="networks"></datalist>
 <label for="wifi-password">Wi-Fi password</label><input id="wifi-password" name="password" type="password" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false">
 <div class="check"><input id="show-password" type="checkbox"><label for="show-password">Show password</label></div>
 <button id="connect">Connect my dragon</button></form>
 <small>Choose a 2.4 GHz network. If your Wi-Fi name doesn't appear, type it yourself. Leave the password blank only for an open network.</small>
-<h2 style="margin-top:26px">Need to reconnect?</h2>
-<small>Hold the dragon's touch pad while plugging it in. Keep holding through the blue startup pulses, then release when you see purple. Join the dragon network using your setup card and open <a href="http://192.168.4.1/">192.168.4.1</a>.<br><br>If your phone says the dragon network has no internet, choose to stay connected.</small>
-<button id="forget" class="secondary">Forget home Wi-Fi</button><small>This keeps your dragon's setup-network password.</small>
+<h2 style="margin-top:26px">Open setup Wi-Fi again</h2>
+<small>Hold the touch button on the right side while connecting the bottom USB-C power port. Keep holding through the five blue eye-blinks, then release when its scales turn purple. Join the dragon network using your setup card and open <a href="http://192.168.4.1/">192.168.4.1</a>.<br><br>If your phone says the dragon network has no internet, choose to stay connected.</small>
+<button id="forget" class="secondary">Forget home Wi-Fi</button><small>This keeps your creations and your dragon's setup-network password (dragon123).</small>
 </div></details>
 <script>
 const $=selector=>document.querySelector(selector),effects=['zones','breathe','colorcycle','glitter','incendio','leviosa'];
@@ -112,6 +112,7 @@ function render(state){
  if(document.activeElement!==$('#dragon')&&Array.from($('#dragon').options).some(option=>option.value===String(state.dragon)))$('#dragon').value=state.dragon;if(document.activeElement!==$('#brightness'))$('#brightness').value=state.brightness;
  const asleep=state.mode===9||state.brightness===0;$('#sleep').textContent=asleep?'Wake my dragon':'Put dragon to sleep';
  for(const button of document.querySelectorAll('[data-effect]'))button.setAttribute('aria-pressed',String(!asleep&&effects[state.mode]===button.dataset.effect));
+ if(typeof updateCreateButtonLabel==='function')updateCreateButtonLabel();
  updateControls();
  if(state.message.startsWith('Could not')||state.message.includes('could not be saved'))feedback(state.message);
  if(state.connected){const hostname='http://'+state.hostname+'.local/',ip='http://'+state.ip+'/';try{sessionStorage.setItem('dragon-home',JSON.stringify({hostname,ip}))}catch(e){}showHomeAddress({hostname,ip})}
@@ -148,22 +149,49 @@ async function initialize(){
 initialize();
 </script>
 <script>
-
 let collection=null,catalog=[],favorites=[],draft=null,reloading=false;
 function collectionRequest(path,data,context=collection){
  return request(path,{...data,profile:context.active??context.profile,generation:context.generation});
 }
 const regionNames=['Background','Left wing edge','Right wing edge','Left horn','Right horn','Face','Body','Tail','Left wing','Right wing'];
+const dragonShapeData={
+ 8:"M143,5L146,6L134,11L126,19L122,23L117,37L113,39L110,43L107,54L108,58L106,63L106,74L110,88L92,80L86,80L84,82L84,85L89,99L89,103L87,108L87,114L91,117L95,117L106,111L107,112L106,125L103,135L103,144L106,153L112,159L118,162L131,165L133,168L133,176L124,197L124,202L122,203L121,209L119,213L112,212L106,216L101,226L101,234L98,237L92,237L78,241L70,245L62,252L55,245L50,242L43,242L40,243L37,246L36,250L35,262L32,259L23,245L16,229L12,215L9,196L9,166L10,157L13,142L22,115L34,92L44,77L58,61L71,48L88,33L105,22L120,14Z",
+ 9:"M179,7L181,7L195,12L218,24L238,39L255,54L266,66L282,86L294,107L299,118L307,143L310,158L311,167L311,195L309,210L302,234L294,250L282,266L281,264L283,256L282,248L280,243L275,241L270,243L268,246L260,256L250,267L251,257L248,245L243,241L237,241L228,248L227,240L224,237L219,236L219,228L216,220L211,215L202,212L192,190L187,172L189,166L203,162L208,159L215,151L217,144L217,135L214,125L212,112L213,111L222,116L229,116L232,115L233,111L232,100L236,88L236,83L234,80L227,80L213,84L215,75L215,62L212,45L208,39L203,35L202,29L197,21L190,13Z",
+ 1:"M140,3L150,4L140,6L120,14L100,25L78,42L58,61L44,77L34,92L22,115L17,128L13,142L9,165L9,195L10,204L14,222L21,241L32,259L39,266L43,274L41,275L26,260L18,250L13,241L9,231L3,209L0,185L0,166L3,145L11,117L22,94L34,75L45,62L62,44L75,32L98,17L119,8L130,5Z",
+ 2:"M169,3L179,3L190,5L212,12L231,22L248,35L273,59L283,70L298,93L309,116L316,139L320,164L320,184L317,208L310,233L303,248L290,265L279,275L277,274L281,266L288,259L299,241L305,225L310,203L311,194L311,167L310,158L307,143L299,118L287,94L275,76L255,54L244,44L230,32L213,21L195,12Z",
+ 7:"M98,236L101,236L102,237L102,244L104,249L104,253L86,257L79,264L77,267L77,277L78,281L82,288L88,293L99,299L121,304L141,304L161,297L170,297L187,303L191,303L192,305L182,312L176,315L169,317L156,317L148,315L141,311L129,313L116,313L99,311L87,308L73,301L67,295L59,283L56,270L56,266L58,258L62,253L70,245L85,239Z",
+ 6:"M133,166L161,173L187,166L188,177L192,190L202,213L207,213L211,216L215,219L218,225L219,230L219,242L217,249L212,256L218,264L218,271L215,274L212,275L203,275L193,272L183,277L173,277L165,273L155,273L146,277L139,278L135,277L130,275L127,271L118,274L114,274L111,271L106,273L103,272L102,268L104,262L107,260L107,257L102,244L101,234L102,223L107,214L112,212L119,213L120,212L131,184L133,177Z",
+ 5:"M160,45L163,47L167,59L170,55L173,54L175,56L177,62L188,68L189,69L186,72L186,75L189,79L197,87L202,88L227,80L233,80L235,82L236,84L236,88L232,99L233,106L232,112L228,116L223,116L218,115L213,111L212,112L217,136L217,144L212,154L208,159L200,163L162,173L118,162L111,158L108,154L104,149L103,142L106,130L107,112L105,111L100,115L93,117L89,115L87,112L87,109L89,103L89,95L85,84L85,81L91,80L96,81L111,89L114,86L119,88L125,86L130,81L134,76L134,72L132,68L139,64L145,63L145,57L148,53L150,54L154,58L157,48Z",
+ 3:"M114,37L117,37L119,40L119,49L122,58L127,64L134,72L134,76L130,81L125,86L119,88L115,86L111,82L108,71L108,52L110,43Z",
+ 4:"M203,37L206,37L208,40L211,45L213,56L213,63L212,73L210,80L205,86L201,88L194,84L188,79L186,73L187,71L195,63L200,54L202,45L202,39Z"
+};
+const drawOrder=[8,9,1,2,7,6,5,3,4],hitOrder=[3,4,5,6,7,1,2,8,9];
+const zoneCenters={1:[18,118],2:[302,118],3:[118,66],4:[202,66],5:[160,115],6:[160,228],7:[120,308],8:[65,153],9:[254,153]};
+const effectIcons=['🌈','🌙','💫','✨'];
+const shapePaths=typeof Path2D==='function'?Object.fromEntries(Object.entries(dragonShapeData).map(([z,d])=>[Number(z),new Path2D(d)])):null;
+
+function updateCreateButtonLabel(){
+ const btn=$('#create-dragon');if(!btn||!catalog.length)return;
+ const current=catalog.find(d=>String(d.id)===$('#dragon').value);
+ btn.textContent=current?.custom?'Edit or copy custom dragon':'Make a dragon';
+}
 async function loadLibrary(dragons){
  catalog=dragons;collection=await request('/api/library');
  $('#profile').replaceChildren();for(const p of collection.profiles){const o=document.createElement('option');o.value=p.id;o.textContent=p.name;$('#profile').append(o)}$('#profile').value=collection.active;$('#profile').disabled=false;
- const p=collection.profiles.find(p=>p.id===collection.active);$('#profile-name').value=p.name;$('#profile-name').disabled=collection.active===0;$('#delete-profile').hidden=collection.active===0;$('#favorites-help').textContent=collection.active===0?'All contains every dragon and cannot be renamed or deleted.':'Choose up to 12 favourites. Your profile shows these plus your own creations. Tapping cycles through your collection. Uncheck and recheck to move a favourite to the end.';favorites=[...p.favorites];
+ const p=collection.profiles.find(p=>p.id===collection.active);$('#profile-name').value=p.name;$('#profile-name').disabled=collection.active===0;$('#delete-profile').hidden=collection.active===0;$('#favorites-help').textContent=collection.active===0?'All (The Great Sanctuary) contains every dragon and cannot be renamed or deleted.':'Choose up to 12 favourites. Your roost shows these plus your own creations. Patting cycles through your roost. Uncheck and recheck to move a favourite to the end.';favorites=[...p.favorites];
  $('#profile-glow').replaceChildren();for(let n=10;n<=100;n+=10){const o=document.createElement('option');o.value=n;o.textContent=n+'%';$('#profile-glow').append(o)}$('#profile-glow').value=p.brightness;
- $('#favorites').hidden=collection.active===0;$('#favorites').replaceChildren();for(const dragon of catalog){const row=document.createElement('div');row.className='check';const input=document.createElement('input');input.type='checkbox';input.id='favorite-'+dragon.id;input.checked=favorites.includes(dragon.id);const label=document.createElement('label');label.htmlFor=input.id;label.textContent=dragon.name+(dragon.custom?(dragon.owned?' · made by you':' · custom dragon'):'');row.append(input,label);$('#favorites').append(row);input.onchange=()=>{if(input.checked){if(favorites.length>=12){input.checked=false;feedback('Choose up to 12 favourites.');return}favorites.push(dragon.id)}else favorites=favorites.filter(id=>id!==dragon.id);showFavoriteOrder()}}
- showFavoriteOrder();populateDragons();updateControls();
+ const isAll=collection.active===0;$('#favorites').hidden=isAll;if($('#favorite-search')){$('#favorite-search').hidden=isAll;$('#favorite-search').value='';$('#favorite-search-status').hidden=true;$('#favorite-search-status').textContent=''}
+ $('#favorites').replaceChildren();for(const dragon of catalog){const row=document.createElement('div');row.className='check';row.dataset.name=dragon.name.toLowerCase();const input=document.createElement('input');input.type='checkbox';input.id='favorite-'+dragon.id;input.checked=favorites.includes(dragon.id);const label=document.createElement('label');label.htmlFor=input.id;label.textContent=dragon.name+(dragon.custom?(dragon.owned?' · made by you':' · custom dragon'):'');row.append(input,label);$('#favorites').append(row);input.onchange=()=>{if(input.checked){if(favorites.length>=12){input.checked=false;feedback('Choose up to 12 favourites.');return}favorites.push(dragon.id)}else favorites=favorites.filter(id=>id!==dragon.id);showFavoriteOrder()}}
+ showFavoriteOrder();populateDragons();updateCreateButtonLabel();updateControls();
 }
+$('#favorite-search').oninput=event=>{
+ const q=event.target.value.trim().toLowerCase();let matches=0;
+ for(const row of document.querySelectorAll('#favorites .check')){row.hidden=Boolean(q&&!row.dataset.name.includes(q));if(!row.hidden)matches++}
+ const status=$('#favorite-search-status');status.hidden=!q;
+ status.textContent=matches?(matches===1?'1 dragon matches.':matches+' dragons match.'):'No dragons match your search.';
+};
 function visibleDragons(){if(collection.active===0)return catalog;const selected=collection.profiles.find(p=>p.id===collection.active).favorites.map(id=>catalog.find(d=>d.id===id)).filter(Boolean);return [...selected,...catalog.filter(d=>d.custom&&d.owned&&!selected.some(s=>s.id===d.id))]}
-function populateDragons(){const dragons=visibleDragons();$('#dragon').replaceChildren();if(!dragons.length){const o=document.createElement('option');o.value='';o.textContent='Add favourites or make a dragon';$('#dragon').append(o)}for(const d of dragons){const o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.custom?' ✨':'');$('#dragon').append(o)}$('#dragon').disabled=!dragons.length;for(const button of document.querySelectorAll('[data-effect],#return,#sleep,#brightness'))button.disabled=!dragons.length;if(lastState&&dragons.some(d=>d.id===lastState.dragon))$('#dragon').value=lastState.dragon;else if(dragons.length)$('#dragon').value=dragons[0].id;updateControls()}
+function populateDragons(){const dragons=visibleDragons();$('#dragon').replaceChildren();if(!dragons.length){const o=document.createElement('option');o.value='';o.textContent='Add favourites or make a dragon';$('#dragon').append(o)}for(const d of dragons){const o=document.createElement('option');o.value=d.id;o.textContent=d.name+(d.custom?' ✨':'');$('#dragon').append(o)}$('#dragon').disabled=!dragons.length;for(const button of document.querySelectorAll('[data-effect],#return,#sleep,#brightness'))button.disabled=!dragons.length;if(lastState&&dragons.some(d=>d.id===lastState.dragon))$('#dragon').value=lastState.dragon;else if(dragons.length)$('#dragon').value=dragons[0].id;updateCreateButtonLabel();updateControls()}
 function showFavoriteOrder(){$('#favorite-order').textContent=collection.active===0?'All dragons':favorites.length?favorites.map((id,i)=>(i+1)+'. '+catalog.find(d=>d.id===id)?.name).join(' · '):'No favourites yet. Your own creations appear automatically.'}
 async function reloadCollection(){if(reloading)return;reloading=true;try{await loadLibrary(await request('/api/dragons?catalog=1'))}catch(e){feedback(e.message)}finally{reloading=false}}
 function closeEditor(){draft=null;$('#editor').hidden=true}
@@ -173,12 +201,35 @@ $('#profile').onchange=async event=>{
 };
 $('#save-profile').onclick=async()=>{if(commandBusy)return;setCommandBusy(true);try{await collectionRequest('/api/profile',{action:'update',name:$('#profile-name').value,brightness:$('#profile-glow').value,favorites:favorites.join(',')});await reloadCollection();render(await request('/api/state'));feedback('Profile saved.')}catch(e){feedback(e.message)}finally{setCommandBusy(false)}};
 $('#new-profile').onclick=async()=>{if(commandBusy)return;if(draft&&!confirm('Create a profile and discard your unsaved dragon?'))return;setCommandBusy(true);try{await collectionRequest('/api/profile',{action:'create',name:$('#new-profile-name').value,brightness:100,favorites:''});closeEditor();lastState=null;await reloadCollection();render(await request('/api/state'));$('#new-profile-name').value='';feedback('Your new profile is ready.')}catch(e){feedback(e.message)}finally{setCommandBusy(false)}};
-function drawDraft(){
- if(!draft)return;const canvas=$('#preview'),ctx=canvas.getContext('2d'),selected=Number($('#region').value);
- ctx.fillStyle='#19182d';ctx.fillRect(0,0,320,320);
- for(let i=0;i<64;i++){const z=draft.zones[i];ctx.fillStyle=(draft.colorMask&(1<<z))?draft.colors[z]:draft.originalPixels[i];const x=(i%8)*40,y=Math.floor(i/8)*40;ctx.fillRect(x+3,y+3,34,34);if(z===selected){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.strokeRect(x+3,y+3,34,34)}}
+
+function zoneDisplayColor(z){
+ if(draft.colorMask&(1<<z))return draft.colors[z];
+ // Approximate the original markings without changing their saved pixel data.
+ const pixels=draft.originalPixels.filter((_,i)=>draft.zones[i]===z);
+ if(!pixels.length)return draft.originalColors[z];
+ const rgb=[0,0,0];for(const color of pixels)for(let c=0;c<3;c++)rgb[c]+=parseInt(color.slice(1+c*2,3+c*2),16);
+ return '#'+rgb.map(sum=>Math.round(sum/pixels.length).toString(16).padStart(2,'0')).join('');
 }
-function showRegion(){if(!draft)return;const z=Number($('#region').value);$('#region-color').value=draft.colors[z];const active=draft.effectZones.map((mask,i)=>mask&(1<<z)?i:null).filter(i=>i!==null);$('#region-effect').value=active.length===0?'none':active.length===1?String(active[0]):'keep';drawDraft()}
+function drawDraft(){
+ if(!draft)return;const ctx=$('#preview').getContext('2d'),selected=Number($('#region').value);
+ ctx.fillStyle='#19182d';ctx.fillRect(0,0,320,320);
+ if(!shapePaths){ctx.fillStyle='#fff9ef';ctx.font='16px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('Choose a Dragon part below',160,160);return}
+ ctx.save();
+ for(const z of drawOrder){
+  const path=shapePaths[z];if(!path)continue;
+  ctx.fillStyle=zoneDisplayColor(z);ctx.fill(path);
+  ctx.strokeStyle='#19182d';ctx.lineWidth=4.5;ctx.lineJoin='round';ctx.stroke(path);
+  ctx.strokeStyle='rgba(255,249,239,0.55)';ctx.lineWidth=1.4;ctx.stroke(path);
+ }
+ if(shapePaths[selected]){ctx.strokeStyle='#ffda8e';ctx.lineWidth=3.5;ctx.stroke(shapePaths[selected])}
+ ctx.font='14px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+ for(const z of drawOrder){
+  const active=draft.effectZones.map((mask,i)=>mask&(1<<z)?i:null).filter(i=>i!==null);
+  if(active.length===1&&zoneCenters[z]){const [x,y]=zoneCenters[z];ctx.fillText(effectIcons[active[0]],x,y)}
+ }
+ ctx.restore();
+}
+function showRegion(){if(!draft)return;const z=Number($('#region').value);$('#region-color').value=zoneDisplayColor(z);const active=draft.effectZones.map((mask,i)=>mask&(1<<z)?i:null).filter(i=>i!==null);$('#region-effect').value=active.length===0?'none':active.length===1?String(active[0]):'keep';drawDraft()}
 async function editDragon(id){
  if(commandBusy)return;if(draft&&!confirm('Discard your unsaved changes and start again?'))return;
  setCommandBusy(true);try{const detail=await request('/api/dragon-detail?id='+id),base=detail.id===detail.base?detail:await request('/api/dragon-detail?id='+detail.base);if(detail.profile!==base.profile||detail.generation!==base.generation)throw Error('Your collection changed. Reload the page before editing.');draft={...detail,originalPixels:base.pixels,originalColors:base.colors};$('#custom-name').value=detail.id===detail.base?'My '+detail.name:detail.name;$('#region').replaceChildren();for(let i=0;i<regionNames.length;i++){if(!detail.zones.includes(i))continue;const o=document.createElement('option');o.value=i;o.textContent=regionNames[i];$('#region').append(o)}$('#region').value=5;$('#copy-custom').hidden=$('#delete-custom').hidden=!detail.canEdit;$('#starting-dragon').replaceChildren();for(const d of catalog){const o=document.createElement('option');o.value=d.id;o.textContent=d.name;$('#starting-dragon').append(o)}$('#starting-dragon').value=detail.id;$('#editor').hidden=false;showRegion();$('#editor').scrollIntoView({behavior:'smooth',block:'start'});feedback('')}catch(e){feedback(e.message)}finally{setCommandBusy(false)}
@@ -186,7 +237,13 @@ async function editDragon(id){
 $('#create-dragon').onclick=()=>editDragon($('#dragon').value===''?catalog[0].id:$('#dragon').value);
 $('#starting-dragon').onchange=e=>editDragon(e.target.value);
 $('#region').onchange=showRegion;
-$('#preview').onclick=event=>{if(!draft)return;const bounds=event.currentTarget.getBoundingClientRect(),x=Math.min(7,Math.floor((event.clientX-bounds.left)/bounds.width*8)),y=Math.min(7,Math.floor((event.clientY-bounds.top)/bounds.height*8));$('#region').value=draft.zones[y*8+x];showRegion()};
+$('#preview').onclick=event=>{
+ if(!draft||!shapePaths)return;
+ const canvas=event.currentTarget,bounds=canvas.getBoundingClientRect();
+ const x=(event.clientX-bounds.left)/bounds.width*320,y=(event.clientY-bounds.top)/bounds.height*320;
+ const ctx=canvas.getContext('2d');
+ for(const z of hitOrder)if(shapePaths[z]&&draft.zones.includes(z)&&ctx.isPointInPath(shapePaths[z],x,y)){$('#region').value=z;showRegion();return}
+};
 $('#region-color').oninput=event=>{if(!draft)return;const z=Number($('#region').value);draft.colorMask|=1<<z;draft.colors[z]=event.target.value;drawDraft()};
 $('#reset-color').onclick=()=>{if(!draft)return;const z=Number($('#region').value);draft.colorMask&=~(1<<z);draft.colors[z]=draft.originalColors[z];showRegion()};
 $('#region-effect').onchange=event=>{if(!draft||event.target.value==='keep')return;const bit=1<<Number($('#region').value);draft.effectZones=draft.effectZones.map(mask=>mask&~bit);if(event.target.value!=='none')draft.effectZones[Number(event.target.value)]|=bit;showRegion()};
@@ -196,7 +253,6 @@ async function saveCustom(copy){
 }
 $('#save-custom').onclick=()=>saveCustom(false);$('#copy-custom').onclick=()=>saveCustom(true);$('#cancel-custom').onclick=()=>{closeEditor();feedback('Changes cancelled.')};
 $('#delete-custom').onclick=async()=>{if(!draft||commandBusy||!confirm('Delete this custom dragon? The supplied dragons are always kept.'))return;setCommandBusy(true);try{await collectionRequest('/api/delete-custom',{id:draft.id},draft);closeEditor();await reloadCollection();render(await request('/api/state'));feedback('Custom dragon deleted.')}catch(e){feedback(e.message)}finally{setCommandBusy(false)}};
-
 
 $('#delete-profile').onclick=async()=>{if(commandBusy||!collection.active||!confirm('Delete this profile? Its custom dragons will be kept in All.'))return;setCommandBusy(true);try{await collectionRequest('/api/delete-profile',{id:collection.active});closeEditor();lastState=null;await reloadCollection();render(await request('/api/state'));feedback('Profile deleted. Its creations are in All.')}catch(e){feedback(e.message)}finally{setCommandBusy(false)}};
 

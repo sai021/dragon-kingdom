@@ -3,9 +3,12 @@
 This guide is for one child and their grown-ups using a prepared prototype.
 Keep its printed setup card. No app, account or coding is needed for normal play.
 The printable [user manual](../output/pdf/dragon-kingdom-user-manual.pdf) is edition
-0.5, dated 19 October 2026; the [editable source](USER-MANUAL.md) covers the same steps.
+0.6 (keeper edition), dated 19 October 2026; the [editable source](USER-MANUAL.md) covers the same steps.
 
 ## Touch play
+
+Use the touch button on the right side. Normal power connects through the
+bottom USB-C power port; the back has a keyhole-shaped mounting slot.
 
 | Gesture | Action |
 | --- | --- |
@@ -50,11 +53,14 @@ starting glow, then save. **My dragon** shows those favourites plus the
 profile's own creations. A new empty profile invites you to add or create one.
 
 To create, tap **Make a dragon**, choose **Start from**, and give it a name.
-Tap a part in the picture or use the part list. Change its colour and magic.
+The editor shows the dragon shape, without LED-grid controls. Tap a body part
+or use the part list. Change its colour and magic.
 Wing edges and interiors can be different. Save to see the creation on the
 physical dragon. Cancel leaves the device unchanged.
 
-You can edit a creation you own or save a new copy. The original supplied
+Select a custom dragon and tap **Edit or copy custom dragon** to edit or copy it.
+Use the search box in profile settings to find favourites without losing your
+existing selections. The original supplied
 dragons remain intact. Deleting a profile moves its creations into All.
 There are three named profile spaces and eight custom dragon spaces shared
 across the device. Play controls stay unavailable for an empty profile until

@@ -6,15 +6,21 @@ matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
-**Current state: working development prototype, firmware 0.2.3, updated 19 October 2026.**
+**Current state: working development prototype, firmware 0.2.4, updated 19 October 2026.**
 The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates the
 accumulated source, interface, asset, palette and documentation improvements.
 Separate S3/C3 firmware downloads, checksums and the manual are on
-[GitHub releases](https://github.com/sai021/dragon-kingdom/releases/tag/v0.2.3-prototype).
+[GitHub releases](https://github.com/sai021/dragon-kingdom/releases/tag/v0.2.4-prototype).
+The [keeper edition](docs/KEEPER-EDITION-2026-10-19.md) adds a dragon-only colour
+editor, working favourites search and an eight-page keeper manual
+(edition 0.6) using the confirmed enclosure layout. Both boards are built; the
+updated C3 embedded interface is physically checked. Earlier 0.2.3 board tests
+remain recorded separately below.
+
 Updated setup Wi-Fi and `.local` names use `Dragon-Kingdom-XXXXXX`; update old
 bookmarks/setup cards. Saved collections, alarms and home Wi-Fi remain compatible.
 
-Both published board images are installed and physically tested under laptop
+Both 0.2.3 board images were installed and physically tested under laptop
 USB-only power. Each passed five Wi-Fi reconnect/HTTP trials and a real cold
 USB boot, alongside live embedded web controls and saved-data checks. The user
 confirmed C3 touch gestures, lighting and LDR response on 0.2.3. The physical
@@ -29,8 +35,10 @@ reset-helper error remain recorded. The later S3 passes used a clearer antenna
 position and ROM-only reset procedure; they do not prove the cause or broader
 reliability. Range/endurance, physical phone browser coverage, deployed external
 supply/current/thermal behaviour and final PCB/mechanical/optical fit remain
-open. Existing mechanical/PCB assets are prototypes; newer user-supplied files
-are still pending.
+open. The user confirms the hardware is made, with a right-side touch button, rear
+keyhole mounting slot and bottom USB-C power port; the internal controller USB
+port is inaccessible to users. Existing CAD/PCB assets are earlier prototypes;
+newer user-supplied files are still pending.
 
 ## What works
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.4-prototype — 19 October 2026
+
+- Adopted the keeper-edition manual and warmer supporting copy, while keeping
+  ordinary control labels and error instructions clear. Manual/PDF edition 0.6
+  reflects the confirmed right-side touch button, rear keyhole mount and bottom
+  USB-C power port; users cannot access the internal ESP32 USB connector.
+- Replaced the custom-editor LED grid with selectable dragon regions, preserving
+  original saved pixel markings and using representative colours in the picture.
+  Empty canvas taps leave the selected part unchanged.
+- Added favourites search with visible filtering, retained selections and an
+  accessible no-results message; custom selections show an edit/copy label.
+- Added browser regressions for all nine illustrated parts, filtering and
+  untouched markings. Made simulated initial alarm-error checks deterministic
+  against background polling. Rebuilt both board images and checked the live
+  C3 embedded UI. Weather and OTA remain deferred.
+
 ## 0.2.3-prototype — 19 October 2026
 
 - Wait for the station-start event before applying the existing 8.5 dBm radio

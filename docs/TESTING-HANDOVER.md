@@ -1,5 +1,10 @@
 Testing handover — 19 October 2026
 
+Latest: [keeper edition 0.2.4](KEEPER-EDITION-2026-10-19.md). The connected C3 on
+COM61 now has the keeper image; both board bundles are refreshed. New embedded
+UI checks cover dragon-only selection and visible favourites filtering. The
+0.2.3 physical results and previous firmware states below are historical.
+
 Latest: [Dragon Kingdom release verification](KINGDOM-RELEASE-2026-10-19.md)
 and [radio readiness / current hardware results](WIFI-READINESS-2026-10-19.md).
 Both boards now have their matching published 0.2.3 images installed. No saved

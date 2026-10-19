@@ -1,5 +1,17 @@
 # Dragon hardware and wiring
 
+## User-confirmed completed enclosure — 19 October 2026
+
+The assembled hardware is made. Normal users have access to the bottom USB-C
+power port and the touch button on the right side. The internal ESP32 USB-C
+connector is not accessible to the user. A keyhole-shaped mounting slot is on
+the back; the motto surrounds the dragon except along the bottom.
+
+Newer STL files, build photos and Gerbers are still to be supplied. Existing
+repository CAD/PCB assets remain earlier prototypes, not a substitute for those
+updated files. This layout confirmation does not replace the separately listed
+external-supply/current/thermal and optical validation.
+
 ## Installed parts
 
 | Part | Value / role | Connection |

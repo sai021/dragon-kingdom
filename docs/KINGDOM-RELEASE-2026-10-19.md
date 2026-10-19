@@ -1,5 +1,8 @@
 # Dragon Kingdom release verification — 19 October 2026
 
+Superseded by the [keeper edition 0.2.4](KEEPER-EDITION-2026-10-19.md). The hashes
+and board results below retain the 0.2.3 checkpoint.
+
 `v0.2.3-prototype` consolidates the work since the original GitHub publication
 and the fixes/diagnostics from live S3 testing. It supersedes 0.2.0–0.2.2.
 The [Wi-Fi readiness repair](WIFI-READINESS-2026-10-19.md) waits for the station
