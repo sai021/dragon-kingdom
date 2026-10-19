@@ -9,7 +9,8 @@ for live API/UI/persistence tests, touch/LDR evidence and the two fixes found.
 The user confirmed tap/double-tap and that covered-LDR minimum glow stays lit.
 A C3 was subsequently connected on the carrier (COM61), ROM-identified and
 flashed with the published 0.2.2 C3 image. USB startup/library/400 mA checks passed;
-visual, gesture, LDR-response, Wi-Fi and cold-boot strapping checks are ongoing.
+visible lighting, gestures and LDR response also passed with user confirmation
+and matching telemetry. Wi-Fi and cold-boot strapping checks are ongoing.
 Repeated final reset tests exposed intermittent home-Wi-Fi reconnect failures.
 Do not treat the earlier successful reconnect as proof this is resolved.
 

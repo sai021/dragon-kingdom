@@ -122,8 +122,8 @@ swapping boards, and manual Boot/Reset steps.
 The flasher supports mixed S3/C3 batches by reading the connected chip identity
 and choosing a separate saved firmware image. C3 uses the matching eight-pin
 header map. A C3 on the carrier has now passed published-image USB startup,
-library and 400 mA ceiling checks; visual, gesture, LDR-response, Wi-Fi and
-cold-boot strapping checks remain in progress.
+library and 400 mA ceiling checks, plus user-confirmed lighting, touch gestures
+and LDR response. Wi-Fi and cold-boot strapping checks remain in progress.
 
 The build regenerates palette and embedded-page headers. Keep
 `DragonPrototype/build_opt.h`: its network-event locking fixed a reproduced

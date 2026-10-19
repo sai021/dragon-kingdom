@@ -174,8 +174,14 @@ Blue selected, and the 400 mA computer-USB ceiling. The device reports the new
 Dragon Kingdom hostname, an open setup AP and no saved home-network credentials.
 Initial LDR readings were approximately 1,400–1,700; touch was initially idle.
 These readings establish sensor input, not yet a cover/uncover or touch pass.
-Visual lighting, touch gestures, LDR response, Wi-Fi and cold-boot strapping
-checks are pending in this follow-up. The earlier S3 Wi-Fi failure remains open.
+The user subsequently confirmed normal dragon lighting, tap to change dragon,
+double-tap sleep/wake, hold brightness and visible LDR cover/uncover response.
+The first 117 captured sensor samples recorded 13 touch presses, eight selected
+dragons, normal/sleep modes, brightness steps 0–10, LDR 152–1,663 (filtered
+197–1,653), and automatic gain 10–40. No decreasing uptime was observed. These
+are physical C3 results, distinct from the native pin/USB simulations. Wi-Fi
+and cold-boot strapping checks remain pending. The earlier S3 Wi-Fi failure
+remains open.
 
 C3 raw logs and saved settings are in ignored
 `dragon-firmware/.tools/c3-hardware-20261019/`.

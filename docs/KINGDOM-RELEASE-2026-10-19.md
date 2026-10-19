@@ -78,8 +78,9 @@ copy/edit/delete. Physical touch/LDR activity was recorded; the user confirmed
 tap/double-tap and that minimum glow remains lit with the LDR covered.
 A C3 was subsequently connected on the carrier with user-confirmed pin
 orientation. Its published 0.2.2 image is installed with flash hash verification
-and passed USB startup/library/400 mA checks. Visual, gesture, LDR-response,
-network and cold-boot strapping checks are ongoing.
+and passed USB startup/library/400 mA checks. User-confirmed visible lighting,
+tap, double-tap, hold brightness and LDR response agree with captured telemetry.
+Network and cold-boot strapping checks are ongoing.
 The final image also includes the transient `testglow` measurement command,
 avoids the redundant first STA start/stop, and applies the existing 8.5 dBm
 limit before association starts. These connection-path changes did not resolve
