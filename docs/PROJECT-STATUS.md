@@ -2,12 +2,15 @@
 
 The latest checkpoint is the [Dragon Kingdom release](KINGDOM-RELEASE-2026-10-19.md):
 renamed interface/assets/manual, all accumulated improvements, both verified
-firmware builds and board-specific download bundles. Software checks passed;
-current-board power confirmation and physical verification of this exact
-release remain pending. The dated evidence below describes earlier images.
+firmware builds and board-specific download bundles. Software checks passed.
+The corrected 0.2.1 S3 image is installed under confirmed USB-only power and
+passed live embedded-page workflows. The user confirmed tap/double-tap and
+that minimum glow stays lit with the LDR covered. See the
+[19 October physical record](HARDWARE-TEST-2026-10-19.md); C3 was unavailable.
+The dated evidence below describes earlier images.
 
 The [19 October reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are the
-current software checkpoint: 25 Python tests, 15 native suites, expanded browser
+earlier software checkpoint: 25 Python tests, 15 native suites, expanded browser
 simulations and both firmware builds passed. The saved S3/C3 pair is prepared;
 no board was flashed during the repairs. The intended product has one child,
 with optional favourite collections.

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.1-prototype — 19 October 2026
+
+- Live S3 testing found that saving/copying a custom dragon could leave the
+  previous dropdown selection until polling. Immediate edit/delete now follows
+  the newly saved dragon, with a regression test that fails on the old code.
+- Dark-room dimming combined with minimum manual glow could round awake pixels
+  to black. Dimming now preserves a minimal nonzero level for already-lit pixels;
+  sleep, black regions and all session power ceilings remain effective. Native
+  checks cover all 79 selectable presets at six power budgets.
+- Installed and tested the matching S3 firmware over USB-only power. See the
+  [19 October physical record](docs/HARDWARE-TEST-2026-10-19.md). C3 is build-tested;
+  no C3 board was available for physical testing.
+
 ## 0.2.0-prototype — 19 October 2026
 
 - Renamed the product, offline interface, setup-card template, manual and build

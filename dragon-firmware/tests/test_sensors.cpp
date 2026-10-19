@@ -11,6 +11,23 @@ int main(){
  mode=SOLID;solidColor={255,255,255};composeFrame(100);RGB base[64];memcpy(base,frame,sizeof(frame));
  ambientGain=60;touchGain=50;composeFrame(100);
  for(int i=0;i<64;i++){auto expected=scaled(scaled(base[i],60,100),50,100);assert(!memcmp(&frame[i],&expected,sizeof(RGB)));}
+ // Dark-room gain and minimum manual glow must not round an awake pixel to
+ // black. Retain only pixels the session power budget can already illuminate.
+ for(uint16_t limit:{300,400,500,800,1600,2400}){
+  operatingTotal=limit;mode=ZONE_VIEW;
+  for(uint8_t p=0;p<PRESET_COUNT;p++){
+   if(PRESET_RETIRED[p])continue;setPalette(p);
+   ambientGain=touchGain=100;composeFrame(100);memcpy(base,frame,sizeof(frame));
+   ambientGain=touchGain=10;composeFrame(100);
+   for(int i=0;i<64;i++){
+    bool lit=base[i].r||base[i].g||base[i].b;
+    assert(bool(frame[i].r||frame[i].g||frame[i].b)==lit);
+   }
+   assert(estimatedMa+runtimeReserve(limit)<=limit);
+  }
+ }
+ operatingTotal=400;mode=SOLID;solidColor={0,0,0};composeFrame(100);assert(channelSum(frame)==0);
+ operatingTotal=1600;
  for(int b=1;b<=100;b++){setBrightness(b);assert(brightness>=10&&brightness<=100&&brightness%10==0);}
  autoLight=false;setBrightness(50);touchGain=100;lastFade=lastLight=fakeTime=0;lightReads=0;
  advance(1500);assert(touchGain==50&&lightReads==0); // fading, without extra ADC load

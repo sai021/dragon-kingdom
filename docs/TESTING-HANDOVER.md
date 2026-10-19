@@ -2,9 +2,12 @@ Software and documentation follow-up - 19 October 2026
 
 Latest: [Dragon Kingdom release verification](KINGDOM-RELEASE-2026-10-19.md).
 The renamed S3/C3 pair supersedes the prepared images below. Setup Wi-Fi and
-mDNS change to `Dragon-Kingdom-XXXXXX`; saved data stays compatible. Physical
-testing of the new pair awaits current USB-only power confirmation. COM17 was
-enumerated; no chip was probed or flashed for this release yet.
+mDNS change to `Dragon-Kingdom-XXXXXX`; saved data stays compatible. The S3 on
+COM17 was ROM-identified and the corrected 0.2.1 image installed under confirmed
+USB-only power. See the [19 October physical record](HARDWARE-TEST-2026-10-19.md)
+for live API/UI/persistence tests, touch/LDR evidence and the two fixes found.
+The user confirmed tap/double-tap and that covered-LDR minimum glow stays lit.
+C3 remains build-tested only; no C3 hardware was available.
 
 The [reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are built and saved as
 one verified S3/C3 release set. No board was flashed in that repair session;

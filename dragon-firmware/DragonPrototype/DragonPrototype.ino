@@ -255,8 +255,11 @@ void composeFrame(uint32_t now) {
  else capVisibleCurrent(frame,operatingTotal-runtimeReserve(operatingTotal));
  // Exactly one scaling per hierarchy level: session power -> ambient -> touch.
  if(!sunrise.active)for(auto& pixel:frame){
-  pixel=scaled(pixel,ambientGain,100);
-  pixel=scaled(pixel,touchGain,100);
+  // Keep an awake, already power-limited pixel visible at the lowest gains.
+  // Zero gains and intentionally black pixels remain black; output never
+  // exceeds the frame that passed the session current cap above.
+  pixel=visibleScale(pixel,ambientGain,100);
+  pixel=visibleScale(pixel,touchGain,100);
  }
  estimatedMa=estimatedMilliAmps(frame);
 }

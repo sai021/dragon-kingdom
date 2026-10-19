@@ -7,14 +7,16 @@ and make custom dragons without installing an app or writing code.
 
 **Current state: working development prototype, updated 19 October 2026.**
 The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates
-the unpublished improvements, renamed assets and verified S3/C3 firmware builds.
+the accumulated improvements, renamed assets and verified S3/C3 firmware builds.
 Board-specific downloads are available from
 [GitHub releases](https://github.com/sai021/dragon-kingdom/releases).
 Updated devices use `Dragon-Kingdom-XXXXXX` for setup Wi-Fi and their `.local`
 name; update old bookmarks/setup cards. Saved collections and home Wi-Fi remain.
 The [19 October reliability repairs](docs/RELIABILITY-FIXES-2026-10-19.md) add
 saved-data safeguards, browser recovery and bounded HTTP handling. Those changes
-have software verification; live installation remains a separate step.
+are installed on the USB-powered S3. The
+[19 October physical checks](docs/HARDWARE-TEST-2026-10-19.md) also found and
+fixed immediate custom-selection and minimum-glow rounding issues.
 The wired S3 prototype has previously passed USB startup, visible lighting/touch/sensor,
 sunrise scheduling, live local web controls and saved-data reset checks. Router
 and house Wi-Fi connect with the tested lower transmit-power setting. Live desktop embedded-page checks also cover controls, alarm save/reload,

@@ -107,7 +107,7 @@ async function request(path,data){
 }
 function render(state){
  if(lastState&&state.profile!==undefined&&state.profile!==lastState.profile)reloadCollection();lastState=state;$('#status').textContent=state.connecting?'Connecting to home Wi-Fi…':state.connected?'Your dragon is on home Wi-Fi. Ready to play!':state.accessPoint?'Connected directly to your dragon. Ready to play!':'Home Wi-Fi is unavailable. Touch play still works.';
- if(!$('#dragon').disabled&&document.activeElement!==$('#dragon'))$('#dragon').value=state.dragon;if(document.activeElement!==$('#brightness'))$('#brightness').value=state.brightness;
+ if(document.activeElement!==$('#dragon')&&Array.from($('#dragon').options).some(option=>option.value===String(state.dragon)))$('#dragon').value=state.dragon;if(document.activeElement!==$('#brightness'))$('#brightness').value=state.brightness;
  const asleep=state.mode===9||state.brightness===0;$('#sleep').textContent=asleep?'Wake my dragon':'Put dragon to sleep';
  for(const button of document.querySelectorAll('[data-effect]'))button.setAttribute('aria-pressed',String(!asleep&&effects[state.mode]===button.dataset.effect));
  updateControls();

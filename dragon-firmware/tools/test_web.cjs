@@ -92,6 +92,17 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   await page.locator('#editor').screenshot({path:path.join(root,'.tools/custom-editor-phone.png')});
   await page.click('#save-custom');await page.waitForFunction(()=>document.querySelector('#feedback').textContent==='Your dragon is saved!');
   assert.equal(customs[0].name,'My Spark');assert.equal(customs[0].colorMask,1<<5);assert.equal(customs[0].effectZones[3],1<<5);
+  // The save response renders while controls are disabled. Immediate editing
+  // must follow the newly saved selection, without waiting for a polling tick.
+  await page.evaluate(()=>clearInterval(pollTimer));
+  assert.equal(await page.inputValue('#dragon'),'81');
+  await page.click('#create-dragon');await page.waitForFunction(()=>!commandBusy&&draft?.id===81);
+  await page.fill('#custom-name','My Spark copy');await page.click('#copy-custom');await page.waitForFunction(()=>!commandBusy&&draft===null);
+  assert.equal(await page.inputValue('#dragon'),'82');
+  await page.click('#create-dragon');await page.waitForFunction(()=>!commandBusy&&draft?.id===82);
+  assert.equal(await page.inputValue('#custom-name'),'My Spark copy');
+  page.once('dialog',dialog=>dialog.accept());await page.click('#delete-custom');await page.waitForFunction(()=>!commandBusy&&draft===null);
+  assert.equal(customs.length,1);assert.equal(customs[0].id,81);assert.equal(customs[0].name,'My Spark');
   await page.check('#favorite-81');await page.selectOption('#profile-glow','40');await page.click('#save-profile');
   await page.waitForFunction(()=>document.querySelector('#feedback').textContent==='Profile saved.');assert.deepEqual(profiles[1].favorites,[81]);assert.equal(state.brightness,40);assert.equal(await page.locator('#dragon option').count(),1);assert.equal(await page.locator('#dragon option[value="0"]').count(),0);
   await page.fill('#new-profile-name','Alex');await page.click('#new-profile');await page.waitForFunction(()=>document.querySelector('#feedback').textContent==='Your new profile is ready.');
