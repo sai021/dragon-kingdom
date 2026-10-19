@@ -45,7 +45,7 @@ workflows in installed Edge, and both pinned S3/C3 Arduino builds. The browser
 suite initially could not find Playwright's bundled browser; rerunning with the
 installed Edge executable passed. These software checks are separate from the
 physical S3 measurements. C3 physical tests earlier on this date apply to
-v0.2.2; the updated C3 image is build-tested until physically installed again.
+v0.2.2; the subsequent updated C3 verification is recorded below.
 
 Both v0.2.3 board archives are prepared with unchanged partition/storage layouts.
 The paired source fingerprint is
@@ -144,3 +144,46 @@ failures, clear the unexplained helper/reset error, or establish range/endurance
 or final-enclosure RF performance. The user was asked to reconnect C3 for a
 physical check of its updated 0.2.3 radio-startup image; earlier C3 passes remain
 0.2.2 evidence until that check is complete.
+
+
+## C3 verification on the published 0.2.3 image
+
+The user reconnected C3 on COM61 under the confirmed USB-only arrangement.
+ROM identity was verified, its current 20,480-byte NVS partition backed up
+privately, and the checksum-verified published C3 image installed with flash
+hash verification and no whole-chip erase. The application SHA-256 is the C3
+value in the table above. Before/after startup retained All, zero customs and
+library generation 8. Startup passed the increasing-uptime/library/400 mA checks.
+Saved home Wi-Fi reconnected and driver status confirmed 8.5 dBm and station
+readiness.
+
+Five ROM-only reset cycles each rejoined and served authenticated HTTP:
+7.42, 7.45, 7.33, 8.50 and 8.56 seconds. RSSI at those connected samples was
+-64, -66, -65, -64 and -65 dBm. Each retained the USB ceiling and radio setting.
+The actual C3 embedded page in headless Edge then passed controls, sleep/wake,
+alarm save/reload/restore and preview/stop, scan, protected All, empty-profile
+reload, custom save/copy/delete, favourites and profile-deletion rehoming.
+No page errors were captured. Temporary data was removed and original settings
+restored. These are physical-device desktop-browser checks, not phone tests.
+The final user-operated cold boot and touch/LDR results follow.
+C3 evidence is in ignored `dragon-firmware/.tools/c3-final-20261019/`.
+
+
+The user unplugged C3 USB for five seconds and reconnected with touch untouched,
+then confirmed that lighting, tap, double-tap sleep/wake, hold brightness and
+LDR cover/uncover all worked on 0.2.3. The observer captured one uptime reset
+and home Wi-Fi connected at approximately 7.6 seconds uptime (preceding status
+7,577 ms), followed by 62 connected samples. Post-boot telemetry recorded 11
+touch presses, eight selected dragons, normal/sleep modes, brightness steps
+0–10, LDR 575–2,074 (filtered 619–2,050) and ambient gain 10–50. No panic or
+backtrace marker was captured during this observation.
+
+Test selections/glow were restored through the normal authenticated API and
+USB controls. Final USB and HTTP confirmed All/Blue/100% glow with automatic
+ambient adjustment, zero customs, original uncalibrated C3 thresholds 600/3400,
+disabled alarm, ready clock, home Wi-Fi connected, setup AP closed, 8.5 dBm
+radio setting and the 400 mA ceiling. The last disconnect reason remained 202
+while connected; no live failure is inferred from that retained field.
+Both published 0.2.3 images now have physical startup, reconnect/HTTP and cold
+USB boot evidence. No source or binary changed during these final checks.
+The previously listed S3 anomalies and broader product acceptance limits remain.

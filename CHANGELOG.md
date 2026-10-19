@@ -9,8 +9,9 @@
 - S3 reported the intended setting and connected after installation and one
   reset, but a later reset still failed. Home-Wi-Fi acceptance remains open.
 - Both firmware targets rebuilt and packaged; saved-data formats and the
-  400 mA USB ceiling remain intact. Earlier C3 physical passes apply to 0.2.2;
-  the new C3 image is build-tested. See the
+  400 mA USB ceiling remain intact. Updated C3 startup, five reconnect/HTTP
+  trials, actual embedded UI workflows, cold USB boot and user-confirmed
+  touch/LDR checks passed physically. See the
   [readiness evidence](docs/WIFI-READINESS-2026-10-19.md).
 
 ## 0.2.2-prototype — 19 October 2026

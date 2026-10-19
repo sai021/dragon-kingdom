@@ -1,15 +1,19 @@
-# S3 physical test record — 19 October 2026
+# S3 and C3 physical test record — 19 October 2026
 
-**Acceptance remains open: home-Wi-Fi reconnection after reset is intermittent.**
-The latest installed image is 0.2.2, application SHA-256
-`ae257d57571cb5e37065ef440b6a7fd5ad4482a0cb78ecbb6279ab5ba22b8ff1`.
-The successful checks below must be read together with the failed restart trials.
+Current firmware and image hashes are in the [0.2.3 release checkpoint](KINGDOM-RELEASE-2026-10-19.md).
+The [radio-readiness follow-up](WIFI-READINESS-2026-10-19.md) contains the latest
+S3 placement/cold-boot results and the updated C3 verification. Earlier S3
+Wi-Fi failures and the unexplained reset-helper error remain recorded; the
+successful later trials are limited to their tested conditions.
 
-The user confirmed **laptop USB power only, external/main power disconnected**,
-with only an S3 available. ROM probing identified ESP32-S3 on the currently
-enumerated COM17. The 0x9000–0xdfff NVS region was backed up privately before
-updating. Neither upload erased that region. Flash writes were hash-verified.
-The C3 build was not installed or physically tested.
+The sections below retain the original S3 session, followed by C3 and S3
+follow-ups. Initially only S3 was available, on confirmed laptop USB-only
+power with external/main power disconnected. Its NVS was backed up privately
+before hash-verified updates without whole-chip erase. The initial S3 session
+ended on 0.2.2 (application SHA-256
+`ae257d57571cb5e37065ef440b6a7fd5ad4482a0cb78ecbb6279ab5ba22b8ff1`).
+C3 was connected and tested later as described below; both boards are now
+installed with the published 0.2.3 images.
 
 ## Installed images and findings
 
@@ -247,3 +251,17 @@ The later clearer-antenna-position follow-up passed five ROM-only reset/HTTP
 trials and a user-operated cold USB boot, with home Wi-Fi connected at about
 7.6 seconds uptime and saved settings intact. The readiness record retains the
 separate failed reset/helper attempts and limits the pass to these conditions.
+
+
+## Final C3 verification on 0.2.3
+
+The published updated C3 image was ROM-selected, backed up and installed with
+flash hash verification. Startup retained the library and USB ceiling. Five
+ROM-only reset/HTTP trials passed in 7.33–8.56 seconds. Actual embedded-page
+controls, alarms, scan, profile/custom/favourite workflows and cleanup passed.
+The final user-operated cold USB boot connected at about 7.6 seconds uptime;
+the user confirmed normal lighting, all touch gestures and LDR response.
+Telemetry and final saved-state checks agree. Both 0.2.3 board images are now
+physically installed/tested; details, final state and limits are in the
+[readiness record](WIFI-READINESS-2026-10-19.md). This does not complete the
+separate external-supply, final design, range/endurance or physical-phone gates.

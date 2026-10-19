@@ -1,40 +1,36 @@
 # Dragon Kingdom
 
 A touch-controlled dragon lightbox for one child, with a phone interface for
-the child and their parents. An ESP32-S3 drives an 8×8 RGB LED matrix behind a dragon face.
+the child and their parents. An ESP32-S3 or ESP32-C3 drives an 8×8 RGB LED
+matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
-**Current state: working development prototype, updated 19 October 2026.**
-The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates
-the accumulated improvements, renamed assets and verified S3/C3 firmware builds.
-Board-specific downloads are available from
-[GitHub releases](https://github.com/sai021/dragon-kingdom/releases).
-Updated devices use `Dragon-Kingdom-XXXXXX` for setup Wi-Fi and their `.local`
-name; update old bookmarks/setup cards. Saved collections and home Wi-Fi remain.
-**Open acceptance issue:** the current USB-powered S3 has intermittent home-Wi-Fi
-reconnection after reset. Some starts connect, while later attempts can fail
-authentication. The [0.2.3 readiness repair](docs/WIFI-READINESS-2026-10-19.md)
-corrects an unapplied transmit-power limit, but subsequent reset results remain
-mixed. A later clearer-antenna position passed five ROM-only reset/HTTP trials;
-a real cold USB boot also passed in that position at about 7.6 seconds uptime.
-Broader placement/range and endurance validation remain open. See the [19 October hardware record](docs/HARDWARE-TEST-2026-10-19.md).
-The project remains a development prototype pending this and the physical gates below.
-The [19 October reliability repairs](docs/RELIABILITY-FIXES-2026-10-19.md) add
-saved-data safeguards, browser recovery and bounded HTTP handling. Those changes
-are installed on the USB-powered S3. The
-[19 October physical checks](docs/HARDWARE-TEST-2026-10-19.md) also found and
-fixed immediate custom-selection and minimum-glow rounding issues.
-The wired S3 prototype has previously passed USB startup, visible lighting/touch/sensor,
-sunrise scheduling, live local web controls and saved-data reset checks. Router
-and house Wi-Fi connect with the tested lower transmit-power setting. Live desktop embedded-page checks also cover controls, alarm save/reload,
-Wi-Fi scanning and profile/custom/favourite saves. See the
-[release checkpoint](docs/RELEASE-CHECKPOINT-2026-10-18.md) for the frozen software
-checks and remaining limits. The C3 follow-up has passed lighting, touch/LDR,
-normal cold USB startup, live web workflows and three Wi-Fi/HTTP reset cycles.
-Startup with touch held also passed. Final PCB/mechanical and optical fit, the complete
-physical-phone test matrix, long-duration reliability and the deployed supply
-have outstanding checks.
+**Current state: working development prototype, firmware 0.2.3, updated 19 October 2026.**
+The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates the
+accumulated source, interface, asset, palette and documentation improvements.
+Separate S3/C3 firmware downloads, checksums and the manual are on
+[GitHub releases](https://github.com/sai021/dragon-kingdom/releases/tag/v0.2.3-prototype).
+Updated setup Wi-Fi and `.local` names use `Dragon-Kingdom-XXXXXX`; update old
+bookmarks/setup cards. Saved collections, alarms and home Wi-Fi remain compatible.
+
+Both published board images are installed and physically tested under laptop
+USB-only power. Each passed five Wi-Fi reconnect/HTTP trials and a real cold
+USB boot, alongside live embedded web controls and saved-data checks. The user
+confirmed C3 touch gestures, lighting and LDR response on 0.2.3. The physical
+checks also found and fixed immediate custom selection, minimum-glow rounding
+and the [radio startup/power-setting race](docs/WIFI-READINESS-2026-10-19.md).
+Software checks passed: 25 Python tests, 15 native suites, simulated browser
+workflows and both pinned firmware builds. Physical and simulated evidence are
+recorded separately in the [hardware record](docs/HARDWARE-TEST-2026-10-19.md).
+
+**Remaining acceptance work:** earlier S3 reconnect failures and an unexplained
+reset-helper error remain recorded. The later S3 passes used a clearer antenna
+position and ROM-only reset procedure; they do not prove the cause or broader
+reliability. Range/endurance, physical phone browser coverage, deployed external
+supply/current/thermal behaviour and final PCB/mechanical/optical fit remain
+open. Existing mechanical/PCB assets are prototypes; newer user-supplied files
+are still pending.
 
 ## What works
 

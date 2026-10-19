@@ -1,27 +1,30 @@
 # Project checkpoint — 19 October 2026
 
-The latest checkpoint is the [Dragon Kingdom release](KINGDOM-RELEASE-2026-10-19.md):
-renamed interface/assets/manual, all accumulated improvements, both verified
-firmware builds and board-specific download bundles. Software checks passed.
-The 0.2.3 S3 image is installed under confirmed USB-only power.
-The [radio readiness repair](WIFI-READINESS-2026-10-19.md) now verifies the
-intended 8.5 dBm setting, but a repeated-reset failure remains unresolved.
-A later clearer-antenna placement passed five ROM-only reset/HTTP trials in
-7.4–8.6 seconds and a user-operated cold USB boot/HTTP check at approximately
-7.6 seconds uptime. These changed conditions
-do not establish the cause of the earlier failures. The 0.2.1
-embedded-page workflows passed, but repeated reset testing found intermittent
-home-Wi-Fi authentication/reconnection failures that remain unresolved.
-The user confirmed tap/double-tap and
-that minimum glow stays lit with the LDR covered. See the
-[19 October physical record](HARDWARE-TEST-2026-10-19.md). A subsequently connected
-C3 on the carrier now has the published 0.2.2 image installed and passed USB
-startup/library/400 mA checks. The user confirmed visible lighting, tap, double-tap,
-hold brightness and LDR cover/uncover response; telemetry agrees. Cold USB boot, live embedded-page workflows and three saved-Wi-Fi/HTTP
-reset cycles also passed. Startup with touch held also passed: the user confirmed normal lighting and
-phone visibility of setup Wi-Fi; post-boot serial and HTTP confirmed AP active,
-home Wi-Fi connected and the retained USB ceiling.
-The dated evidence below describes earlier images.
+The latest [Dragon Kingdom release](KINGDOM-RELEASE-2026-10-19.md) includes the
+renamed interface/assets/manual, all accumulated improvements and separate
+checksum-verified S3/C3 firmware downloads. Both published 0.2.3 images are now
+installed and physically checked under laptop USB-only power.
+
+The [radio readiness repair and latest hardware results](WIFI-READINESS-2026-10-19.md)
+verify the intended 8.5 dBm driver setting and 400 mA USB ceiling. S3 passed five
+ROM-only reset/HTTP trials in a clearer antenna position (7.4–8.6 seconds),
+plus a user-operated cold USB boot/HTTP check at about 7.6 seconds uptime.
+Earlier S3 reconnect failures and an unexplained helper/reset error remain
+unresolved; these later passes do not prove their cause or broader reliability.
+
+C3 0.2.3 passed preserved-library startup, saved-home-Wi-Fi connection, five
+reset/HTTP trials (7.3–8.6 seconds) and the actual embedded web workflows.
+Its final cold USB boot reconnected at about 7.6 seconds uptime; the user
+confirmed normal lighting, tap, double-tap, hold and LDR response, with matching
+telemetry. Earlier C3 0.2.2
+normal/held cold boot, setup Wi-Fi visibility and physical gestures/sensors
+passed with user confirmation and telemetry. Detailed dated evidence remains
+in the [physical record](HARDWARE-TEST-2026-10-19.md).
+
+The remaining gates include deployed external supply/current/thermal behaviour,
+final prints/PCB/optical fit, physical phone browser coverage, range and endurance.
+Earlier prototype assets are not the final design. The sections below retain
+the earlier software and test checkpoints.
 
 The [19 October reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are the
 earlier software checkpoint: 25 Python tests, 15 native suites, expanded browser

@@ -1,32 +1,30 @@
-Software and documentation follow-up - 19 October 2026
+Testing handover — 19 October 2026
 
-Latest: [Dragon Kingdom release verification](KINGDOM-RELEASE-2026-10-19.md).
-Current S3 follow-up: [readiness repair and final state](WIFI-READINESS-2026-10-19.md).
-S3 is on home Wi-Fi with setup AP closed following normal resets,
-Blue/All/100% automatic glow, no
-temporary creations and a disabled alarm. Radio setting and 400 mA ceiling are
-confirmed. Five ROM-only resets passed in the clearer antenna position at
-7.4–8.6 seconds each; a manual cold USB boot also passed at about 7.6 seconds
-uptime, with authenticated HTTP and saved settings intact. Earlier Wi-Fi
-failures and an unexplained reset-tool panic remain recorded.
-The renamed S3/C3 pair supersedes the prepared images below. Setup Wi-Fi and
-mDNS change to `Dragon-Kingdom-XXXXXX`; saved data stays compatible. The S3 on
-COM17 was ROM-identified and the 0.2.3 image installed under confirmed
-USB-only power. See the [19 October physical record](HARDWARE-TEST-2026-10-19.md)
-for live API/UI/persistence tests, touch/LDR evidence and the two fixes found.
-The user confirmed tap/double-tap and that covered-LDR minimum glow stays lit.
-A C3 was subsequently connected on the carrier (COM61), ROM-identified and
-flashed with the published 0.2.2 C3 image. USB startup/library/400 mA checks passed;
-visible lighting, gestures and LDR response also passed with user confirmation
-and matching telemetry. Cold USB boot, live embedded-page workflows and three saved-Wi-Fi/HTTP
-reset cycles also passed. Startup with touch held also passed: the user confirmed normal lighting and
-phone visibility of setup Wi-Fi; post-boot serial and HTTP confirmed AP active,
-home Wi-Fi connected and the retained USB ceiling.
-The [0.2.3 radio readiness repair](WIFI-READINESS-2026-10-19.md) verified the
-intended TX setting, but repeated S3 resets still exposed intermittent
-home-Wi-Fi reconnect failures. C3 physical evidence above is for 0.2.2; the
-updated C3 image is build-tested only.
-Do not treat the earlier successful reconnect as proof this is resolved.
+Latest: [Dragon Kingdom release verification](KINGDOM-RELEASE-2026-10-19.md)
+and [radio readiness / current hardware results](WIFI-READINESS-2026-10-19.md).
+Both boards now have their matching published 0.2.3 images installed. No saved
+formats or partition layouts changed; the 400 mA computer-USB ceiling remains.
+
+S3, last on COM17, passed five ROM-only reset/HTTP trials in the clearer antenna
+position and a real cold USB boot. Its saved baseline is All/Blue/100% automatic
+glow, zero custom test dragons and a disabled alarm, with setup AP closed.
+Earlier Wi-Fi failures and the unexplained reset-helper error remain recorded;
+do not infer range or endurance approval from these limited later passes.
+
+C3 is currently connected on COM61. The published 0.2.3 image passed preserved
+library startup, home Wi-Fi, five reset/HTTP trials and actual embedded UI
+controls, alarms, scan and profile/custom workflows. Temporary entries were
+removed and saved settings restored. The final user-operated cold USB boot
+reconnected at about 7.6 seconds uptime and passed visible lighting, touch
+gestures and LDR response with user confirmation and matching telemetry.
+Final C3 state is All/Blue/100% automatic glow, zero customs, disabled alarm,
+ready clock, home Wi-Fi connected and setup AP closed. Earlier 0.2.2 held-touch startup
+and phone setup-AP visibility passed. Raw logs/settings stay in ignored
+`.tools/c3-final-20261019/` under the firmware folder.
+
+The historical checkpoints below retain their dates/images and must not be read
+as the latest connected board. Verify port and live state before any upload.
+Never connect laptop USB and external/main power simultaneously.
 
 The [reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are built and saved as
 one verified S3/C3 release set. No board was flashed in that repair session;
