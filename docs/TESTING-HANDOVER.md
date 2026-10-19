@@ -6,7 +6,8 @@ S3 is on home Wi-Fi with setup AP closed following normal resets,
 Blue/All/100% automatic glow, no
 temporary creations and a disabled alarm. Radio setting and 400 mA ceiling are
 confirmed. Five ROM-only resets passed in the clearer antenna position at
-7.4–8.6 seconds each; a manual cold power cycle is pending. Earlier Wi-Fi
+7.4–8.6 seconds each; a manual cold USB boot also passed at about 7.6 seconds
+uptime, with authenticated HTTP and saved settings intact. Earlier Wi-Fi
 failures and an unexplained reset-tool panic remain recorded.
 The renamed S3/C3 pair supersedes the prepared images below. Setup Wi-Fi and
 mDNS change to `Dragon-Kingdom-XXXXXX`; saved data stays compatible. The S3 on

@@ -242,3 +242,8 @@ The current S3 image is v0.2.3, with unchanged storage/partitions and the
 400 mA USB ceiling. The earlier S3 reconnect gate remains open. Earlier C3
 physical results remain specifically v0.2.2 evidence; the new paired C3 image
 is build-tested only.
+
+The later clearer-antenna-position follow-up passed five ROM-only reset/HTTP
+trials and a user-operated cold USB boot, with home Wi-Fi connected at about
+7.6 seconds uptime and saved settings intact. The readiness record retains the
+separate failed reset/helper attempts and limits the pass to these conditions.

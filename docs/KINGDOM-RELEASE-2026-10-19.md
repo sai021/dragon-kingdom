@@ -105,3 +105,9 @@ bundles are `20261019-kingdom-4c20fe7d4d16-s3` and
 The current S3 image is 0.2.3; its radio-setting correction and mixed reset
 results are detailed in the linked readiness repair. The C3 physical results
 above apply to 0.2.2. The updated 0.2.3 C3 image is build-tested only.
+
+Latest S3 placement follow-up: five ROM-only resets rejoined and served HTTP
+in 7.4–8.6 seconds each, and a manual cold USB boot connected at about 7.6
+seconds uptime. These passes are limited to the tested clearer antenna
+position; earlier failures and an unexplained helper/reset error remain
+recorded. The updated C3 physical check is pending.

@@ -125,3 +125,22 @@ ceiling. The setup AP was not requested during these normal starts. This is
 five successful trials under the changed placement/procedure, not proof of
 reliability in the earlier position or longer endurance. A user-operated USB
 power-off/on test is the next check; no source/binary was changed.
+
+
+The user then unplugged USB for five seconds and reconnected the S3 in the new
+position with touch untouched, confirming normal visible startup. The observer
+captured an uptime reset and the home connection at approximately 7.6 seconds
+uptime (the preceding status sample was 7,648 ms). Thirteen subsequent connected
+samples were recorded through approximately 21 seconds uptime, with no panic
+or backtrace marker captured. Post-boot authenticated state/library/alarm reads
+passed. Final state is connected with setup AP closed, ready All, zero customs,
+Blue, 100% manual glow with automatic ambient adjustment, original calibrated
+LDR thresholds, disabled alarm, ready clock, 8.5 dBm driver setting and the
+400 mA USB ceiling. RSSI was -53 dBm.
+
+This completes five reset/HTTP trials plus one user-operated cold USB boot in
+the clearer antenna position on v0.2.3. It does not prove the cause of earlier
+failures, clear the unexplained helper/reset error, or establish range/endurance
+or final-enclosure RF performance. The user was asked to reconnect C3 for a
+physical check of its updated 0.2.3 radio-startup image; earlier C3 passes remain
+0.2.2 evidence until that check is complete.
