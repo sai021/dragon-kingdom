@@ -11,8 +11,8 @@ that minimum glow stays lit with the LDR covered. See the
 [19 October physical record](HARDWARE-TEST-2026-10-19.md). A subsequently connected
 C3 on the carrier now has the published 0.2.2 image installed and passed USB
 startup/library/400 mA checks. The user confirmed visible lighting, tap, double-tap,
-hold brightness and LDR cover/uncover response; telemetry agrees. Network and
-cold-boot strapping checks are ongoing.
+hold brightness and LDR cover/uncover response; telemetry agrees. Cold USB boot, live embedded-page workflows and three saved-Wi-Fi/HTTP
+reset cycles also passed. Startup with touch held remains pending.
 The dated evidence below describes earlier images.
 
 The [19 October reliability repairs](RELIABILITY-FIXES-2026-10-19.md) are the

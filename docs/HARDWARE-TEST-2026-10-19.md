@@ -147,8 +147,9 @@ to the explicitly identified earlier image.
 
 ## Remaining physical limits
 
-C3 carrier orientation/strapping/sensors, deployed external supply/current/thermal
-behaviour, final prints and Gerbers, optical separation/colour agreement,
+The later C3 follow-up below supersedes the initial lack of C3 hardware.
+Deployed external supply/current/thermal behaviour, final prints and Gerbers,
+optical separation/colour agreement,
 physical phone platforms, deliberate router loss, cold power-cut/NTP recovery
 and longer endurance remain separate checks. The old mechanical/PCB assets
 remain prototypes. No simultaneous USB/external-power test was performed.
@@ -185,3 +186,26 @@ remains open.
 
 C3 raw logs and saved settings are in ignored
 `dragon-firmware/.tools/c3-hardware-20261019/`.
+
+
+The user then disconnected USB for five seconds and reconnected with the touch
+pad untouched. Normal visible startup was confirmed; serial independently
+passed increasing-uptime/library/400 mA checks after that cold boot.
+
+C3 provisioning to the intended home network succeeded over trusted USB. The
+laptop reached authenticated state/library/dragons/alarm endpoints through the
+existing cross-network router rule. Headless Edge then exercised the actual
+C3 embedded page at 390 × 844, with a desktop screenshot at 1280 × 900. Controls,
+sleep/wake, alarm save/reload/restore and preview/stop, Wi-Fi scan, protected All,
+empty-profile reload, custom save/copy/delete, favourites and profile-deletion
+rehoming passed without captured page errors. These are live-device desktop
+browser checks, not physical phone tests. Temporary test data was removed;
+only All, zero customs, Blue at 100% glow and the original disabled alarm remain.
+
+
+Three subsequent ROM-loader hard-reset cycles each rejoined the saved home
+network and returned authenticated HTTP state: 7.44, 8.59 and 7.48 seconds after
+the loader reset. The serial observations retained the 400 mA USB ceiling.
+These three C3 trials passed; they do not resolve or supersede the S3 failures.
+Cold startup with the touch pad held (GPIO2 strapping/setup gesture) remains
+the next physical check.

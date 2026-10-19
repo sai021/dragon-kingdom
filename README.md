@@ -26,9 +26,11 @@ sunrise scheduling, live local web controls and saved-data reset checks. Router
 and house Wi-Fi connect with the tested lower transmit-power setting. Live desktop embedded-page checks also cover controls, alarm save/reload,
 Wi-Fi scanning and profile/custom/favourite saves. See the
 [release checkpoint](docs/RELEASE-CHECKPOINT-2026-10-18.md) for the frozen software
-checks and remaining limits. C3
-hardware, final PCB/mechanical and optical fit, the complete physical-phone test
-matrix, long-duration reliability and the deployed supply have outstanding checks.
+checks and remaining limits. The C3 follow-up has passed lighting, touch/LDR,
+normal cold USB startup, live web workflows and three Wi-Fi/HTTP reset cycles.
+C3 startup with touch held, final PCB/mechanical and optical fit, the complete
+physical-phone test matrix, long-duration reliability and the deployed supply
+have outstanding checks.
 
 ## What works
 
@@ -123,7 +125,8 @@ The flasher supports mixed S3/C3 batches by reading the connected chip identity
 and choosing a separate saved firmware image. C3 uses the matching eight-pin
 header map. A C3 on the carrier has now passed published-image USB startup,
 library and 400 mA ceiling checks, plus user-confirmed lighting, touch gestures
-and LDR response. Wi-Fi and cold-boot strapping checks remain in progress.
+and LDR response. Cold USB boot, live web workflows and three Wi-Fi/HTTP reset cycles also passed;
+startup with touch held remains pending.
 
 The build regenerates palette and embedded-page headers. Keep
 `DragonPrototype/build_opt.h`: its network-event locking fixed a reproduced
