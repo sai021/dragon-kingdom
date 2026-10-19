@@ -119,6 +119,32 @@ The final image matches the paired release manifest's S3 application hash.
 Saved configuration remains present. Further network/radio and supply evidence
 is needed before closing the home-Wi-Fi acceptance gate.
 
+The user clarified that the laptop and dragon use different Wi-Fi networks,
+with a router rule permitting access. Programmatic Windows WLAN switching was
+blocked by its Location permission setting; no successful laptop switch was
+established, and internet connectivity remained available. Direct setup-AP
+browser access therefore was not verified in that attempt.
+
+Opening the dragon's recovery AP through USB was followed by a successful saved
+home-network connection. Authenticated HTTP access through the router rule then
+worked. All temporary verification profiles/creations were removed; the saved
+profile list matched the baseline (only All), with zero custom test dragons.
+The user's current Willow selection was restored at 100% normal glow, and the
+alarm remained disabled at 07:00 / 20 minutes. A further image that disabled
+Wi-Fi sleep before joining also failed its 90-second trial; that experimental
+change was discarded. Recovery with AP open is evidence of an available path,
+not proof of why ordinary station starts fail.
+
+The checksum-verified canonical 0.2.2 image was reinstalled after discarding that
+experiment. It passed USB startup/library/ceiling checks. Recovery AP opening
+was reported, but the home network did not reconnect within the subsequent
+130-second observation. Final USB verification shows protected All active,
+zero custom test dragons, Willow at normal 100% glow with automatic dimming,
+alarm disabled, and the 400 mA estimated ceiling. Home credentials remain saved
+and the recovery AP is open; home-Wi-Fi readiness is not claimed. No final HTTP
+stress rerun was possible in this state. Earlier transport metrics above apply
+to the explicitly identified earlier image.
+
 ## Remaining physical limits
 
 C3 carrier orientation/strapping/sensors, deployed external supply/current/thermal
