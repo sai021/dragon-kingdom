@@ -72,7 +72,8 @@ and export/import backups are not implemented yet.
 | Hardware assembly and power | [Hardware wiring](dragon-firmware/HARDWARE-WIRING.md) |
 | Profiles and custom dragons | [Collections and editing](dragon-firmware/PROFILES-AND-CREATIONS.md) |
 | Wi-Fi setup and recovery | [Web setup](dragon-firmware/WEB-SETUP.md) |
-| Current manual edition | 0.5, 19 October 2026; eight A4 pages |
+| Current manual edition | 0.7, 20 October 2026; eight A4 pages |
+| Universal QR setup cards and rear labels | [Print and verify](docs/QR-SETUP.md) |
 | Current evidence and unfinished checks | [Project status](docs/PROJECT-STATUS.md) |
 | System design and API | [Architecture](docs/ARCHITECTURE.md) |
 | Optical/CAD prototype | [Mechanical assets](docs/MECHANICAL-ASSETS.md) |
@@ -129,6 +130,9 @@ monitors before uploading. Build uses Arduino-ESP32 3.2.1, Adafruit NeoPixel
 To program several boards, double-click `dragon-firmware/Flash Dragons.cmd`.
 The [batch flasher guide](docs/BATCH-FLASHING.md) covers building once,
 swapping boards, and manual Boot/Reset steps.
+Enable **Auto mode — flash on connection** for hands-free batch uploads. After
+each STARTUP PASS, unplug and wait for **Auto ready** before connecting the next
+board. Auto starts off and switches off on errors.
 The flasher supports mixed S3/C3 batches by reading the connected chip identity
 and choosing a separate saved firmware image. C3 uses the matching eight-pin
 header map. A C3 on the carrier has now passed published-image USB startup,

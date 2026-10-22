@@ -16,7 +16,7 @@ Your new dragon is a sensitive creature and performs a strict waking ritual when
 
 Your dragon didn't hatch out of just any boulder! Because keeping seventy-nine full-sized dragons in one bedroom is frowned upon, your Wall Dragon is trained in **Chameleon Shifting**. With a single pat, it can channel **79 famous dragons** from the tribes—plus up to **eight rare hybrids** invented by you.
 
-**Keep your setup card.** It has your dragon's Wi-Fi name. Its setup password is **dragon123** (all lowercase).
+**Keep your setup card.** Every dragon uses the same QR card. You may write its Wi-Fi name in the optional blank. The setup password is **dragon123** (all lowercase).
 
 <!-- page -->
 
@@ -54,11 +54,11 @@ Section Two — telepathy for grown-up keepers
 
 While your dragon is happy being patted on its right-side touch button without knowing what the internet is, grown-ups can speak to it through a phone browser. No app or coding is needed.
 
-1. Wait for your dragon to finish its blue-eye waking ritual.
-2. Open the phone's Wi-Fi settings and join the dragon network named on its setup card.
+1. Read the **Setup & manual** QR guide while you have internet. Power on one new dragon and wait for its waking ritual.
+2. Open phone Wi-Fi settings and choose **Dragon-Kingdom-** followed by six letters/numbers. If several appear, power off the other dragons during setup.
 3. Enter **dragon123** (all lowercase).
 4. If the phone warns that this network has no internet, choose **Stay connected**. (Dragons do not read emails.)
-5. Open a browser and type **http://192.168.4.1** in the address bar.
+5. The setup page may appear automatically. Otherwise scan **Open dragon** on the card or rear label. Fallback: **http://192.168.4.1**.
 6. Log in with username **parent** and password **dragon123**.
 
 You can play and edit right away over the dragon's own network. Home Wi-Fi is optional. Updated firmware uses **dragon123** even if an older card shows a random password. Your home Wi-Fi keeps its own private password.
@@ -217,4 +217,4 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi & browser password: **dragon123** (Browser username: **parent**). Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom prototype user manual, version 0.6, 19 October 2026. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom prototype user manual, version 0.7, 20 October 2026. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.

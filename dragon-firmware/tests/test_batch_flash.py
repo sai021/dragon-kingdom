@@ -5,7 +5,7 @@ import sys
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
@@ -14,6 +14,14 @@ from flash_support import check_startup
 from flash_support import compiler_lock
 from board_targets import TARGETS, parse_chip, detect_board
 from batch_flash import Flasher
+
+
+def destroy_window(window):
+    # Cancel Tcl callbacks before destroying a root; subsequent test roots share
+    # the event dispatcher and must not receive callbacks from a closed window.
+    for callback in window.tk.call('after', 'info'):
+        window.after_cancel(callback)
+    window.destroy()
 
 
 class BatchFlashTests(unittest.TestCase):
@@ -78,7 +86,7 @@ class BatchFlashTests(unittest.TestCase):
                     self.assertEqual((cache/'current-set.json').read_bytes(),previous)
                     for board in TARGETS:self.assertEqual(load_bundle(cache,board),original[board])
             finally:
-                window.destroy()
+                destroy_window(window)
 
     def test_build_lock_rejects_concurrent_build_and_releases_after_error(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -97,6 +105,9 @@ class BatchFlashTests(unittest.TestCase):
         for board in TARGETS:
             flasher = Flasher.__new__(Flasher)
             flasher.cli = 'arduino-cli'
+            flasher.busy = False
+            flasher.known_ports = {'COM7'}
+            flasher.auto_mode = Mock(get=lambda: False)
             flasher.ready = True
             flasher.port = Mock(get=lambda: 'COM7')
             flasher.events = Mock()
@@ -243,6 +254,179 @@ class BatchFlashTests(unittest.TestCase):
         with patch('flash_support.serial_modules', return_value=(serial, ports)):
             with self.assertRaisesRegex(RuntimeError, 'NOT confirmed'):
                 check_startup('COM7', lambda line: None, timeout=0)
+
+
+class AutoFlashTests(unittest.TestCase):
+    """Real Tk/worker event flow with discovery, ROM, upload and startup fakes."""
+
+    def setUp(self):
+        import tkinter as tk
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        cache_patch = patch('batch_flash.CACHE', Path(directory.name))
+        cache_patch.start()
+        self.addCleanup(cache_patch.stop)
+        refresh_patch = patch.object(Flasher, 'refresh')
+        refresh_patch.start()
+        self.addCleanup(refresh_patch.stop)
+        self.window = tk.Tk()
+        self.window.withdraw()
+        self.addCleanup(destroy_window, self.window)
+        self.app = Flasher(self.window, 'unused')
+        self.app.builds = {board: Path(board) for board in TARGETS}
+        self.app.ready = True
+        self.app.run = Mock(return_value='COM8')
+        self.app.verify = Mock()
+        discovery = SimpleNamespace(stdout=json.dumps([
+            {'port': {'address': 'COM7', 'protocol': 'serial'}}]))
+        for mock_patch in (
+                patch('batch_flash.serial_modules'),
+                patch('batch_flash.subprocess.run', return_value=discovery),
+                patch('batch_flash.load_bundle', side_effect=lambda board: Path(board))):
+            mock_patch.start()
+            self.addCleanup(mock_patch.stop)
+        chip_patch = patch('batch_flash.detect_board', return_value='c3')
+        self.detect = chip_patch.start()
+        self.addCleanup(chip_patch.stop)
+
+    def enable(self):
+        self.app.auto_mode.set(True)
+        self.app.toggle_auto()
+
+    def finish(self):
+        deadline = time.monotonic() + 5
+        while self.app.busy and time.monotonic() < deadline:
+            self.window.update()
+            time.sleep(.01)
+        self.assertFalse(self.app.busy, self.app.status.get())
+        self.app.auto_settle_until = 0
+
+    def test_opt_in_mixed_batch_and_no_reflash_on_usb_renumber(self):
+        self.app.update_ports(['COM7'])
+        self.app.run.assert_not_called()
+        self.assertFalse(self.app.auto_mode.get())
+        self.enable()
+        self.app.update_ports(['COM7'])
+        self.finish()
+        self.assertIn(TARGETS['c3'], self.app.run.call_args.args)
+        self.assertIn('STARTUP PASS', self.app.status.get())
+        self.app.verify.assert_called_once_with('COM8')
+        for ports in (['COM7'], ['COM8'], [], ['COM8'], ['COM8']):
+            self.app.update_ports(ports)
+        self.assertEqual(self.app.run.call_count, 1)
+        self.app.update_ports([])
+        self.app.update_ports([])
+        self.assertIn('Auto ready', self.app.auto_status.get())
+        self.detect.return_value = 's3'
+        self.app.update_ports(['COM7'])
+        self.finish()
+        self.assertIn(TARGETS['s3'], self.app.run.call_args.args)
+        self.assertEqual(self.app.count, 2)
+        self.assertEqual(self.app.checked, 2)
+
+    def test_waits_for_connection_and_ignores_stale_discovery(self):
+        old_generation = self.app.scan_generation
+        self.enable()
+        self.app.events.put(('ports', (old_generation, ['COM7'])))
+        self.app.poll()
+        self.app.run.assert_not_called()
+        self.app.update_ports([])
+        self.assertIn('Auto ready', self.app.auto_status.get())
+        self.app.update_ports(['COM7'])
+        self.finish()
+        self.assertEqual(self.app.run.call_count, 1)
+        # A scan started before uploading cannot undo the unplug latch.
+        self.app.events.put(('ports', (old_generation, [])))
+        self.app.poll()
+        self.assertEqual(self.app.auto_absent_scans, 0)
+
+    def test_ambiguous_connections_and_missing_firmware_do_not_flash(self):
+        self.enable()
+        self.app.update_ports(['COM7', 'COM8'])
+        self.assertFalse(self.app.auto_mode.get())
+        self.assertIn('Several ports', self.app.auto_status.get())
+        self.app.run.assert_not_called()
+        self.app.ready = False
+        self.enable()
+        self.assertFalse(self.app.auto_mode.get())
+        self.assertIn('Build firmware first', self.app.auto_status.get())
+
+    def test_background_port_does_not_prevent_next_board(self):
+        self.enable()
+        self.app.update_ports([])
+        # An already known unrelated port is not a connection event.
+        self.app.known_ports = {'COM1'}
+        self.app.update_ports(['COM1', 'COM7'])
+        self.finish()
+        self.app.update_ports(['COM1'])
+        self.app.update_ports(['COM1'])
+        self.assertIn('Auto ready', self.app.auto_status.get())
+        self.app.update_ports(['COM1', 'COM7'])
+        self.finish()
+        self.assertEqual(self.app.run.call_count, 2)
+
+    def test_errors_stop_auto_without_retrying(self):
+        for failing_step in (self.detect, self.app.run, self.app.verify):
+            with self.subTest(step=failing_step):
+                self.app.auto_wait_disconnect = False
+                failing_step.side_effect = RuntimeError('simulated failure')
+                self.enable()
+                self.app.update_ports(['COM7'])
+                self.finish()
+                self.assertFalse(self.app.auto_mode.get())
+                self.assertIn('simulated failure', self.app.status.get())
+                calls = self.detect.call_count
+                self.app.update_ports([])
+                self.app.update_ports(['COM7'])
+                self.assertEqual(self.detect.call_count, calls)
+                failing_step.side_effect = None
+
+    def test_discovery_error_is_not_an_unplug(self):
+        self.app.update_ports(['COM7'])
+        self.enable()
+        self.app.events.put(('scan_error', (self.app.scan_generation, 'discovery failed')))
+        self.app.poll()
+        self.assertFalse(self.app.auto_mode.get())
+        self.assertEqual(self.app.known_ports, {'COM7'})
+        self.app.run.assert_not_called()
+
+    def test_switching_off_during_upload_finishes_without_another_flash(self):
+        self.enable()
+        self.app.update_ports(['COM7'])
+        self.app.auto_mode.set(False)
+        self.app.toggle_auto()
+        self.finish()
+        self.assertIn('STARTUP PASS', self.app.status.get())
+        self.app.update_ports([])
+        self.app.update_ports([])
+        self.app.update_ports(['COM7'])
+        self.assertEqual(self.app.run.call_count, 1)
+
+    def test_busy_and_settling_cannot_rearm_or_start_another_upload(self):
+        self.enable()
+        self.app.update_ports(['COM7'])
+        self.assertTrue(self.app.busy)
+        self.app.flash()
+        self.app.update_ports(['COM9'])
+        self.finish()
+        self.assertEqual(self.app.run.call_count, 1)
+        self.app.auto_settle_until = time.monotonic() + 30
+        self.app.update_ports([])
+        self.app.update_ports([])
+        self.assertTrue(self.app.auto_wait_disconnect)
+        self.assertEqual(self.app.auto_absent_scans, 0)
+
+    def test_toggle_does_not_reflash_the_finished_board(self):
+        self.enable()
+        self.app.update_ports(['COM7'])
+        self.finish()
+        self.app.auto_mode.set(False)
+        self.app.toggle_auto()
+        self.enable()
+        self.app.update_ports(['COM8'])
+        self.app.update_ports(['COM8'])
+        self.assertEqual(self.app.run.call_count, 1)
+        self.assertTrue(self.app.auto_wait_disconnect)
 
 
 if __name__ == '__main__':

@@ -31,11 +31,13 @@ Use `--cli PATH` if your CLI is elsewhere.
    images are copied into separate immutable bundles before publication. Only
    one updated flasher can build at a time. The displayed log is bounded to keep
    the window responsive; full output remains in the session's `uploader.log`.
-3. Connect one ESP32-S3 or ESP32-C3 SuperMini. Close serial monitors. Its port
-   is selected automatically; click **Flash this ESP32**. The flasher resets
+3. Close serial monitors. For a batch, enable **Auto mode — flash on connection**,
+   then connect one ESP32-S3 or ESP32-C3 SuperMini. A single board already
+   connected when Auto is enabled also starts automatically. Alternatively,
+   leave Auto off, connect a board and click **Flash this ESP32**. The flasher resets
    the selected board into its ROM loader and reads the chip identity with
    esptool, then uploads the matching saved firmware. Unsupported/unidentified
-   chips and missing/corrupt builds stop before any write. There is no checkbox.
+   chips and missing/corrupt builds stop before any write.
 4. If it cannot connect, hold **BOOT**, press and release **RESET**, then
    release **BOOT**. Wait for the port to update because its number can
    change in download mode. Retry flashing.
@@ -48,21 +50,40 @@ Use `--cli PATH` if your CLI is elsewhere.
    fails the check.
    If startup is not confirmed, press Reset and click **Check startup (no flash)**
    to retry without rewriting firmware. Close other serial monitors.
-6. Disconnect USB, connect the next board and repeat from step 3.
+6. Disconnect USB. In Auto mode, wait for **Auto ready**, then connect the next
+   board; it flashes and checks startup without further clicks. Otherwise,
+   connect the next board and repeat from step 3.
+
+Auto mode starts off each time the window opens and uses the displayed saved
+firmware. It does not rebuild on connection. It waits for two successful port
+scans showing the finished board disconnected before accepting another board,
+with a short settling period after each operation. Leave USB unplugged until
+**Auto ready** appears (normally a few seconds). A port-number change during
+flashing or reboot does not trigger another flash. Keep other serial devices
+unchanged while working through a batch.
+
+If several ports are present when enabling Auto, or several appear together,
+Auto switches off; select the intended port and flash manually. Upload, chip
+detection, firmware-validation, startup-check and discovery errors also switch
+Auto off, with no automatic retry. Resolve the displayed problem and retry
+manually, or unplug the board, enable Auto and wait for **Auto ready** before
+reconnecting. Turning Auto off during an upload lets that operation finish.
+**Build firmware** switches Auto off; enable it again after the build completes.
 
 Ports refresh in the background approximately every two seconds while idle.
 A single available port or a single newly appearing port is selected
 automatically. If several ports appear together, choose the board's port
 manually. The dropdown and **Refresh ports** button remain available.
-Automatic port selection is separate from chip detection, which happens when
-you click Flash. USB port descriptions are not used to infer the chip type.
-The power reminder remains visible without requiring a checkbox.
+Automatic port selection is separate from chip detection, which happens before
+every manual or automatic flash. USB port descriptions are not used to infer
+the chip type. The power reminder remains visible.
 
 The upload and startup-pass counters count operations, including repeats on
 the same board; they do not count unique devices. A startup pass confirms
 brief firmware execution, not LED, sensor, power-supply or Wi-Fi operation. The tool
-does not automatically flash newly connected devices. Check the selected port
-for every board. It supports only the project's S3 and C3 configurations.
+automatically flashes newly connected devices only while Auto mode is enabled.
+In manual mode, check the selected port for every board. It supports only the
+project's S3 and C3 configurations.
 Chip detection does not identify a SuperMini PCB revision or check its wiring.
 
 The saved builds, their selection manifests and per-session logs are under ignored

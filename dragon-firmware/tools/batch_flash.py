@@ -38,6 +38,12 @@ class Flasher:
         self.last_port = None
         self.scanning = False
         self.known_ports = set()
+        self.scan_generation = 0
+        self.auto_initial = False
+        self.auto_wait_disconnect = False
+        self.auto_background = set()
+        self.auto_absent_scans = 0
+        self.auto_settle_until = 0
         self.operation_started = 0
         self.operation_label = ''
         self.session = CACHE / datetime.now().strftime('%Y%m%d-%H%M%S-%f')
@@ -51,7 +57,7 @@ class Flasher:
         self.ready = bool(self.builds)
         cache_message = self.bundle_summary()
         self.window.title('Dragon Kingdom — automatic S3 / C3 batch flasher')
-        self.window.geometry('820x650')
+        self.window.geometry('820x720')
         frame = ttk.Frame(window, padding=16)
         frame.pack(fill='both', expand=True)
         ttk.Label(frame, text='Dragon Kingdom batch flasher', font=('', 18, 'bold')).pack(anchor='w')
@@ -59,8 +65,8 @@ class Flasher:
                   foreground='#b00020').pack(anchor='w', pady=8)
         ttk.Label(frame, text='Saved firmware is ready to flash. Build only after changing the sources.\n'
                   '1. Connect one board; its port is detected automatically.\n'
-                  '3. Click Flash this ESP32 (chip type detected before writing).\n'
-                  '4. Wait for STARTUP PASS, then swap boards.').pack(anchor='w')
+                  '2. Click Flash this ESP32, or enable Auto mode for a batch.\n'
+                  '3. Wait for STARTUP PASS, unplug, then wait for Auto ready before the next board.').pack(anchor='w')
         row = ttk.Frame(frame)
         row.pack(fill='x', pady=12)
         self.build_button = ttk.Button(row, text='Build firmware', command=self.compile)
@@ -73,6 +79,12 @@ class Flasher:
         self.flash_button.pack(side='left', padx=8)
         self.check_button = ttk.Button(frame, text='Check startup (no flash)', command=self.check)
         self.check_button.pack(anchor='w')
+        self.auto_mode = tk.BooleanVar(value=False)
+        self.auto_button = ttk.Checkbutton(frame, text='Auto mode — flash on connection',
+                                           variable=self.auto_mode, command=self.toggle_auto)
+        self.auto_button.pack(anchor='w', pady=(8, 0))
+        self.auto_status = tk.StringVar(value='Auto off. Enable to flash connected boards using the saved firmware.')
+        ttk.Label(frame, textvariable=self.auto_status, wraplength=760).pack(anchor='w')
         ttk.Label(frame, text='If connection fails: hold BOOT → press and release RESET → release BOOT.\n'
                   'Wait for the port to update (the COM number may change), then retry.\n'
                   'After flashing: release BOOT; press RESET if asked during the startup check.\n'
@@ -111,6 +123,7 @@ class Flasher:
         if self.busy:
             return
         self.busy = True
+        self.scan_generation += 1
         self.operation_started = time.monotonic()
         self.operation_label = label
         self.progress.start(50)
@@ -134,6 +147,7 @@ class Flasher:
     def compile(self):
         if self.busy:
             return
+        self.stop_auto('Build firmware, then enable Auto mode again when ready.')
         def work():
             with compiler_lock(CACHE):
                 self.compile_targets()
@@ -163,14 +177,15 @@ class Flasher:
         if self.busy or self.scanning:
             return
         self.scanning = True
+        generation = self.scan_generation
         def worker():
             try:
                 result = subprocess.run([self.cli, 'board', 'list', '--format', 'json'],
                                         capture_output=True, text=True, check=True, timeout=10,
                                         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-                self.events.put(('ports', serial_ports(json.loads(result.stdout))))
+                self.events.put(('ports', (generation, serial_ports(json.loads(result.stdout)))))
             except Exception as error:
-                self.events.put(('scan_error', str(error)))
+                self.events.put(('scan_error', (generation, str(error))))
         threading.Thread(target=worker, daemon=True).start()
 
     def auto_refresh(self):
@@ -189,17 +204,74 @@ class Flasher:
         else:
             selected = previous if previous in ports else ''
         self.port.set(selected)
+        self.maybe_auto_flash(set(ports), added)
+
+    def stop_auto(self, reason):
+        self.auto_mode.set(False)
+        self.auto_status.set('Auto off. ' + reason)
+
+    def toggle_auto(self):
+        # Require a fresh discovery after the user's change of mode.
+        self.scan_generation += 1
+        if not self.auto_mode.get():
+            self.auto_status.set('Auto off. Any current operation will finish normally.')
+            return
+        if not self.ready:
+            self.stop_auto('Build firmware first, then enable Auto mode.')
+            return
+        self.auto_initial = True
+        # Preserve the unplug latch when toggled during/after an operation.
+        self.auto_status.set('Auto on — checking ports. A single connected board will flash automatically.')
+        self.refresh()
+
+    def wait_for_disconnect(self, port):
+        # Treat all other current ports as background devices. Any new port may
+        # be this board re-enumerating from ROM to firmware, so it also blocks
+        # rearming until an actual unplug has been observed.
+        self.auto_background = self.known_ports - {port}
+        self.auto_wait_disconnect = True
+        self.auto_absent_scans = 0
+        self.auto_initial = False
+        if self.auto_mode.get():
+            self.auto_status.set('Auto on — processing this board. Wait for STARTUP PASS before unplugging.')
+
+    def maybe_auto_flash(self, ports, added):
+        if not self.auto_mode.get() or self.busy or not self.ready:
+            return
+        if self.auto_wait_disconnect:
+            if time.monotonic() < self.auto_settle_until:
+                return
+            self.auto_absent_scans = self.auto_absent_scans + 1 if ports <= self.auto_background else 0
+            if self.auto_absent_scans < 2:
+                self.auto_status.set('Auto on — unplug the finished board, then wait for Auto ready.')
+                return
+            self.auto_wait_disconnect = False
+            self.auto_initial = False
+            self.auto_status.set('Auto ready — connect the next ESP32 to flash automatically.')
+            return
+        candidates = ports if self.auto_initial else added
+        self.auto_initial = False
+        if len(candidates) > 1:
+            self.stop_auto('Several ports appeared. Select the board and click Flash this ESP32, or reconnect one board at a time.')
+        elif candidates:
+            self.port.set(next(iter(candidates)))
+            self.flash()
+        else:
+            self.auto_status.set('Auto ready — connect an ESP32 to flash automatically.')
 
     def flash(self):
+        if self.busy:
+            return
         port = self.port.get()
         if not self.ready or not port:
             messagebox.showinfo('Before flashing', 'Build firmware and connect the board. If several ports are present, select its port.')
             return
+        self.wait_for_disconnect(port)
         def work():
             serial_modules()  # Check dependency before uploading.
             # Recheck presence immediately before upload. Never erase the whole flash/NVS.
             result = subprocess.run([self.cli, 'board', 'list', '--format', 'json'],
-                                    capture_output=True, text=True, check=True,
+                                    capture_output=True, text=True, check=True, timeout=10,
                                     creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
             if port not in serial_ports(json.loads(result.stdout)):
                 raise RuntimeError('Selected port disappeared. Refresh ports and select the board again.')
@@ -227,10 +299,13 @@ class Flasher:
         return check_startup(port, emit)
 
     def check(self):
+        if self.busy:
+            return
         port = self.port.get() or self.last_port
         if not port:
             messagebox.showinfo('Connect a board', 'Connect the ESP32 and wait for its port to appear.')
             return
+        self.wait_for_disconnect(port)
         self.start('Checking startup…', lambda: self.verify(port), 'check')
 
     def poll(self):
@@ -252,8 +327,13 @@ class Flasher:
                 if kind in ('ports', 'scan_error'):
                     self.scanning = False
                     # Discard discovery started before an upload/build began.
-                    if not self.busy:
-                        self.update_ports(value if kind == 'ports' else [])
+                    generation, discovery = value
+                    if not self.busy and generation == self.scan_generation:
+                        if kind == 'ports':
+                            self.update_ports(discovery)
+                        elif self.auto_mode.get():
+                            # A failed discovery is not evidence of unplugging.
+                            self.stop_auto('Port discovery failed. Refresh ports and enable Auto mode again. ' + discovery)
                     continue
                 if kind == 'log':
                     self.log.configure(state='normal')
@@ -264,10 +344,12 @@ class Flasher:
                     self.log.configure(state='disabled')
                     continue
                 self.busy = False
+                self.auto_settle_until = time.monotonic() + 3
                 self.progress.stop()
                 self.ready = bool(self.builds)
                 self.firmware.set(self.bundle_summary())
                 if kind == 'error':
+                    self.stop_auto('Operation failed. Resolve the error; retry manually or unplug and enable Auto mode again.')
                     self.status.set(value + f' Uploads: {self.count}. Startup passes: {self.checked}.')
                 else:
                     action, result = value
@@ -277,6 +359,8 @@ class Flasher:
                     elif action in ('flash', 'check'):
                         self.checked += 1
                         self.status.set(f'STARTUP PASS — safe to unplug and swap boards. Uploads: {self.count}. Startup passes: {self.checked}.')
+                        if self.auto_mode.get():
+                            self.auto_status.set('Auto on — unplug the finished board, then wait for Auto ready.')
                 self.build_button.configure(state='normal')
                 self.refresh_button.configure(state='normal')
                 self.check_button.configure(state='normal')

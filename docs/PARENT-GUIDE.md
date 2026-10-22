@@ -3,7 +3,7 @@
 This guide is for one child and their grown-ups using a prepared prototype.
 Keep its printed setup card. No app, account or coding is needed for normal play.
 The printable [user manual](../output/pdf/dragon-kingdom-user-manual.pdf) is edition
-0.6 (keeper edition), dated 19 October 2026; the [editable source](USER-MANUAL.md) covers the same steps.
+0.7 (QR setup edition), dated 20 October 2026; the [editable source](USER-MANUAL.md) covers the same steps.
 
 ## Touch play
 
@@ -21,10 +21,10 @@ power, so 100% does not necessarily mean the LEDs' maximum possible output.
 
 ## First phone connection
 
-1. Plug in the prepared dragon and wait for startup to finish.
-2. Join the dragon Wi-Fi network shown on its setup card.
+1. Scan **Setup & manual** while you have internet, then power on one new dragon and wait for startup.
+2. In phone Wi-Fi settings choose **Dragon-Kingdom-** followed by six letters/numbers, using **dragon123**. If several appear, temporarily power off the others.
 3. If the phone warns that the network has no internet, choose to stay connected.
-4. Open `http://192.168.4.1` in the phone browser.
+4. The setup page may appear automatically. Otherwise scan **Open dragon** on the shared card or rear label. Fallback: `http://192.168.4.1`.
 5. Log in as `parent`, using the setup card's password.
 
 The 18 October 2026 firmware update uses **dragon123** for both the
@@ -103,7 +103,7 @@ Follow the prepared device's power instructions rather than changing its wiring.
 A low-power startup can leave Wi-Fi off while touch play still works. If setup
 never appears, ask the maker to check the specified supply and cable.
 
-Keep the setup card for the device's network name and address. For this firmware,
+Keep the universal QR setup card; optionally write the device's Wi-Fi name in its blank. For this firmware,
 the shared setup password is **dragon123**. Older firmware with a lost random
 password needs the maker's help or an update; a parent-friendly factory-reset
 flow has not been implemented.

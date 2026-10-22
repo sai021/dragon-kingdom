@@ -1,5 +1,50 @@
 # Project checkpoint — 19 October 2026
 
+## GitHub checkpoint — 23 October 2026
+
+This checkpoint preserves the current source, batch-flasher Auto mode,
+universal QR setup workflow and manual edition 0.7. All 34 Python regression
+tests passed again before publication. No board was connected or flashed for
+this publication; previous physical evidence retains its recorded scope.
+
+The user will supply newer STL and Gerber files soon. Those files and build
+photos remain pending; existing mechanical and PCB assets are earlier prototypes,
+not the final design. The `keeper-edition-draft/` folder is retained as an
+archival design draft; active sources remain in `dragon-firmware/web/` and `docs/`.
+
+## Universal QR setup — 20 October 2026
+
+[Universal cards and rear labels](QR-SETUP.md) now use the same two QR codes for
+all dragons: the public manual and the local setup controls. The A5 card has an
+optional handwritten Wi-Fi-name blank. No personalised printing or serial capture
+is required. Sources generate ignored `output/setup/` PDFs without a board.
+Manual edition 0.7 and parent/setup guides describe the shared-card workflow.
+All 14 rendered QR codes decoded correctly; card, labels and eight manual pages
+were visually reviewed. Printed phone scanning and enclosure fit remain pending.
+The manual QR now points directly to the edition 0.7 PDF on GitHub Pages at
+`https://sai021.github.io/dragon-kingdom/manual.pdf`, served from `gh-pages`.
+It opens without an intervening webpage; browser settings determine viewing
+or saving. Regenerated cards supersede the earlier Markdown-link cards.
+Firmware and physical-test evidence are unchanged.
+
+## Batch flasher Auto mode — 20 October 2026
+
+`Flash Dragons.cmd` now offers an opt-in **Auto mode — flash on connection**.
+It uses the existing ROM chip detection, matching checksum-verified S3/C3 image,
+upload and startup check. After each operation it waits for confirmed unplugging
+before accepting the next board, including when USB changes COM numbers.
+Ambiguous connections or operation/discovery errors switch Auto off. Disabling
+Auto during an operation lets it finish; opening the app always starts in manual
+mode. See [batch flashing](BATCH-FLASHING.md) for the swap sequence.
+
+Software evidence: all 34 Python tests passed, including 21 flasher tests and
+nine new real-Tk tests
+with simulated discovery, upload and startup responses. No hardware was probed
+or flashed for this change; physical Auto-mode batch verification is pending.
+Firmware sources, saved data handling and power limits are unchanged.
+
+## Firmware checkpoint
+
 Latest: [keeper edition 0.2.4](KEEPER-EDITION-2026-10-19.md), with a dragon-only
 editor, fixed favourites search, manual edition 0.6 and user-confirmed enclosure
 layout. Both firmware targets are rebuilt; the updated C3 image is installed
