@@ -1,6 +1,6 @@
 """Build universal QR setup cards and rear labels; no connected device required.
 
-Requires reportlab. Outputs stay in ignored output/setup/.
+Requires reportlab. The two universal PDFs in output/setup/ are tracked in Git.
 """
 import argparse
 from pathlib import Path

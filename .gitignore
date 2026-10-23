@@ -35,5 +35,7 @@ Thumbs.db
 # Local document-review renders (the finished manual is versioned)
 output/pdf/manual-review-*.png
 
-# Universal printable setup cards, QR labels and visual checks
-output/setup/
+# Publish only the universal PDFs; keep captures, renders and site checkout local.
+output/setup/*
+!output/setup/dragon-setup-card.pdf
+!output/setup/dragon-rear-labels.pdf

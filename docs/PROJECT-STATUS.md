@@ -1,5 +1,14 @@
 # Project checkpoint — 19 October 2026
 
+## Printable setup cards published — 24 October 2026
+
+The existing universal A5 setup card and A4 rear-label sheet are now tracked in
+`output/setup/`, with download links in README and the [print guide](QR-SETUP.md).
+Only these two PDFs are exempted from the output ignore rule. Personalised cards,
+credentials, visual-review renders and the local Pages checkout remain ignored.
+The PDFs are unchanged from the previously reviewed universal-card edition;
+printed phone scanning and enclosure fit remain pending.
+
 ## Hardware files received — 23 October 2026
 
 The native Fusion design archive `NightLamp.f3d` was subsequently added to the

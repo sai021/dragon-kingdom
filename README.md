@@ -75,7 +75,7 @@ and export/import backups are not implemented yet.
 | Profiles and custom dragons | [Collections and editing](dragon-firmware/PROFILES-AND-CREATIONS.md) |
 | Wi-Fi setup and recovery | [Web setup](dragon-firmware/WEB-SETUP.md) |
 | Current manual edition | 0.7, 20 October 2026; eight A4 pages |
-| Universal QR setup cards and rear labels | [Print and verify](docs/QR-SETUP.md) |
+| Universal QR setup cards and rear labels | [A5 card](output/setup/dragon-setup-card.pdf) / [A4 labels](output/setup/dragon-rear-labels.pdf) / [Print and verify](docs/QR-SETUP.md) |
 | Current evidence and unfinished checks | [Project status](docs/PROJECT-STATUS.md) |
 | System design and API | [Architecture](docs/ARCHITECTURE.md) |
 | Optical/CAD prototype | [Mechanical assets](docs/MECHANICAL-ASSETS.md) |
@@ -110,7 +110,7 @@ dragon-light-guide-prototype/ legacy delivery notes and validation reports
 ```
 
 Local runtimes, firmware binaries, logs, device credentials, printable setup
-cards, generated large STL meshes, and duplicate ZIP bundles are excluded
+cards personalised for a device, generated large STL meshes, and duplicate ZIP bundles are excluded
 from Git. See [mechanical assets](docs/MECHANICAL-ASSETS.md) to rebuild the mesh.
 Nothing is deleted from the local workspace by these exclusions.
 

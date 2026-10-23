@@ -5,10 +5,17 @@ unchanged, but no device name or credential capture is needed for printing.
 Families may write the name in the card's optional
 `Dragon-Kingdom-________________` blank.
 
-## Generate and print
+## Download, generate and print
+
+Print-ready universal PDFs are published in this repository:
+
+- [Download the A5 setup card](../output/setup/dragon-setup-card.pdf).
+- [Download the A4 rear-label sheet](../output/setup/dragon-rear-labels.pdf).
+
+On GitHub, use the PDF viewer's download button to save the original file.
 
 From `dragon-firmware`, run `python tools/build_setup_card.py` with ReportLab
-installed. No board connection is needed. Generated files remain ignored:
+installed. No board connection is needed. These two generated files are tracked:
 
 - `output/setup/dragon-setup-card.pdf`: one A5 card.
 - `output/setup/dragon-rear-labels.pdf`: six identical 90 x 65 mm labels on A4.

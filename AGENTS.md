@@ -9,8 +9,10 @@ dragon-firmware/hardware/supplied-2026-10-23/. Build photos remain pending.
 Earlier mechanical/PCB assets remain prototypes; the supplied intake has not
 been validated as the final design. Do not replace supplied files with guesses.
 
-Keep device credentials, setup cards, serial captures, runtimes and generated
-large meshes in ignored local output directories. Supplied character/artwork
+Keep device credentials, personalised setup cards, serial captures, runtimes and
+generated large meshes in ignored local output directories. The two universal
+setup-card and rear-label PDFs in output/setup/ are published in Git.
+Supplied character/artwork
 assets and CAD library notices do not have a blanket project licence.
 
 Edit presets/dragons.json and web sources rather than generated firmware headers.
