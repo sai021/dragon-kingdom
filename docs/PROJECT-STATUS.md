@@ -2,6 +2,11 @@
 
 ## Hardware files received — 23 October 2026
 
+The native Fusion design archive `NightLamp.f3d` was subsequently added to the
+same intake, with its attachment checksum verified. The package now contains
+nine supplied files. Fusion component coverage and external dependencies have
+not been checked; receipt does not establish fabrication completeness.
+
 The user supplied six STL files, a BOM workbook and a Gerber ZIP, now preserved
 in [the dated hardware intake](../dragon-firmware/hardware/supplied-2026-10-23/README.md).
 All eight files match the supplied attachments by SHA-256. Original filenames

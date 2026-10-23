@@ -2,7 +2,8 @@
 
 ## Supplied files — 23 October 2026
 
-Six STL files, the BOM workbook and Gerber archive are now available in the
+The native Fusion archive `NightLamp.f3d`, six STL files, the BOM workbook and
+Gerber archive are now available in the
 [dated hardware intake](../dragon-firmware/hardware/supplied-2026-10-23/README.md),
 with original bytes and verified SHA-256 checksums. Build photos remain pending.
 Receipt does not establish final-design approval or physical validation. The

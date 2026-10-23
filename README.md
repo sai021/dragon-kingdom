@@ -38,7 +38,7 @@ supply/current/thermal behaviour and final PCB/mechanical/optical fit remain
 open. The user confirms the hardware is made, with a right-side touch button, rear
 keyhole mounting slot and bottom USB-C power port; the internal controller USB
 port is inaccessible to users. Existing CAD/PCB assets are earlier prototypes;
-newer user-supplied STL files, a BOM and Gerbers are preserved in the
+the user-supplied Fusion design, STL files, BOM and Gerbers are preserved in the
 [23 October hardware intake](dragon-firmware/hardware/supplied-2026-10-23/README.md).
 Their review and physical validation, along with build photos, remain pending.
 
