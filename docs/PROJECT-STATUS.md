@@ -1,5 +1,16 @@
 # Project checkpoint — 19 October 2026
 
+## Hardware files received — 23 October 2026
+
+The user supplied six STL files, a BOM workbook and a Gerber ZIP, now preserved
+in [the dated hardware intake](../dragon-firmware/hardware/supplied-2026-10-23/README.md).
+All eight files match the supplied attachments by SHA-256. Original filenames
+and bytes are retained, including the September dates on the PCB files.
+This supersedes earlier statements that those files were pending. Build photos
+remain pending; design review, units/orientation and physical-fit validation
+have not been performed during this publication. These files are not labelled
+as an approved final design. Firmware and physical-test evidence are unchanged.
+
 ## GitHub checkpoint — 23 October 2026
 
 This checkpoint preserves the current source, batch-flasher Auto mode,

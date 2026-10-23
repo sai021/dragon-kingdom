@@ -1,5 +1,13 @@
 # Mechanical and PCB assets
 
+## Supplied files — 23 October 2026
+
+Six STL files, the BOM workbook and Gerber archive are now available in the
+[dated hardware intake](../dragon-firmware/hardware/supplied-2026-10-23/README.md),
+with original bytes and verified SHA-256 checksums. Build photos remain pending.
+Receipt does not establish final-design approval or physical validation. The
+earlier prototype history below is retained separately.
+
 The current repository preserves the earlier design work. On 15 October 2026,
 the user confirmed that newer STL files are printing and will be supplied after
 completion, followed by making-of photos and Gerber files. These later assets

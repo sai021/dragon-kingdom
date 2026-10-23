@@ -17,6 +17,7 @@ dragon-light-guide-prototype/*.stl
 dragon-masks/light-guide/*.stl
 dragon-masks/light-guide/geometry-grid.npz
 *.zip
+!dragon-firmware/hardware/supplied-2026-10-23/Gerber_PCB1_1_2026-09-21_2.zip
 
 # Local CAD/editor and test output
 *.exe
