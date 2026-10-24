@@ -1,5 +1,24 @@
 # Project checkpoint — 19 October 2026
 
+## Automatic USB batches restored — 24 October 2026
+
+Recover Dragon.cmd now retains manual recovery and adds opt-in automatic batches.
+One USB-only confirmation enables the batch. Each native Espressif USB connection
+is read for its running version, identified from ROM and updated only when older;
+same/newer versions skip writes and undergo startup verification. Responsive
+unversioned legacy firmware uses recovery; unreadable/unrecognised firmware stops
+Auto. Two absent scans plus a settling period gate the next board so USB
+re-enumeration cannot trigger another write. Multiple boards or any error stop
+Auto. STARTUP PASS is firmware/storage/uptime/power/OTA validation, not an LED or
+sensor test. The prepared S3/C3 firmware remains beta 2; no rebuild or firmware
+publication is needed for this host-only correction.
+
+51 Python tests pass, including simulated ROM identification, version
+ordering/no-write paths, disconnect/re-enumeration, power confirmation and real
+Tk worker flow. The real local recovery window passes preflight with both cached
+beta 2 images and the standalone tool. No connected board was probed or flashed
+during this correction; physical batch acceptance remains pending.
+
 ## Visible firmware and prepared recovery — beta 2, 24 October 2026
 
 `v0.3.0-beta.2` shows actual installed firmware and board type on the main page,

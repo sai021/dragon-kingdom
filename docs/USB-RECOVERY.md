@@ -54,3 +54,32 @@ python dragon-firmware/tools/recovery.py --port CURRENT_PORT --usb-only --esptoo
 This still verifies ROM identity, the live NVS layout and target bundle. Recovery
 now resets the verified controller after unchanged-NVS readback and before checking
 startup. Never reuse an earlier COM port without confirming the present board.
+
+
+## Automatic batches in Recover Dragon.cmd
+
+Auto mode is restored in the recovery launcher. Start with both S3/C3 prepared
+images available and confirm that every board in this batch will use internal
+laptop USB only, with all external/product power disconnected. Enable **Auto mode
+- update boards when connected** once for the batch. Connect one board at a time;
+no repeated port selection or per-board checkbox is needed while Auto remains on.
+
+The tool reads status, identifies S3/C3 from ROM, and updates older firmware to the
+prepared version. Same/newer versions are not rewritten; their startup is still
+verified. Responsive legacy versions without the version field use the prepared
+migration/recovery image. Unresponsive boards and unrecognised version strings
+stop Auto for manual recovery instead of assuming they are older. Automatic port
+discovery accepts native Espressif USB (VID 303A); other adapters can be selected
+manually after disabling Auto.
+
+Wait for **STARTUP PASS**, unplug the board, then wait for **Auto ready** before
+connecting the next. USB re-enumeration during flashing/startup does not count as
+a new board. Multiple connected ESP32 ports or any operation failure stop Auto.
+Unchecking Auto prevents subsequent operations; a current write finishes normally.
+
+STARTUP PASS covers the running version, storage, increasing uptime, USB current
+ceiling and firmware/OTA validation. It does not test physical LEDs, sensors or
+Wi-Fi range. Manual update/recovery and **Check startup only** remain available
+with Auto off. Close/reopen the tool after changing its source; an already open
+window continues running the older code. The published beta 2 firmware is
+unchanged by this host-tool update.

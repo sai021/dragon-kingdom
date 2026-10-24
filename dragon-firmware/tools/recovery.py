@@ -2,7 +2,7 @@
 import argparse, json, struct, subprocess, time, os, re
 from pathlib import Path
 from board_targets import TARGETS, detect_board, parse_chip
-from flash_support import ROOT, FILES, load_bundle, digest, check_startup
+from flash_support import ROOT, FILES, load_bundle, digest, check_startup, serial_modules
 
 def validate_partitions(raw):
     entries={}
@@ -78,6 +78,53 @@ def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True)
     emit('Recovery complete. Keep USB-only power until unplugged. Setup Wi-Fi opens at startup.')
     return session
+
+def firmware_version(tag):
+    match=re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?',tag or '')
+    if not match:raise ValueError('Unrecognised firmware version; use manual recovery instead of Auto.')
+    major,minor,patch,beta=match.groups()
+    return (int(major),int(minor),int(patch),1 if beta is None else 0,int(beta or 0))
+
+def read_running_version(port,timeout=18):
+    # Status output may contain user data. Keep it in memory and emit only the version.
+    serial,_=serial_modules();connection=None;deadline=time.monotonic()+timeout;last=0;uptimes=0
+    try:
+        while time.monotonic()<deadline:
+            try:
+                if connection is None:
+                    connection=serial.Serial(port=None,baudrate=115200,timeout=.2,write_timeout=1)
+                    connection.dtr=True;connection.rts=False;connection.port=port;connection.open();connection.reset_input_buffer()
+                if time.monotonic()-last>=1:connection.write(b'status\n');last=time.monotonic()
+                line=connection.readline().decode('utf-8',errors='replace').strip()
+                if line.startswith('firmware_version='):return line.split()[0].split('=',1)[1]
+                if line.startswith('uptime_ms='):
+                    uptimes+=1
+                    if uptimes>=2:return None # Legacy firmware has no version status field.
+            except (serial.SerialException,OSError):
+                if connection:connection.close()
+                connection=None;time.sleep(.2)
+        raise RuntimeError('Could not read the running firmware. Release BOOT, reset and retry Auto, or use manual recovery.')
+    finally:
+        if connection:connection.close()
+
+def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
+    if not usb_only:raise ValueError('Disconnect external/main power before enabling Auto.')
+    info=prepared_release(cache);target=info.get('firmware_tag');wanted=firmware_version(target)
+    tool=tool or installed_esptool() or esptool_path(cli)
+    emit('Reading the connected firmware version...');current=read_running_version(port)
+    if current is not None:
+        running=firmware_version(current);emit('Running '+current+'; prepared '+target+'.')
+        if running>=wanted:
+            # Still identify the ROM and verify a healthy startup; skip all flash writes.
+            probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--baud','115200','--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
+            board=parse_chip(probe.stdout+probe.stderr);emit('Verified ESP32-'+board.upper()+'. No newer firmware; no flash write required.')
+            subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
+            check_startup(port,emit,timeout=75,expected_firmware=current,require_validation=True)
+            return 'Already current or newer; startup verified.'
+    else:emit('Legacy or unreported firmware version: applying the prepared recovery firmware.')
+    recover(cli,port,usb_only,emit,cache=cache,tool=tool)
+    return 'Updated to '+target+'; startup verified.'
+
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',required=True);p.add_argument('--cli',default=str(ROOT/'.tools/arduino-cli/arduino-cli.exe'));p.add_argument('--esptool',type=Path,help='Use an installed standalone esptool, without Arduino CLI');p.add_argument('--usb-only',action='store_true');a=p.parse_args()
