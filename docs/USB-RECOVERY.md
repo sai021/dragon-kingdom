@@ -3,10 +3,19 @@
 ![USB recovery power sequence](images/usb-recovery.svg)
 
 Never connect laptop USB and external/main power simultaneously. The bottom USB-C
-port is power-only. Use the internal ESP32 connector, accessible after removing
-one screw, for service. Confirm the current identity and port on every board.
+port is power-only. Confirm the current identity and port on every board.
 
-1. Disconnect external/product power, then connect internal laptop USB.
+## Open the backplate
+
+1. Disconnect the bottom product USB-C power cable before connecting laptop USB.
+2. Remove the screw at the top rear of the box.
+3. Using a screwdriver through the rear keyhole, push the release tab until the backplate pops open.
+4. Connect the laptop USB-C cable to the ESP32 on the main board in the centre of the backplate.
+
+## Restore firmware
+
+
+1. Confirm external/product power remains disconnected and laptop USB is connected only to the internal ESP32.
 2. Open `Flash Dragons.cmd` or `Recover Dragon.cmd`. Both use the same workflow.
 3. Choose **Select signed release bundle** and explicitly select an immutable
    format-2 release directory prepared by `tools/prepare_release.py`. Old unsigned
@@ -21,7 +30,7 @@ one screw, for service. Confirm the current identity and port on every board.
    uptime, ready library, 400 mA USB estimate and VALID application are required.
    Missing version/validation, rollback to another tag, or zero-budget bare-board
    startup cannot receive a production pass. Check saved contents separately.
-7. Unplug laptop USB before reconnecting the external supply. Complete and record
+7. After restoring firmware, disconnect laptop USB. Fit the backplate's bottom USB-C port and LDR (room-light sensor) into their respective slots in the box. Press the top of the backplate until it pops into place, then replace the screw. Reconnect normal product power only after laptop USB is disconnected. Complete and record
    LED/touch/LDR/external-power and other [physical checks](PHYSICAL-ACCEPTANCE.md).
 
 Auto mode requires one board at a time and explicit USB-only acknowledgement.

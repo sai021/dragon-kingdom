@@ -65,11 +65,11 @@ You can play and edit right away over the dragon's own network. Home Wi-Fi is op
 
 ## Optional: teach it your home Wi-Fi
 
-1. Open **Parent settings** and unlock with **dragon123**.
-2. Tap **Find my Wi-Fi**, then pick your **2.4 GHz** home network (or type its name if hidden).
+1. Unlock **Parent settings** with **dragon123**, then open **Home Wi-Fi**.
+2. Tap **Find my Wi-Fi** and choose your **2.4 GHz** home network (or type its name).
 3. Enter your home Wi-Fi password. Use **Show password** to check your spelling.
 4. Tap **Connect my dragon** and wait for the result.
-5. Copy the **.local** bookmark address that appears above the play controls (such as **http://Dragon-Kingdom-a1b2c3.local/**).
+5. Open **Connection & power** above the play controls and bookmark its **.local** address.
 6. Setup Wi-Fi closes about 15 seconds after success. Switch your phone back to home Wi-Fi, open that address in your normal browser, and bookmark it. A numeric fallback is also shown.
 
 <!-- page -->
@@ -171,7 +171,7 @@ If you change Wi-Fi routers or want a direct phone connection again, teach your 
 2. Reconnect power normally; setup Wi-Fi opens at startup. No touch hold is needed.
 3. Wait for startup, then join the **Dragon-Kingdom-XXXXXX** Wi-Fi network with **dragon123** and open **http://192.168.4.1**.
 
-This keeps your saved home Wi-Fi and creations intact. To erase home Wi-Fi completely, unlock Parent settings, tap **Forget home Wi-Fi**, then power off and on.
+This keeps your saved home Wi-Fi and creations intact. To erase home Wi-Fi completely, unlock Parent settings, open **Open setup Wi-Fi again**, tap **Forget home Wi-Fi**, then power off and on.
 
 ## When your dragon seems confused
 
@@ -190,7 +190,7 @@ Section Seven — care rules and official registration
 
 ## Feeding and care (For grown-ups)
 
-The bottom USB-C port is power-only. Always feed your dragon through that port using the power supply provided or specified by your maker. Keep your dragon indoors and dry, handle its cord gently, and never open its enclosure or attach unapproved power sources.
+The bottom USB-C port is power-only. Always feed your dragon through that port using the power supply provided or specified by your maker. Keep your dragon indoors and dry, handle its cord gently, and leave enclosure service to a grown-up following the maker’s recovery instructions, and never attach unapproved power sources.
 
 ## A good dragon keeper remembers
 
@@ -215,4 +215,32 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 0.8, 24 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 0.9, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+
+
+<!-- page -->
+
+# Grown-up service notes
+
+USB recovery and refitting the backplate
+
+## Open for recovery
+
+The bottom USB-C port is power-only. Never connect laptop USB and external/main power simultaneously. Use the maker's signed firmware and recovery instructions; normal wireless updates do not require opening the box.
+
+1. Disconnect the bottom product USB-C power cable before connecting laptop USB.
+2. Remove the screw at the top rear of the box.
+3. Using a screwdriver through the rear keyhole, push the release tab until the backplate pops open.
+4. Connect the laptop USB-C cable to the ESP32 on the main board in the centre of the backplate.
+
+## Close after recovery
+
+After restoring firmware, disconnect laptop USB. Fit the backplate's bottom USB-C port and LDR (room-light sensor) into their respective slots in the box. Press the top of the backplate until it pops into place, then replace the screw. Reconnect normal product power only after laptop USB is disconnected.
+
+## What is Download support details?
+
+Parent settings has a Support details dropdown. Its download button saves a small troubleshooting file for the maker, including firmware/board, uptime, startup result, estimated power limit, calibration presence and connection/memory diagnostics. It excludes passwords, tokens, Wi-Fi network names and custom dragon names.
+
+## Connection and power information
+
+Open Connection & power near the top of the webpage for your home-network addresses, detected power mode and estimated startup current limit. Computer USB is capped at 400 mA. Product-supply mode means no computer USB was detected; the startup limit is an estimate, not a measured supply rating.

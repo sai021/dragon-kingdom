@@ -18,7 +18,7 @@ def create_window(visible=True,bundle_path=None):
     frame=ttk.Frame(window,padding=20);frame.pack(fill='both',expand=True)
     ttk.Label(frame,text='Update or recover a dragon',font=('',20,'bold')).pack(anchor='w')
     bundle=tk.StringVar(value='Checking firmware...');ttk.Label(frame,textvariable=bundle,wraplength=680).pack(anchor='w',pady=8)
-    ttk.Label(frame,text='1. Disconnect product/external power. Never use both power inputs.\n2. Connect laptop USB to the internal ESP32 connector (one access screw).\n3. Select the current port. The tool reads the chip and chooses S3 or C3.',wraplength=680).pack(anchor='w',pady=8)
+    ttk.Label(frame,text='1. Disconnect product/external power. Never use both power inputs.\n2. Remove the top rear screw; push the release tab through the rear keyhole with a screwdriver. Open the backplate. Connect laptop USB-C to the ESP32 on its centre main board.\n3. Select the current port. The tool reads the chip and chooses S3 or C3. After recovery, disconnect laptop USB, seat the bottom USB-C and LDR in their slots, press the backplate top closed and replace the screw before normal power.',wraplength=680).pack(anchor='w',pady=8)
     ports=ttk.Combobox(frame,state='readonly');ports.pack(fill='x');safe=tk.BooleanVar(value=False)
     safety=ttk.Checkbutton(frame,text='External/main power is disconnected; internal laptop USB is the only power.',variable=safe);safety.pack(anchor='w',pady=12)
     status=tk.StringVar(value='Select a port. Each board needs its own USB-only confirmation.');ttk.Label(frame,textvariable=status,wraplength=680).pack(anchor='w')

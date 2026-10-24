@@ -2,7 +2,7 @@
 
 For shipping firmware **v0.3.0** and beta 3 or later. The webpage shows its installed version.
 The shipped firmware mix is not yet established; older 0.2.4 instructions are in
-[the historical guide](history/0.2.4-PARENT-GUIDE.md). Manual edition 0.8, 24 October 2026.
+[the historical guide](history/0.2.4-PARENT-GUIDE.md). Manual edition 0.9, 25 October 2026.
 No app, account or browser login is needed for ordinary play. Keep your setup card.
 
 ## Touch play
@@ -93,7 +93,7 @@ Touch play remains available within the startup power budget.
 ## Power, updates and help
 
 The bottom USB-C port is power-only. For service, the internal controller connector
-is accessible after removing one screw. Never connect laptop USB and external/main
+is on the main board in the centre of the backplate. Disconnect product power, remove the top rear screw, then push the release tab through the rear keyhole using a screwdriver to open the backplate. After recovery, disconnect laptop USB, seat the bottom USB-C port and LDR in their slots, press the backplate top closed and replace the screw. See [the full recovery procedure](USB-RECOVERY.md). Never connect laptop USB and external/main
 power simultaneously. Ask the maker for service rather than changing wiring.
 A weak supply can leave Wi-Fi off; check the specified supply and cable.
 
@@ -107,3 +107,8 @@ Parent **Full reset** removes saved user settings and home Wi-Fi, while retainin
 unit voltage calibration. Keep a backup before reset or restore. The parent password
 remains **dragon123**. Beta 4 adds a support-details download without network names,
 passwords or creation names. Startup checks are separate from physical acceptance.
+
+
+Parent settings uses separate dropdowns for home Wi-Fi, setup Wi-Fi, support details, backups, firmware updates, reset and USB recovery. The collapsed Connection & power panel holds the home addresses, computer-USB detection mode and estimated startup limit. It is not a measured supply rating.
+
+Download support details saves a small troubleshooting JSON file for the maker. It includes firmware/board, uptime, startup result, power estimate, calibration-present flag and connection/memory diagnostics, while excluding passwords, tokens, household network names and custom dragon names.
