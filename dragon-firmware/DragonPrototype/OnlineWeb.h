@@ -46,6 +46,9 @@ void serviceOnline(){
  if(message.kind==DragonOnline::FAILED){char error[513];memcpy(error,message.bytes,message.size);error[message.size]=0;failOnline(error);return;}
  if(onlinePhase==ONLINE_CHECKING){
   if(message.kind==DragonOnline::DATA){if(onlineText.length()+message.size>DragonOnline::MANIFEST_MAX){failOnline("Release metadata is too large.");return;}onlineText.concat((const char*)message.bytes,message.size);return;}
+  // Legacy feeds cannot express calibration/schema guarantees. Explain the
+  // publication transition; never offer their application for installation.
+  if(!strncmp(onlineText.c_str(),"dragon-online-v1",16)||!strncmp(onlineText.c_str(),"dragon-update-v1",16)){onlineManifest={};failOnline("No compatible online release has been published for this firmware yet. Use a matching signed firmware file.");return;}
   if(!DragonOnline::parse(onlineText.c_str(),onlineText.length(),onlineManifest)||strcmp(onlineManifest.board,boardName())||!DragonOnline::channelTag(onlineChannel.c_str(),onlineManifest.tag)||!verifyUpdateSignature(onlineCanonical(onlineManifest),onlineManifest.signature)){onlineManifest={};failOnline("Invalid signature, board or release metadata. Existing firmware was kept.");return;}
   onlineText="";onlineBusy=false;
   if(!DragonCompatibility::compatible(onlineManifest.capabilities,onlineManifest.schema,voltageCalibrationPresent)){failOnline("This release cannot preserve this unit's calibration or saved data. Existing firmware was kept.");return;}

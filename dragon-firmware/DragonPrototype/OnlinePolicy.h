@@ -5,10 +5,12 @@
 #include "UpdatePolicy.h"
 #include "CompatibilityPolicy.h"
 namespace DragonOnline {
-constexpr const char* CURRENT_TAG="v0.3.0-beta.5";
+constexpr const char* CURRENT_TAG="v0.3.0-beta.6";
 inline bool releaseTag(const char* tag){if(*tag!='v')return false;for(tag++;*tag;tag++)if((*tag<'0'||*tag>'9')&&*tag!='.')return false;return true;}
 inline bool channelTag(const char* channel,const char* tag){return !strcmp(channel,"beta")?strstr(tag,"-beta.")!=nullptr:releaseTag(tag);}
 constexpr size_t MANIFEST_MAX=1024;
+// IDF needs the complete request line in its TX buffer, including signed query.
+constexpr size_t URL_CAPACITY=1024,REQUEST_BUFFER_SIZE=URL_CAPACITY+128;
 struct Manifest {char board[3]{},tag[49]{},hash[65]{},signature[513]{};uint32_t size=0,capabilities=0,schema=0;};
 inline bool validTag(const char* tag){size_t n=strlen(tag);if(!n||n>48)return false;for(size_t i=0;i<n;i++){char c=tag[i];if(!((c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='.'||c=='_'||c=='-'))return false;}return true;}
 inline bool allowedURL(const char* url){

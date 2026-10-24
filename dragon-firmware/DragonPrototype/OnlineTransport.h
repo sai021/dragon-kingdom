@@ -13,7 +13,7 @@ namespace DragonOnline {
 class Transport {
  QueueHandle_t queue=nullptr;
  std::atomic<bool> working{false},cancelled{false};
- char target[1024]{};uint32_t maximum=0;
+ char target[URL_CAPACITY]{};uint32_t maximum=0;
  std::atomic<int> resultCode{0},transportError{0},tlsCode{0},tlsFlags{0},socketError{0};
  std::atomic<uint32_t> clockEpoch{0},freeHeap{0},largestBlock{0};
  void captureFailure(esp_http_client_handle_t client,esp_err_t result){
@@ -21,25 +21,25 @@ class Transport {
   tlsCode.store(code);tlsFlags.store(flags);socketError.store(esp_http_client_get_errno(client));
   clockEpoch.store(uint32_t(time(nullptr)));freeHeap.store(ESP.getFreeHeap());largestBlock.store(ESP.getMaxAllocHeap());resultCode.store(result);
  }
- struct Redirect {char url[1024]{};};
+ struct Redirect {char url[URL_CAPACITY]{};bool tooLong=false;};
  static esp_err_t event(esp_http_client_event_t* event){
   if(event->event_id==HTTP_EVENT_ON_HEADER&&event->header_key&&event->header_value&&!strcasecmp(event->header_key,"Location")){
-   auto* redirect=(Redirect*)event->user_data;snprintf(redirect->url,sizeof(redirect->url),"%s",event->header_value);
+   auto* redirect=(Redirect*)event->user_data;redirect->tooLong=strlen(event->header_value)>=sizeof(redirect->url);if(!redirect->tooLong)strcpy(redirect->url,event->header_value);
   }return ESP_OK;
  }
  bool send(Message& message){while(!cancelled.load()){if(xQueueSend(queue,&message,pdMS_TO_TICKS(100))==pdTRUE)return true;}return false;}
  void failure(const char* text){Message m;m.kind=FAILED;m.size=strlen(text);memcpy(m.bytes,text,m.size);send(m);}
  static void task(void* pointer){auto* self=(Transport*)pointer;self->download();self->working.store(false);vTaskDelete(nullptr);}
  void download(){
-  char url[1024];strcpy(url,target);uint32_t since=millis();
+  char url[URL_CAPACITY];strcpy(url,target);uint32_t since=millis();
   for(unsigned redirects=0;redirects<=4&&!cancelled.load();redirects++){
    if(!allowedURL(url)){failure("Update redirect was not a trusted HTTPS release host.");return;}
-   Redirect redirect;esp_http_client_config_t config{};config.url=url;config.timeout_ms=5000;config.disable_auto_redirect=true;config.crt_bundle_attach=esp_crt_bundle_attach;config.transport_type=HTTP_TRANSPORT_OVER_SSL;config.buffer_size=1024;config.buffer_size_tx=512;config.event_handler=event;config.user_data=&redirect;
+   Redirect redirect;esp_http_client_config_t config{};config.url=url;config.timeout_ms=5000;config.disable_auto_redirect=true;config.crt_bundle_attach=esp_crt_bundle_attach;config.transport_type=HTTP_TRANSPORT_OVER_SSL;config.buffer_size=1024;config.buffer_size_tx=REQUEST_BUFFER_SIZE;config.event_handler=event;config.user_data=&redirect;
    auto client=esp_http_client_init(&config);if(!client){failure("Not enough memory for HTTPS. Try again or upload a file.");return;}
    esp_http_client_set_header(client,"User-Agent","Dragon-Kingdom/0.3");
-   esp_err_t opened=esp_http_client_open(client,0);if(opened!=ESP_OK){captureFailure(client,opened);esp_http_client_cleanup(client);failure("Could not establish verified HTTPS. Check internet and the clock. Support details include the connection error.");return;}
+   esp_err_t opened=esp_http_client_open(client,0);if(opened!=ESP_OK){captureFailure(client,opened);esp_http_client_cleanup(client);failure("Secure update request failed. Check internet and the clock. Support details include the connection error.");return;}
    int64_t length=esp_http_client_fetch_headers(client);int status=esp_http_client_get_status_code(client);
-   if(status==301||status==302||status==303||status==307||status==308){esp_http_client_cleanup(client);if(!redirect.url[0])break;strcpy(url,redirect.url);continue;}
+   if(status==301||status==302||status==303||status==307||status==308){esp_http_client_cleanup(client);if(redirect.tooLong){failure("Update redirect exceeded the supported address length. Use a signed firmware file.");return;}if(!redirect.url[0])break;strcpy(url,redirect.url);continue;}
    if(status!=200||length>maximum){esp_http_client_cleanup(client);failure(status==404?"No signed online release is published yet. File upload is still available.":"Release download failed or exceeded the expected size.");return;}
    uint32_t received=0;bool ok=true;
    while(!cancelled.load()){

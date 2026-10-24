@@ -140,6 +140,8 @@ int main(){
  auto deliver=[&](const std::string& text){DragonOnline::Message m;m.kind=DragonOnline::DATA;assert(text.size()<=512);m.size=text.size();memcpy(m.bytes,text.data(),m.size);onlineTransport.messages.push_back(m);serviceOnline();};
  auto done=[&](){DragonOnline::Message m;m.kind=DragonOnline::DONE;onlineTransport.messages.push_back(m);serviceOnline();};
  auto metadata=[&](const char* board){return std::string("dragon-update-v2\n")+board+"\nv0.3.1\n512\n"+std::string(64,'0')+"\n1\n1\n2a"+std::string(510,'0')+"\n";};
+ deliver("dragon-online-v1\nc3\nv0.3.0\n");done();assert(onlinePhase==ONLINE_FAILED&&onlineMessage.find("No compatible online release")!=std::string::npos&&erases==beforeErase);
+ server.call("/api/update/online/check",HTTP_POST);
  auto text=metadata("c3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_FAILED&&erases==beforeErase);
  server.call("/api/update/online/check",HTTP_POST);text=metadata("s3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_READY&&erases==beforeErase);
  server.call("/api/update/online/install",HTTP_POST,{{"release","v0.3.2"}});assert(server.code==409&&erases==beforeErase);
