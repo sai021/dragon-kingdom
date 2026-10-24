@@ -27,7 +27,7 @@ def online_manifest(pkg,tag,key):
     return message.decode()+key.sign(message,padding.PKCS1v15(),hashes.SHA256()).hex()+'\n'
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=['keygen','sign']);p.add_argument('--key',type=Path,required=True);p.add_argument('--board',choices=['s3','c3']);p.add_argument('--image',type=Path);p.add_argument('--output',type=Path);p.add_argument('--tag',help='Also write online manifest and raw binary for this GitHub release tag');p.add_argument('--legacy-bridge',action='store_true',help='Explicit offline v1 bridge for older firmware; use only a calibration-aware image');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=['keygen','sign']);p.add_argument('--key',type=Path,required=True);p.add_argument('--board',choices=['s3','c3']);p.add_argument('--image',type=Path);p.add_argument('--output',type=Path);p.add_argument('--tag',help='Also write online manifest and raw binary for this GitHub release tag');p.add_argument('--capabilities',type=int,choices=[0,1],help='Explicit capability declaration: 1 reads chip-bound voltage calibration; 0 does not');p.add_argument('--schema',type=int,choices=[1],help='Explicit saved-data schema contract');p.add_argument('--legacy-bridge',action='store_true',help='Explicit offline v1 bridge for older firmware; use only a calibration-aware image');a=p.parse_args()
     # Key creation is deliberately separate from builds: never silently change the trust root.
     if a.action=='keygen':
         if a.key.exists():p.error('Key already exists; refusing to replace it')
@@ -37,11 +37,12 @@ def main():
         public=key.public_key().public_bytes(serialization.Encoding.PEM,serialization.PublicFormat.SubjectPublicKeyInfo).decode()
         (ROOT/'DragonPrototype/UpdatePublicKey.h').write_text('#pragma once\n// Public release verification key. Private key is never shipped.\nstatic const char DRAGON_UPDATE_PUBLIC_KEY[]=R"KEY('+public+')KEY";\n')
     else:
-        if not(a.board and a.image and a.output and a.tag):p.error('sign requires --board, --image, --output and --tag')
+        if not(a.board and a.image and a.output and a.tag) or a.capabilities is None or a.schema is None:p.error('sign requires --board, --image, --output, --tag, --capabilities and --schema')
+        if a.legacy_bridge and a.capabilities!=1:p.error('The legacy bridge must retain calibration support')
         key=serialization.load_pem_private_key(a.key.read_bytes(),password=None)
         from release_contract import public_key
         if key.public_key().public_numbers()!=public_key().public_numbers():p.error('Signing key differs from the installed trust root')
-        a.output.parent.mkdir(parents=True,exist_ok=True);pkg=package(a.image,a.board,key,None if a.legacy_bridge else a.tag);a.output.write_text(json.dumps(pkg,separators=(',',':')))
+        a.output.parent.mkdir(parents=True,exist_ok=True);pkg=package(a.image,a.board,key,None if a.legacy_bridge else a.tag,a.capabilities,a.schema);a.output.write_text(json.dumps(pkg,separators=(',',':')))
         if a.tag and not a.legacy_bridge:
             (a.output.parent/f'dragon-{a.board}.manifest').write_text(online_manifest(pkg,a.tag,key),encoding='ascii')
             (a.output.parent/f'dragon-{a.board}.bin').write_bytes(a.image.read_bytes())

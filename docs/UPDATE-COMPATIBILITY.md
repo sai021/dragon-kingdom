@@ -46,7 +46,7 @@ upgraded. Do not offer beta-2-based stable to the corrected C3.
 After physical acceptance, produce a deliberately named **offline v1 bridge** of
 this same calibration-aware beta 4 application, using the existing external key:
 
-    python tools/sign_update.py sign --legacy-bridge --key PRIVATE_KEY_PATH --tag v0.3.0-beta.4 --board c3 --image build/c3/DragonPrototype.ino.bin --output .tools/bridge/dragon-c3-bridge.dragon.json
+    python tools/sign_update.py sign --legacy-bridge --capabilities 1 --schema 1 --key PRIVATE_KEY_PATH --tag v0.3.0-beta.4 --board c3 --image build/c3/DragonPrototype.ino.bin --output .tools/bridge/dragon-c3-bridge.dragon.json
 
 Repeat for S3. The v1 signature binds board/size/hash; the operator must independently
 check bridge version and calibration support, since old firmware cannot. Install
@@ -83,3 +83,12 @@ first retain a verified private raw NVS dump with `restore_service.py`, review i
 original firmware/schema, then deliberately supply `--source-schema 1` to CLI recovery.
 This service assertion is never inferred by Auto mode and does not bypass signed
 target compatibility. A future schema needs a separate migration, not this assertion.
+
+Direct signing requires explicit `--capabilities` and `--schema`; the signer does
+not infer image capabilities from its tag. An intentionally repackaged historical
+stable image must declare `--capabilities 0 --schema 1`, after checking its known
+source/image hashes. This permits an explicit return on an ordinary unit while
+calibrated units reject it. Never label beta-2-based stable as calibration-aware.
+The normal preparation tool derives capability 1 from this checked beta-4 source
+and requires matching source-tag/build provenance. Repackaging or publishing a
+historical return package is a separate reviewed release action.
