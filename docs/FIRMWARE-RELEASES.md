@@ -7,7 +7,7 @@ choosing Install. File upload remains available offline.
 
 - Release resolves GitHub `releases/latest/download/dragon-{board}.manifest`.
   Publish only accepted stable versions, with tags such as `v0.3.0`. The device
-  rejects beta tags from this channel. There is no stable 0.3.0 yet.
+  rejects beta tags from this channel. Stable 0.3.0 is the promoted beta 2 baseline.
 - Beta resolves `releases/download/firmware-beta/dragon-{board}.manifest`.
   The `firmware-beta` GitHub release is a prerelease used only as a discovery
   pointer. Its signed manifests name immutable tags such as `v0.3.0-beta.1`.

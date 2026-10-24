@@ -6,16 +6,12 @@ matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
-**Beta firmware, 24 October 2026:** [0.3.0 beta 2](docs/NEXT-RELEASE.md)
-adds contrasting Glitter, opt-in Beta/default Release update channels,
-login-free play, firmware-enforced parent settings, startup AP/home-network
-handover, rotation, signed offline updates, two slots and backup/restore. Parent
-settings stay hidden until unlocked with `dragon123`; no password change or USB
-setup code is needed. See the
-[USB-only recovery guide](docs/USB-RECOVERY.md). The [S3 USB migration](docs/HARDWARE-TEST-2026-10-24.md) preserves saved data and
-passes startup validation. Online installation, phones and C3 physical acceptance
-remain pending. The beta is for experienced testers; the previous published
-prototype described below is 0.2.4. See [release channels](docs/FIRMWARE-RELEASES.md).
+**Main release, 24 October 2026:** [0.3.0](docs/RELEASE-0.3.0.md), promoted
+from beta 2. Firmware behaviour is unchanged apart from the version label.
+Existing beta 2 boards can stay as they are. Release is the default update channel;
+beta 3 remains opt-in. Keep the separately voltage-corrected C3 on beta 3 because
+0.3.0 does not read its unit calibration. Physical acceptance limits remain in
+the release notes. See [release channels](docs/FIRMWARE-RELEASES.md).
 
 **Current state: working development prototype, firmware 0.2.4, updated 19 October 2026.**
 The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates the

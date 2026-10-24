@@ -1,5 +1,15 @@
 # Project checkpoint — 19 October 2026
 
+## Beta 2 promoted to main release — 24 October 2026
+
+Owner requested beta 2 as the main release. Published stable tag v0.3.0 uses
+beta 2 firmware with only CURRENT_TAG renamed, allowing existing Release-channel
+checks to accept it and report current after installation. Beta 3 remains opt-in.
+Existing beta 2 boards need no urgent update; keep the voltage-corrected C3 on
+beta 3 since this stable baseline cannot apply its per-chip correction. No
+physical flashing or new physical acceptance is claimed for this promotion.
+See [release notes](RELEASE-0.3.0.md).
+
 ## Visible firmware and prepared recovery — beta 2, 24 October 2026
 
 `v0.3.0-beta.2` shows actual installed firmware and board type on the main page,
