@@ -38,7 +38,7 @@ int main(){
  failLevel=800;reset();startupCheck();assert(operatingTotal==800);
  assert(storeWrites==++expectedWrites&&savedFailure.maximum==800);
  // Failure codes remain visible even when ambient light would disable normal output.
- operatingTotal=0;ambientGain=touchGain=0;
+ operatingTotal=0;ambientGainPermille=touchGain=0;
  for(int code=1;code<=5;code++){
   startupPower.failure=code;
   for(int pulse=0;pulse<code;pulse++){

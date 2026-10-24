@@ -43,12 +43,14 @@ struct AmbientLight {
   if(nextStep!=stepCandidate){stepCandidate=nextStep;stepSince=now;}
   if(step!=stepCandidate&&uint32_t(now-stepSince)>=1000)step=stepCandidate;
  }
- uint8_t targetGain() const {
-  if(!ready)return 100;
-  // Bright daylight should look awake, not switch the dragon off.
-  if(!night)return 100;
-  return step*10;
+ // Gain relative to the existing power-limited, 80%-capped frame. Permille
+ // precision retains a 1.5% low end: 204 * 15 / 1000 = 3 (about 1% full scale).
+ static constexpr uint16_t GAINS_PERMILLE[10]={15,25,50,90,150,250,400,600,800,1000};
+ uint16_t targetGainPermille() const {
+  if(!ready||!night)return 1000;
+  return GAINS_PERMILLE[step-1];
  }
+
  bool calibrate(uint16_t covered,uint16_t uncovered) {
   if(uncovered>4095||covered>4095||uncovered<covered+200)return false;
   uint32_t span=uncovered-covered;

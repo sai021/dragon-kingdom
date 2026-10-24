@@ -42,7 +42,7 @@ int main(){
  auto saved=sunrise.settings;failStore=true;settings.minute=480;assert(!saveAlarmSettings(settings));assert(sunrise.settings.minute==saved.minute);failStore=false;
  otherPreferences["dragon-alarm/settings"][0]^=1;sunrise=Alarm{};loadAlarmSettings();assert(!sunrise.settings.enabled);
  // Sunrise lights only wings/edges, wakes from manual sleep, and obeys every power ceiling.
- mode=OFF;brightness=0;touchGain=ambientGain=0;
+ mode=OFF;brightness=0;touchGain=ambientGainPermille=0;
  for(auto budget:StartupPower::levels){
   operatingTotal=budget;startupPower.failure=0;sunrise=Alarm{};sunrise.startPreview(0);
   for(uint32_t t=0;t<=30000;t+=500){

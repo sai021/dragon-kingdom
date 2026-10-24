@@ -5,7 +5,7 @@ int main(){
  assert(ACTIVE_PRESET_COUNT==79);
  assert(PRESET_COUNT==81&&!strcmp(DRAGON_PRESETS[0].id,"blue"));
  for(auto& g:zoneGain)g=100;for(auto& g:pixelGain)g=100;
- touchGain=ambientGain=100;setBrightness(100);
+ touchGain=100;ambientGainPermille=1000;setBrightness(100);
  for(int p=0;p<PRESET_COUNT;p++){
   if(PRESET_RETIRED[p])continue;
   for(auto c:DRAGON_PRESETS[p].pixels)assert(c.r || c.g || c.b);

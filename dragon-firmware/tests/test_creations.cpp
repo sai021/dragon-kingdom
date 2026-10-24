@@ -7,7 +7,7 @@ int main(){
  for(auto& color:c.colors)color={255,255,255};for(auto& mask:c.effectZones)mask=c.colorMask;
  data.profiles[1].count=2;data.profiles[1].favorites[0]=PRESET_COUNT;data.profiles[1].favorites[1]=0;assert(library.save(data));
  for(auto& gain:zoneGain)gain=100;for(auto& gain:pixelGain)gain=100;
- setPalette(PRESET_COUNT);setBrightness(100);touchGain=ambientGain=100;
+ setPalette(PRESET_COUNT);setBrightness(100);touchGain=100;ambientGainPermille=1000;
  for(uint16_t limit:{300,400,500,800,1600,2400}){
   operatingTotal=limit;
   for(int effect=0;effect<6;effect++)for(uint32_t now=0;now<6000;now+=137){mode=Mode(effect);composeFrame(now);assert(estimatedMa+runtimeReserve(limit)<=limit);for(auto pixel:frame)assert(pixel.r<=204&&pixel.g<=204&&pixel.b<=204);}

@@ -226,3 +226,10 @@ A4 pages. Keep manual render images and extraction logs in an ignored `.tools/`
 folder. Render and visually check every final page before delivering the PDF.
 Manual-builder changes are documentation work; the already verified firmware
 images retain their release-time source fingerprint and do not need reflashing.
+
+
+## Beta 8 night range
+
+Automatic room-light gain uses permille precision, separate from the saved 0/10..100 Glow value. Ten ADC bins retain the existing filtering, hysteresis and dwell; their gain table is 15, 25, 50, 90, 150, 250, 400, 600, 800, 1000 per thousand of the already power-limited frame. For an otherwise full 204/255 channel at Glow 100%, the digital outputs are 3, 5, 10, 18, 30, 51, 81, 122, 163 and 204 (about 1%, 2%, 4%, 7%, 12%, 20%, 32%, 48%, 64%, 80% of 255). These are digital drive levels, not measured optical brightness or an absolute minimum on every artwork pixel.
+
+Order remains artwork/80% channel cap -> session current limiting -> room-light gain -> selected Glow. Lower power, artwork colours and selected Glow can reduce output further. Existing one-count visibility protection keeps an awake pixel lit; black and Sleep remain black. Sunrise retains its independent ramp. The ambient gain fades by up to 10 permille every 30 ms, settling exactly at the target; ADC reads remain 4 Hz. No calibration/profile schema changes are needed. Serial reports `light_gain_permille`; the parent support export reports automaticLight, ambientGainPermille, roomLightStep and glowPercent.

@@ -96,7 +96,7 @@ bool rotationStoreReady=false;
 void loadRotation(){rotationStoreReady=rotationStore.begin("dragon-rotate",false);DragonRotation::Settings v{};if(rotationStore.getBytes("settings",&v,sizeof(v))==sizeof(v)&&DragonRotation::valid(v))rotation.settings=v;}
 bool saveRotation(DragonRotation::Settings v){DragonRotation::Settings check{};if(DragonRotation::valid(v)&&rotationStore.getBytes("settings",&check,sizeof(check))==sizeof(check)&&!memcmp(&v,&check,sizeof(v))){rotation.settings=v;rotation.restart(millis());return true;}if(!DragonRotation::valid(v)||rotationStore.putBytes("settings",&v,sizeof(v))!=sizeof(v)||rotationStore.getBytes("settings",&check,sizeof(check))!=sizeof(check)||memcmp(&v,&check,sizeof(v)))return false;rotation.settings=v;rotation.restart(millis());return true;}
 uint8_t touchGain=100;
-uint8_t ambientGain=100;
+uint16_t ambientGainPermille=1000;
 uint8_t rawGlowTest=0; // USB-only transient measurement; zero uses normal dimming.
 uint32_t lastLight=0,lastFade=0,lastUsbCheck=0,touchPresses=0;
 
@@ -147,7 +147,7 @@ void setBrightness(uint8_t value) {
  brightness=value?min(100,((int(value)+5)/10)*10):0;
  if(value&&brightness==0)brightness=10;
 }
-void manualControl(){rawGlowTest=0;autoLight=false;ambientGain=100;}
+void manualControl(){rawGlowTest=0;autoLight=false;ambientGainPermille=1000;}
 void rememberLighting(){if(mode!=OFF&&brightness)resumeState={mode,brightness,palette,solidColor};}
 void wakeLighting(){
  mode=resumeState.mode;setPalette(resumeState.palette);solidColor=resumeState.solid;
@@ -163,8 +163,8 @@ void updateLight(uint32_t now){
  if(autoLight&&uint32_t(now-lastLight)>=250){lastLight=now;ambient.update(analogRead(Config::LIGHT_PIN),now);}
  if(uint32_t(now-lastFade)>=30){
   lastFade=now;
-  uint8_t target=autoLight?ambient.targetGain():100;
-  if(ambientGain<target)ambientGain++;else if(ambientGain>target)ambientGain--;
+  uint16_t target=autoLight?ambient.targetGainPermille():1000;
+  if(ambientGainPermille<target)ambientGainPermille+=min(10,int(target-ambientGainPermille));else if(ambientGainPermille>target)ambientGainPermille-=min(10,int(ambientGainPermille-target));
   if(touchGain<brightness)touchGain++;else if(touchGain>brightness)touchGain--;
  }
 }
@@ -279,7 +279,7 @@ void composeFrame(uint32_t now) {
   // Keep an awake, already power-limited pixel visible at the lowest gains.
   // Zero gains and intentionally black pixels remain black; output never
   // exceeds the frame that passed the session current cap above.
-  pixel=visibleScale(pixel,ambientGain,100);
+  pixel=visibleScale(pixel,ambientGainPermille,1000);
   pixel=visibleScale(pixel,touchGain,100);
  }
  estimatedMa=estimatedMilliAmps(frame);
@@ -432,7 +432,7 @@ void startupCheck(int8_t computerOverride=-1) {
   startupPower.pattern(frame,accepted,wiring);showFrame();delay(2000);
  }
  pixels.clear();pixels.show();setBrightness(100);touchGain=0;
- ambientGain=autoLight?ambient.targetGain():100;
+ ambientGainPermille=autoLight?ambient.targetGainPermille():1000;
  printPowerStats();
 }
 
@@ -481,8 +481,8 @@ void updateTouch(uint32_t now) {
 bool readNumber(char* s,int low,int high,int& result){if(!s||!*s)return false;char* end=nullptr;long v=strtol(s,&end,10);if(*end||v<low||v>high)return false;result=int(v);return true;}
 void printSensors(){
  Serial.printf("uptime_ms=%lu session_max=%umA computer_usb_cap=%u voltage_sampling=stopped\n",(unsigned long)millis(),operatingTotal,computerUsbMode);
- Serial.printf("sensors touch=%d presses=%lu ldr=%u filtered=%.0f night=%u auto=%u light_step=%u light_gain=%u touch_step=%u touch_gain=%u thresholds=%u/%u calibrated=%u\n",
- digitalRead(Config::TOUCH_PIN),(unsigned long)touchPresses,ambient.raw,ambient.filtered,ambient.night,autoLight,ambient.step,ambientGain,brightness/10,touchGain,ambient.dark,ambient.bright,lightCalibrated);
+ Serial.printf("sensors touch=%d presses=%lu ldr=%u filtered=%.0f night=%u auto=%u light_step=%u light_gain_permille=%u touch_step=%u touch_gain=%u thresholds=%u/%u calibrated=%u\n",
+ digitalRead(Config::TOUCH_PIN),(unsigned long)touchPresses,ambient.raw,ambient.filtered,ambient.night,autoLight,ambient.step,ambientGainPermille,brightness/10,touchGain,ambient.dark,ambient.bright,lightCalibrated);
 }
 void printStatus() {
  Serial.printf("voltage_correction_permille=%u chip_bound=1 startup_volts=%.3f\n",voltageCorrection,startupPower.lastVolts);
