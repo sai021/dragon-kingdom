@@ -9,6 +9,7 @@ float transientVoltage(){
  return 5.00f/Config::VOLTAGE_CALIBRATION;
 }
 void reset(){fakeTime=0;voltageReads=0;peakTotal=0;touchGain=100;voltageHook=voltage;failureSavedThisBoot=false;computerUsbMode=false;}
+float wrongDividerVoltage(){return 5.0f/1.79f/Config::VOLTAGE_CALIBRATION;}
 int main(){
  for(auto& g:zoneGain)g=100;for(auto& g:pixelGain)g=100;
  reset();startupStabilize();assert(fakeTime==2800&&shownTotal==BASE_TOTAL_MA&&peakTotal==BASE_TOTAL_MA+1&&voltageReads==0);
@@ -51,5 +52,10 @@ int main(){
  auto record=makeFailureRecord(startupPower);assert(validFailureRecord(record));
  record.checksum^=1;assert(!validFailureRecord(record));
  auto history=failureHistory;assert(validFailureHistory(history));history.checksum^=1;assert(!validFailureHistory(history));
+ // A chip-bound correction repairs divider sensing without lifting the USB cap.
+ failLevel=9999;reset();voltageHook=wrongDividerVoltage;voltageCorrection=1790;startupCheck(true);
+ assert(operatingTotal==400&&peakTotal<=400&&fabs(startupPower.lastVolts-5.0f)<.03f);
+ auto unit=DragonVoltage::make(123,1790);voltageCorrection=DragonVoltage::correction(unit,456);
+ reset();voltageHook=wrongDividerVoltage;startupCheck(true);assert(operatingTotal==0&&startupPower.failure==2);
  puts("PASS: six levels, fallback, two-second indicator, persistent failure record, no runtime voltage reads.");
 }

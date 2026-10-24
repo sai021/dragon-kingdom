@@ -138,3 +138,22 @@ above apply to the preceding candidate; the new hidden-settings/password interfa
 still needs owner phone confirmation. Online download/install and physical rollback
 remain open gates. Earlier one-use setup instructions are obsolete and have been
 replaced locally with the fixed-password instructions.
+
+
+## Follow-up: separate C3 with divider correction
+
+A newly connected unit was identified from ROM as C3 after fresh user confirmation
+of laptop/internal USB-only power. This is a different unit from the S3 above;
+its identity and raw captures remain private. Before modification, beta 2 reported
+an invalid divider reading, operating ceiling 0 mA and no startup validation.
+The user supplied approximately 1.79 times correction for this unit's wrong divider.
+
+The live table and VALID app0 were checked. App0 alone was updated to beta 3;
+0x8000..0xFFFF (table, NVS and OTA metadata) matched before/after. Then the new
+USB-only command stored/read-verified multiplier 1790/1000 in a checksummed NVS
+record bound to the live chip identity. After normal reset, multiplier 1790
+persisted, startup reported 5.083 V and firmware reached ready/VALID with increasing
+uptime and the 400 mA USB ceiling. Saved profile/custom counts and generation
+matched. No independent meter measurement, external supply, LEDs, touch, LDR,
+phone or rollback acceptance was established by this check. Generic firmware has
+no per-unit identity/profile; other chips retain 1.000 unless separately calibrated.

@@ -1,8 +1,23 @@
-# Firmware 0.3.0 beta 2
+# Firmware 0.3.0 beta 3
 
 This source implements the 24 October 2026 product direction and is published
-as `v0.3.0-beta.2` for experienced testers. It is not a stable release; physical
+as `v0.3.0-beta.3` for experienced testers. It is not a stable release; physical
 acceptance checks below remain open. The previous published prototype is 0.2.4.
+
+## Chip-bound voltage correction
+
+A unit-specific multiplier can be provisioned over internal computer USB with
+`voltage correction 1790` (1.790 times the existing calibrated divider reading).
+Values are thousandths, accepted from 500 to 3000. The command checks computer
+USB mode, writes/read-verifies a checksummed calibration record bound to the live
+eFuse identity, and requires a restart. Firmware reads that record before startup
+voltage testing. Missing, corrupt or other-chip records use 1.000; the existing
+global divider calibration is unchanged. No web calibration endpoint is added.
+The hardware calibration namespace is excluded from user backups/restore/reset;
+USB recovery preserves it with the rest of NVS. It cannot be transferred to a
+different chip by copying NVS. USB current limits and voltage thresholds remain.
+This calibrates sensing; it does not change the physical divider or establish its
+resistor values. Unit-specific identity and provisioning captures stay private.
 
 ## Visible firmware identity and ready recovery
 

@@ -1,10 +1,18 @@
 #include "../DragonPrototype/StartupPower.h"
 #include "../DragonPrototype/SensorControl.h"
 #include <cassert>
+#include "../DragonPrototype/VoltageCalibration.h"
 #include <cstdio>
 using namespace Dragon;
 void fill(VoltageStats& s,float a,float b){for(int i=0;i<30;i++)s.add(i%2?a:b);}
 int main(){
+ auto calibration=DragonVoltage::make(0x123456789abcULL,1790);
+ assert(DragonVoltage::correction(calibration,0x123456789abcULL)==1790);
+ assert(DragonVoltage::correction(calibration,0x123456789abdULL)==1000);
+ auto damaged=calibration;damaged.permille=1700;assert(!DragonVoltage::valid(damaged,calibration.identity));
+ assert(!DragonVoltage::valid(DragonVoltage::make(calibration.identity,499),calibration.identity));
+ assert(!DragonVoltage::valid(DragonVoltage::make(calibration.identity,3001),calibration.identity));
+ assert(fabs(2.8f*DragonVoltage::correction(calibration,calibration.identity)/1000.0f-5.012f)<.0001f);
  uint32_t noisy[]={0,902,899,900,1200};assert(medianFive(noisy)==900);
  VoltageStats s;fill(s,4.9,5.1);assert(fabs(s.mean-5)<.001&&fabs(s.range()-.2)<.001&&fabs(s.deviation()-.1)<.001);
  StartupPower p;fill(p.stats[2],4.99,5.01);assert(p.accept(2));

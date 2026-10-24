@@ -6,7 +6,7 @@ matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
-**Beta firmware, 24 October 2026:** [0.3.0 beta 2](docs/NEXT-RELEASE.md)
+**Beta firmware, 24 October 2026:** [0.3.0 beta 3](docs/NEXT-RELEASE.md)
 adds contrasting Glitter, opt-in Beta/default Release update channels,
 login-free play, firmware-enforced parent settings, startup AP/home-network
 handover, rotation, signed offline updates, two slots and backup/restore. Parent

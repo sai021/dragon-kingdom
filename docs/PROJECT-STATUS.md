@@ -1,5 +1,30 @@
 # Project checkpoint — 19 October 2026
 
+## Chip-bound divider correction — beta 3, 24 October 2026
+
+Beta 3 adds a USB-only, checksummed, chip-bound NVS multiplier for divider sensing.
+The normal multiplier is 1.000; a supplied 1.790 correction was provisioned only
+on the currently verified C3. The base 1.0135 calibration, startup thresholds and
+400 mA computer USB ceiling are unchanged. User backup/restore/reset does not
+transfer/remove unit hardware calibration. Generic S3/C3 images contain no unit
+identity or calibration profile.
+
+Software: 51 Python tests and 16 native suites pass. Native tests verify identity
+mismatch/corruption rejection and actual startup behaviour: the corrected divider
+passes at 400 mA, while a different chip retains default calibration and fails
+that same wrong-divider simulation. Both pinned cached-dependency builds pass;
+final images S3 1,368,144 bytes, C3 1,411,440 bytes, within OTA slots.
+
+Physical: after fresh USB-only power confirmation, ROM identified the current C3.
+Its prior beta 2 status reported invalid divider reading and 0 mA. The two-slot
+layout and VALID app0 were checked; only app0 was rewritten. Partition table,
+NVS and OTA metadata matched byte-for-byte before/after application upload.
+Then the USB command stored 1.790 bound to the live eFuse ID. After reset, status
+confirmed persistence, 5.083 V reported startup voltage, VALID firmware, ready
+library and 400 mA USB ceiling. Profile/custom counts and generation matched the
+baseline. This is not an independent meter measurement or external-supply test.
+Private identities, flash/NVS and serial records remain ignored local output.
+
 ## Automatic USB batches restored — 24 October 2026
 
 Recover Dragon.cmd now retains manual recovery and adds opt-in automatic batches.

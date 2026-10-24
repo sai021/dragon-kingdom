@@ -13,6 +13,7 @@
 #include "SunriseAlarm.h"
 #include "Rotation.h"
 #include "OnlinePolicy.h"
+#include "VoltageCalibration.h"
 #ifdef ARDUINO
 #include <time.h>
 #include <sys/time.h>
@@ -367,6 +368,24 @@ bool computerUsbConnected(){
  return false;
 #endif
 }
+uint16_t voltageCorrection=1000;
+void loadVoltageCorrection(){
+ voltageCorrection=1000;
+#ifdef ARDUINO
+ Preferences cal;DragonVoltage::Record record;
+ if(cal.begin("dragon-vcal",true)){if(cal.getBytesLength("unit")==sizeof(record)&&cal.getBytes("unit",&record,sizeof(record))==sizeof(record))voltageCorrection=DragonVoltage::correction(record,ESP.getEfuseMac());cal.end();}
+#endif
+}
+bool saveVoltageCorrection(uint16_t permille){
+#ifdef ARDUINO
+ if(!computerUsbMode)return false;
+ Preferences cal;if(!cal.begin("dragon-vcal",false))return false;
+ auto record=DragonVoltage::make(ESP.getEfuseMac(),permille);DragonVoltage::Record check;
+ bool ok=cal.putBytes("unit",&record,sizeof(record))==sizeof(record)&&cal.getBytes("unit",&check,sizeof(check))==sizeof(check)&&DragonVoltage::valid(check,ESP.getEfuseMac())&&check.permille==permille;cal.end();return ok;
+#else
+ return false;
+#endif
+}
 void startupCheck(int8_t computerOverride=-1) {
  startupPower=StartupPower{};operatingTotal=0;
  pixels.clear();pixels.show();
@@ -384,7 +403,7 @@ void startupCheck(int8_t computerOverride=-1) {
    bool valid=true;
    for(int sample=0;sample<30;sample++){
     uint32_t readings[5];for(auto& v:readings)v=analogReadMilliVolts(Config::VOLTAGE_PIN);
-    float volts=sourceVolts(medianFive(readings));
+    float volts=sourceVolts(medianFive(readings))*voltageCorrection/1000.0f;
     startupPower.lastVolts=volts;
     if(!isfinite(volts)||volts<3||volts>6){valid=false;startupPower.failure=2;startupPower.result="invalid divider reading";break;}
     startupPower.stats[level].add(volts);
@@ -462,6 +481,7 @@ void printSensors(){
  digitalRead(Config::TOUCH_PIN),(unsigned long)touchPresses,ambient.raw,ambient.filtered,ambient.night,autoLight,ambient.step,ambientGain,brightness/10,touchGain,ambient.dark,ambient.bright,lightCalibrated);
 }
 void printStatus() {
+ Serial.printf("voltage_correction_permille=%u chip_bound=1 startup_volts=%.3f\n",voltageCorrection,startupPower.lastVolts);
 #ifdef ARDUINO
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
  Serial.printf("firmware_version=%s board=c3\n",DragonOnline::CURRENT_TAG);
@@ -480,6 +500,7 @@ void printStatus() {
 void printHelp() {
  Serial.println("Dragon: tap=next/wake, double tap=on/off, hold=brightness. Touch preserves automatic light adjustment.");
  Serial.println("sensors | auto on|off | light DARK BRIGHT (0..4095)");
+ Serial.println("voltage correction 500..3000: chip-bound multiplier in thousandths; USB only, restart after saving");
  Serial.println("light calibrate COVERED UNCOVERED (stable readings; saved across restarts)");
  Serial.println("testglow 1..10: transient raw percent after session cap; 0 ends test; no settings saved");
  Serial.println("mode zones|breathe|colorcycle|glitter|incendio|leviosa|solid|corners|chase|off");
@@ -490,6 +511,10 @@ void handleCommand(char* line) {
  char* args[8];int n=0;char* ctx=nullptr;
  for(char* t=strtok_r(line," \t",&ctx);t;t=strtok_r(nullptr," \t",&ctx)){if(n==8){Serial.println("Too many arguments");return;}args[n++]=t;}
  if(!n)return;int a,b,c;bool ok=false;
+ if(n==3&&!strcmp(args[0],"voltage")&&!strcmp(args[1],"correction")&&readNumber(args[2],500,3000,a)){
+  if(!saveVoltageCorrection(a)){Serial.println("Voltage correction not saved. Requires computer USB and working storage.");return;}
+  Serial.printf("voltage_correction_saved=%u chip_bound=1 restart_required=1\n",unsigned(a));return;
+ }
  if(n==2&&!strcmp(args[0],"testglow")&&readNumber(args[1],0,10,a)){
   if(a&&(mode==OFF||!brightness))wakeLighting();sunrise.stop();rawGlowTest=a;
   Serial.printf("test_glow percent=%u saved=0 session_max=%umA\n",rawGlowTest,operatingTotal);return;
@@ -571,6 +596,7 @@ void setup() {
 #endif
  analogReadResolution(12);analogSetPinAttenuation(Config::LIGHT_PIN,ADC_11db);
  analogSetPinAttenuation(Config::VOLTAGE_PIN,ADC_11db);
+ loadVoltageCorrection();
  loadSavedFailure();
  loadLightSettings();
  loadAlarmSettings();
