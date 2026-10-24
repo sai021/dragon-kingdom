@@ -1,85 +1,45 @@
-# USB recovery and first migration
+# USB production recovery and first migration
 
 ![USB recovery power sequence](images/usb-recovery.svg)
 
-**Never connect laptop USB and external/main power simultaneously.**
-The bottom product USB-C connector is power-only. Use the internal ESP32 connector
-for recovery; removing one screw provides access. The drawing is schematic, not
-an enclosure fit/position claim.
+Never connect laptop USB and external/main power simultaneously. The bottom USB-C
+port is power-only. Use the internal ESP32 connector, accessible after removing
+one screw, for service. Confirm the current identity and port on every board.
 
-1. Disconnect the bottom product power cable and any external/main supply.
-2. Remove the access screw/cover and connect the laptop to the internal ESP32 USB.
-3. Open `dragon-firmware/Recover Dragon.cmd`. Check **Prepared firmware: v0.3.0-beta.2**
-   and the S3/C3 verification message. Refresh ports and select the current
-   board's port. Confirm the USB-only checkbox after checking the actual wiring.
-4. Choose **Update / recover firmware**. The tool reads the ROM chip identity and selects
-   only its checksum-verified image. It rejects old single-slot bundles. Build and
-   prepare the matching new release bundle before using it. For the published beta,
-   extract `dragon-usb-recovery-bundle.zip` from the release into
-   `dragon-firmware/.tools/recovery-release/` (so `current-set.json` is directly
-   inside that folder). Download the source at the same release tag for the tool.
-5. Keep USB connected. Saved NVS is privately backed up before writes and read back
-   afterwards. A mismatch is a failure: retain the backup and stop. No whole-flash
-   erase is used. Keep USB connected for startup validation (about one minute).
-   Success requires the prepared version, ready storage, increasing uptime, the
-   400 mA USB ceiling and VALID firmware. If asked, release BOOT and press RESET;
-   **Check startup only** retries verification without writing again.
-6. Verify saved dragons and settings. The webpage's parent password is always
-   `dragon123`; no USB code, password change or credential recovery is needed.
-7. Unplug laptop USB **before** reconnecting product power; then replace the cover
-   and screw.
-8. For another board, disconnect the finished board, connect the next with
-   external/main power still disconnected, click **Refresh ports**, select its
-   current port and confirm USB-only power again. S3/C3 selection is automatic.
+1. Disconnect external/product power, then connect internal laptop USB.
+2. Open `Flash Dragons.cmd` or `Recover Dragon.cmd`. Both use the same workflow.
+3. Choose **Select signed release bundle** and explicitly select an immutable
+   format-2 release directory prepared by `tools/prepare_release.py`. Old unsigned
+   recovery sets are rejected. Check the displayed expected tag and both-board
+   hash/layout verification. No source rebuild is performed by the production GUI.
+4. Refresh ports, select the current board and confirm USB-only power.
+5. Choose **Update / recover firmware**. ROM identification chooses the correct
+   board. Signed compatibility, hashes and partition layout are checked before any
+   write. NVS is privately backed up; only bootloader, partition table, OTA metadata
+   and app0 are written. Whole-flash erase is never used.
+6. NVS must read back unchanged. After reset the expected firmware/board, increasing
+   uptime, ready library, 400 mA USB estimate and VALID application are required.
+   Missing version/validation, rollback to another tag, or zero-budget bare-board
+   startup cannot receive a production pass. Check saved contents separately.
+7. Unplug laptop USB before reconnecting the external supply. Complete and record
+   LED/touch/LDR/external-power and other [physical checks](PHYSICAL-ACCEPTANCE.md).
 
-If no port appears, use the controller's BOOT/RESET procedure from the existing
-[flashing guide](BATCH-FLASHING.md). Do not assume a port from a previous session.
-The launcher automatically uses the standalone esptool installed with the
-Espressif Arduino package when available. This PC is prepared with that tool;
-Arduino CLI is not needed for recovery.
+Auto mode requires one board at a time and explicit USB-only acknowledgement.
+Older/legacy firmware can update to the selected compatible release; an equal
+version is checked without writing. A newer version is refused so it cannot be
+mistaken for the selected production release. Confirm unplugging before the next
+board; USB re-enumeration alone must never initiate another flash.
 
-If Windows Application Control blocks the selected tool, have the trusted tool
-approved through the Windows policy; do not turn off protections globally.
+CLI:
 
-The S3 has completed a physical NVS-preserving migration; C3 migration and
-interruption tests remain pending. See [the candidate notes](NEXT-RELEASE.md) for the release gates.
+    python dragon-firmware/tools/recovery.py --bundle IMMUTABLE_RELEASE_DIRECTORY --port CURRENT_PORT --usb-only --esptool FULL_PATH_TO_ESPTOOL
 
+Install `requirements-service.txt` for USB tools. Use the pinned standalone esptool
+or Arduino-installed tool. Do not disable host protections if a tool is blocked.
+Current tools support the existing schema-1 installed releases; future/custom saved
+schemas require a separately reviewed migration. A corrupt restore journal has
+its own [evidence-preserving service path](RESTORE-SERVICE.md).
 
-A trusted standalone esptool can also be selected without Arduino CLI:
-
-```powershell
-python dragon-firmware/tools/recovery.py --port CURRENT_PORT --usb-only --esptool FULL_PATH_TO_ESPTOOL
-```
-
-This still verifies ROM identity, the live NVS layout and target bundle. Recovery
-now resets the verified controller after unchanged-NVS readback and before checking
-startup. Never reuse an earlier COM port without confirming the present board.
-
-
-## Automatic batches in Recover Dragon.cmd
-
-Auto mode is restored in the recovery launcher. Start with both S3/C3 prepared
-images available and confirm that every board in this batch will use internal
-laptop USB only, with all external/product power disconnected. Enable **Auto mode
-- update boards when connected** once for the batch. Connect one board at a time;
-no repeated port selection or per-board checkbox is needed while Auto remains on.
-
-The tool reads status, identifies S3/C3 from ROM, and updates older firmware to the
-prepared version. Same/newer versions are not rewritten; their startup is still
-verified. Responsive legacy versions without the version field use the prepared
-migration/recovery image. Unresponsive boards and unrecognised version strings
-stop Auto for manual recovery instead of assuming they are older. Automatic port
-discovery accepts native Espressif USB (VID 303A); other adapters can be selected
-manually after disabling Auto.
-
-Wait for **STARTUP PASS**, unplug the board, then wait for **Auto ready** before
-connecting the next. USB re-enumeration during flashing/startup does not count as
-a new board. Multiple connected ESP32 ports or any operation failure stop Auto.
-Unchecking Auto prevents subsequent operations; a current write finishes normally.
-
-STARTUP PASS covers the running version, storage, increasing uptime, USB current
-ceiling and firmware/OTA validation. It does not test physical LEDs, sensors or
-Wi-Fi range. Manual update/recovery and **Check startup only** remain available
-with Auto off. Close/reopen the tool after changing its source; an already open
-window continues running the older code. The published beta 2 firmware is
-unchanged by this host-tool update.
+These are tool contracts, not new physical evidence. S3/C3 candidate migration,
+rollback and power tests remain pending. Keep all NVS files and unit identifiers
+under ignored local output; they may contain household credentials.

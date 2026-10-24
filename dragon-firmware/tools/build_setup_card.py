@@ -57,7 +57,7 @@ def build(output=OUTPUT, manual_url=MANUAL_URL):
     for line in [
         '<b>1. Read first.</b> Scan Setup &amp; manual while your phone has internet. Then power on one new dragon and wait for it to wake.',
         '<b>2. Join your dragon.</b> In phone Wi-Fi settings, choose a network starting <b>Dragon-Kingdom-</b>. Password: <b>dragon123</b>. If asked, stay connected without internet.',
-        '<b>3. Open controls.</b> The setup page may appear automatically. Otherwise scan Open dragon below. Browser login: <b>parent</b>; password: <b>dragon123</b>.',
+        '<b>3. Open controls.</b> The setup page may appear automatically. Otherwise scan Open dragon below. Play needs no login. Unlock Parent settings with <b>dragon123</b>.',
     ]:
         y = paragraph(c, line, x, y-4*mm, width, 10)
     qr_y = y-40*mm
@@ -68,7 +68,7 @@ def build(output=OUTPUT, manual_url=MANUAL_URL):
     y = qr_y-18*mm
     y = paragraph(c, '<b>My dragon\'s Wi-Fi name (optional)</b><br/>Dragon-Kingdom-________________', x, y, width, 10)
     y = paragraph(c, 'Several dragon networks? Power off the others while setting up. Home Wi-Fi is optional; after joining it, bookmark the address shown in the controls.', x, y-5*mm, width, 9)
-    y = paragraph(c, '<b>Need setup again?</b> Hold the right-side touch button while connecting power. Keep holding through the blue pulses; release when purple appears.', x, y-4*mm, width, 9)
+    y = paragraph(c, '<b>Need setup again?</b> Power off and on normally. Setup Wi-Fi opens at startup; no touch hold needed. Bottom USB-C is power-only.', x, y-4*mm, width, 9)
     paragraph(c, 'QR fallback after joining dragon Wi-Fi: http://192.168.4.1/<br/>Manual: sai021.github.io/dragon-kingdom/manual.pdf', x, y-4*mm, width, 7)
     c.showPage(); c.save()
 
@@ -88,7 +88,7 @@ def build(output=OUTPUT, manual_url=MANUAL_URL):
             qr(c, CONTROL_URL, lx+53*mm, ly+23*mm, 29*mm)
             paragraph(c, '<b>Setup &amp; manual</b><br/>Needs internet', lx+5*mm, ly+22*mm, 40*mm, 8)
             paragraph(c, '<b>Open dragon</b><br/>Join dragon Wi-Fi first', lx+48*mm, ly+22*mm, 40*mm, 8)
-            paragraph(c, 'Wi-Fi: Dragon-Kingdom-... | Password: dragon123<br/>Browser login: parent / dragon123', lx+5*mm, ly+10*mm, 80*mm, 7)
+            paragraph(c, 'Wi-Fi: Dragon-Kingdom-... | Password: dragon123<br/>Play: no login | Parent settings: dragon123', lx+5*mm, ly+10*mm, 80*mm, 7)
     c.showPage(); c.save()
     print(card)
     print(labels)

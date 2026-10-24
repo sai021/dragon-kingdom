@@ -59,18 +59,18 @@ While your dragon is happy being patted on its right-side touch button without k
 3. Enter **dragon123** (all lowercase).
 4. If the phone warns that this network has no internet, choose **Stay connected**. (Dragons do not read emails.)
 5. The setup page may appear automatically. Otherwise scan **Open dragon** on the card or rear label. Fallback: **http://192.168.4.1**.
-6. Log in with username **parent** and password **dragon123**.
+6. Play without logging in. Open **Parent settings** and unlock with **dragon123** for Wi-Fi, backups, updates and reset.
 
 You can play and edit right away over the dragon's own network. Home Wi-Fi is optional. Updated firmware uses **dragon123** even if an older card shows a random password. Your home Wi-Fi keeps its own private password.
 
 ## Optional: teach it your home Wi-Fi
 
-1. Open **For grown-ups · Wi-Fi & help** on the phone page.
+1. Open **Parent settings** and unlock with **dragon123**.
 2. Tap **Find my Wi-Fi**, then pick your **2.4 GHz** home network (or type its name if hidden).
 3. Enter your home Wi-Fi password. Use **Show password** to check your spelling.
 4. Tap **Connect my dragon** and wait for the result.
 5. Copy the **.local** bookmark address that appears above the play controls (such as **http://Dragon-Kingdom-a1b2c3.local/**).
-6. Switch your phone back to home Wi-Fi, open that address, and bookmark it. The page also shows a numeric fallback address.
+6. Setup Wi-Fi closes about 15 seconds after success. Switch your phone back to home Wi-Fi, open that address in your normal browser, and bookmark it. A numeric fallback is also shown.
 
 <!-- page -->
 
@@ -163,22 +163,20 @@ On the play screen, tap **Glitter**, **Fire**, **Breathe**, or **Rainbow**. Your
 
 Section Six — moving house and first aid for common ailments
 
-## Moving house (The Purple Setup Hold)
+## Moving house (The power-cycle setup)
 
-If you change Wi-Fi routers or want a direct phone connection again, teach your dragon the **Purple Setup Hold**:
+If you change Wi-Fi routers or want a direct phone connection again, teach your dragon the **power-cycle setup**:
 
 1. Unplug the power cord from the bottom of the dragon.
-2. Press and hold the touch button on the right side while plugging power back into the bottom USB-C power port.
-3. Keep holding right through the five blue eye-blinks.
-4. Let go when the dragon glows **purple** after startup.
-5. Join the **Dragon-Kingdom-XXXXXX** Wi-Fi network with **dragon123** and open **http://192.168.4.1**.
+2. Reconnect power normally; setup Wi-Fi opens at startup. No touch hold is needed.
+3. Wait for startup, then join the **Dragon-Kingdom-XXXXXX** Wi-Fi network with **dragon123** and open **http://192.168.4.1**.
 
-This keeps your saved home Wi-Fi and creations intact. To erase home Wi-Fi completely, tap **Forget home Wi-Fi** in the grown-ups section.
+This keeps your saved home Wi-Fi and creations intact. To erase home Wi-Fi completely, unlock Parent settings, tap **Forget home Wi-Fi**, then power off and on.
 
 ## When your dragon seems confused
 
 - **Phone says "no internet":** Completely normal on the dragon's private network. Stay connected and open **http://192.168.4.1**.
-- **The .local bookmark won't open:** Make sure your phone is on the same home Wi-Fi as the dragon, or try its numeric address. Guest networks often forbid pets from talking to phones—use a regular home network or the Purple Setup Hold.
+- **The .local bookmark won't open:** Make sure your phone is on the same home Wi-Fi as the dragon, or try its numeric address. Guest networks often forbid pets from talking to phones—use a regular home network or the power-cycle setup.
 - **Dragon Wi-Fi never appears:** If the power brick is weak, the dragon saves its energy for touch lighting and keeps Wi-Fi off. Ask a grown-up to check the power supply specified by the maker.
 - **Page says "Please wait for your dragon":** An action is still being processed. Wait for it to finish before trying another control.
 - **Dragon is unexpectedly dark or blinking red:** Check **Sleep** and **Glow** first (remember it dims in dark rooms). If it shows a dim red code at startup or keeps restarting, unplug it and contact the maker.
@@ -192,13 +190,13 @@ Section Seven — care rules and official registration
 
 ## Feeding and care (For grown-ups)
 
-Always feed your dragon through the bottom USB-C power port using the power supply provided or specified by your maker. Keep your dragon indoors and dry, handle its cord gently, and never open its enclosure or attach unapproved power sources.
+The bottom USB-C port is power-only. Always feed your dragon through that port using the power supply provided or specified by your maker. Keep your dragon indoors and dry, handle its cord gently, and never open its enclosure or attach unapproved power sources.
 
 ## A good dragon keeper remembers
 
 Carved around your dragon's frame, except along the bottom, is the motto **Darkness will rise to bring the light**—every hard climb or quiet night comes right before you shine.
 
-- **Touch play always works**—even without a phone, Wi-Fi, or internet.
+- **Touch play needs no network**—even without a phone, Wi-Fi, or internet.
 - **Keep your setup card** and bookmark your dragon's **.local** address.
 - **All** is the protected Great Sanctuary; named profiles are personal roosts.
 - **Save your work** in the editor before unplugging the dragon.
@@ -215,6 +213,6 @@ Phone bookmark (.local): ________________________________
 
 Maker / Dragon healer contact: __________________________
 
-Dragon Wi-Fi & browser password: **dragon123** (Browser username: **parent**). Keep your home Wi-Fi password private.
+Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom prototype user manual, version 0.7, 20 October 2026. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 0.8, 24 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.

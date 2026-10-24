@@ -52,7 +52,7 @@ def build():
         canvas.setFont('Helvetica-Bold',9);canvas.setFillColor(PURPLE);canvas.drawString(52,height-35,'DRAGON KINGDOM  /  USER MANUAL')
         canvas.setStrokeColor(colors.HexColor('#dddbe6'));canvas.line(52,42,width-52,42)
         canvas.setFont('Helvetica',8);canvas.setFillColor(colors.HexColor('#686574'))
-        canvas.drawString(52,28,f'Prototype edition {version}  |  {date}');canvas.restoreState()
+        canvas.drawString(52,28,f'Shipping edition {version}  |  {date}');canvas.restoreState()
     story=[]
     for page_index,chunk in enumerate(chunks):
         if page_index:story.append(PageBreak())
