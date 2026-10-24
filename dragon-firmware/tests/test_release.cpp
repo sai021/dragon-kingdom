@@ -128,7 +128,7 @@ int main(){
  restoreStore.bytes("pending")={1,2,3};assert(!recoverRestore());assert(restoreStore.isKey("pending"));
  computerUsbMode=false;serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(restoreStore.isKey("pending"));
  computerUsbMode=true;serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(!restoreStore.isKey("pending"));
- assert(queueRestore(snapshot));serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(restoreStore.isKey("pending"));assert(recoverRestore());
+ assert(queueRestore(snapshot));failRead=true;serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");failRead=false;assert(restoreStore.isKey("pending"));serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(restoreStore.isKey("pending"));assert(recoverRestore());
  auto after=library.data;server.call("/api/restore",HTTP_POST,{{"data","corrupt"}});assert(server.code==400&&!memcmp(&after,&library.data,sizeof(after)));
  // Actual online API handlers: no network work without parent auth; signed metadata before flash.
  registerOnlineRoutes();simulatedAlarmEpoch=1800000000;

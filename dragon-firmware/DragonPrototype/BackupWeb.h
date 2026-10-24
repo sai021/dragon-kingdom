@@ -35,8 +35,9 @@ bool serviceRestoreCommand(const char* line){
  if(!strcmp(line,"restore abandon-invalid EVIDENCE-SAVED")){
   if(!computerUsbMode){Serial.println("restore_recovery=requires_computer_usb");return true;}
   if(!restoreStoreReady||!restoreStore.isKey("pending")){Serial.println("restore_recovery=no_journal");return true;}
-  DragonBackup::Snapshot value{};
-  if(restoreStore.getBytesLength("pending")==sizeof(value)&&restoreStore.getBytes("pending",&value,sizeof(value))==sizeof(value)&&DragonBackup::valid(value)){Serial.println("restore_recovery=valid_journal_retained retry_required=1");return true;}
+  DragonBackup::Snapshot value{};size_t length=restoreStore.getBytesLength("pending");
+  if(!length||(length==sizeof(value)&&restoreStore.getBytes("pending",&value,sizeof(value))!=sizeof(value))){Serial.println("restore_recovery=read_failed journal_retained=1");return true;}
+  if(length==sizeof(value)&&DragonBackup::valid(value)){Serial.println("restore_recovery=valid_journal_retained retry_required=1");return true;}
   Serial.println(restoreStore.remove("pending")?"restore_recovery=invalid_journal_removed restart_required=1 inspect_all_saved_settings=1":"restore_recovery=remove_failed journal_retained=1");return true;
  }
  Serial.println("restore retry | restore abandon-invalid EVIDENCE-SAVED (USB service only, save raw NVS first)");return true;
