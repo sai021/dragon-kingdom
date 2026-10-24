@@ -2,6 +2,7 @@
 // Included inside DragonWeb. Signed manifest is verified BEFORE erasing the inactive slot.
 DragonUpdate::Transfer transfer;
 esp_ota_handle_t otaHandle=0;
+uint8_t lastChunk[512]{};size_t lastChunkSize=0;uint32_t lastChunkAt=0;
 const esp_partition_t* otaTarget=nullptr;
 mbedtls_sha256_context otaHash;
 uint8_t expectedHash[32]{};
@@ -28,7 +29,7 @@ bool verifyUpdateSignature(const String& manifest,const String& signature){
 bool beginTransfer(uint32_t size,const uint8_t* digest){
  otaTarget=esp_ota_get_next_update_partition(nullptr);
  if(!otaTarget||size>otaTarget->size||esp_ota_begin(otaTarget,OTA_WITH_SEQUENTIAL_WRITES,&otaHandle)!=ESP_OK)return false;
- transfer.start(size,millis());memcpy(expectedHash,digest,32);strcpy(updateOwner,parentSession.token);mbedtls_sha256_starts(&otaHash,0);return true;
+ lastChunkSize=0;transfer.start(size,millis());memcpy(expectedHash,digest,32);strcpy(updateOwner,parentSession.token);mbedtls_sha256_starts(&otaHash,0);return true;
 }
 int finalizeTransfer(){
  if(!transfer.complete())return 409;uint8_t hash[32];mbedtls_sha256_finish(&otaHash,hash);
@@ -45,16 +46,20 @@ void registerUpdateRoutes(){
   String sha=server.arg("sha256"),sig=server.arg("signature");
   if(server.arg("board")!=boardName()||!unsignedArgument("size",size)||!size||size>DragonUpdate::MAX_IMAGE||!DragonUpdate::decode(sha.c_str(),sha.length(),digest,sizeof(digest))||!DragonUpdate::decode(sig.c_str(),sig.length(),signature,sizeof(signature))){server.send(400,"text/plain","Wrong board or invalid signed package.");return;}
   if(onlineBusy||!firmwareValidated||transfer.active||connecting||joinAfterReply||rebootPending){server.send(409,"text/plain","Wait for the current operation to finish.");return;}
-  String manifest=String("dragon-update-v1\n")+boardName()+"\n"+String(size)+"\n"+sha+"\n";
+  uint32_t caps=0,schema=0;String tag=server.arg("tag");
+  if(server.arg("format")!="2"||!unsignedArgument("capabilities",caps)||!unsignedArgument("schema",schema)||!DragonCompatibility::compatible(caps,schema,voltageCalibrationPresent)||!DragonCompatibility::allowed(tag.c_str(),DragonOnline::CURRENT_TAG,server.arg("intent")=="return-release")){server.send(409,"text/plain","Incompatible or non-newer firmware. Use signed format 2; returning to a compatible release requires explicit selection.");return;}
+  String manifest=String("dragon-update-v2\n")+boardName()+"\n"+tag+"\n"+String(size)+"\n"+sha+"\n"+String(caps)+"\n"+String(schema)+"\n";
   if(!verifyUpdateSignature(manifest,sig)){server.send(403,"text/plain","Firmware signature did not match. Download the official package.");return;}
   if(!beginTransfer(size,digest)){server.send(503,"text/plain","Update unavailable. Initial USB migration or startup validation may be required.");return;}
   reply(200,"{\"offset\":0}");
  });
  server.on("/api/update/chunk",HTTP_POST,[]{
   if(!updateOwnerAuthorized())return;if(onlineBusy){server.send(409,"text/plain","An online firmware operation is in progress.");return;}uint32_t at;String text=server.arg("data");uint8_t bytes[512];size_t count=text.length()/2;
-  if(!unsignedArgument("offset",at)||!transfer.accepts(at,count)||!DragonUpdate::decode(text.c_str(),text.length(),bytes,count)){server.send(409,"text/plain","Unexpected update chunk. Start the update again.");return;}
+  if(!unsignedArgument("offset",at)||!count||count>sizeof(bytes)||!DragonUpdate::decode(text.c_str(),text.length(),bytes,count)){server.send(409,"text/plain","Unexpected update chunk. Start the update again.");return;}
+  if(lastChunkSize==count&&at==lastChunkAt&&transfer.offset==at+count&&!memcmp(bytes,lastChunk,count)){transfer.last=millis();reply(200,String("{\"offset\":")+String(transfer.offset)+"}");return;}
+  if(!transfer.accepts(at,count)){server.send(409,"text/plain","Unexpected update offset. Cancel and retry.");return;}
   if(esp_ota_write(otaHandle,bytes,count)!=ESP_OK){abortUpdate();server.send(500,"text/plain","Firmware write failed. Existing firmware kept.");return;}
-  mbedtls_sha256_update(&otaHash,bytes,count);transfer.offset+=count;transfer.last=millis();reply(200,String("{\"offset\":")+String(transfer.offset)+"}");
+  mbedtls_sha256_update(&otaHash,bytes,count);memcpy(lastChunk,bytes,count);lastChunkSize=count;lastChunkAt=at;transfer.offset+=count;transfer.last=millis();reply(200,String("{\"offset\":")+String(transfer.offset)+"}");
  });
  server.on("/api/update/finish",HTTP_POST,[]{
   if(!updateOwnerAuthorized())return;if(onlineBusy){server.send(409,"text/plain","An online firmware operation is in progress.");return;}if(!transfer.complete()){server.send(409,"text/plain","Upload is incomplete.");return;}

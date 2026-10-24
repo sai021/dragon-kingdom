@@ -41,14 +41,14 @@ Wiring wiring;
 DragonLibrary::Library library;
 DragonPreset currentPreset=DRAGON_PRESETS[DEFAULT_PRESET];
 TouchFilter nativeTouch;
-RGB frame[PHYSICAL_COUNT],zoneColors[ZONE_COUNT];
+Dragon::RGB frame[PHYSICAL_COUNT],zoneColors[ZONE_COUNT];
 uint16_t zoneGain[ZONE_COUNT],pixelGain[64];
 
 enum Mode : uint8_t {
  ZONE_VIEW,BREATHE,COLOR_CYCLE,PATRONUS_GLITTER,INCENDIO,LEVIOSA,SOLID,CORNERS,CHASE,OFF
 };
 Mode mode=ZONE_VIEW;
-RGB solidColor={255,160,80};
+Dragon::RGB solidColor={255,160,80};
 uint8_t brightness=50,palette=0;
 uint16_t operatingTotal=0,estimatedMa=Config::PANEL_IDLE_MA;
 uint32_t lastFrame=0,lastTouch=0,lastReport=0;
@@ -59,6 +59,8 @@ StartupPower startupPower;
 bool autoLight=true;
 bool computerUsbMode=false;
 DragonAlarm::Alarm sunrise;
+#include "BootValidation.h"
+DragonBoot::Validation bootValidation;
 bool firmwareValidated=false;
 Preferences alarmStore;
 bool alarmStoreReady=false;
@@ -90,8 +92,9 @@ bool saveAlarmSettings(DragonAlarm::Settings value){
 }
 DragonRotation::State rotation;
 Preferences rotationStore;
-void loadRotation(){rotationStore.begin("dragon-rotate",false);DragonRotation::Settings v{};if(rotationStore.getBytes("settings",&v,sizeof(v))==sizeof(v)&&DragonRotation::valid(v))rotation.settings=v;}
-bool saveRotation(DragonRotation::Settings v){DragonRotation::Settings check{};if(!DragonRotation::valid(v)||rotationStore.putBytes("settings",&v,sizeof(v))!=sizeof(v)||rotationStore.getBytes("settings",&check,sizeof(check))!=sizeof(check)||memcmp(&v,&check,sizeof(v)))return false;rotation.settings=v;rotation.restart(millis());return true;}
+bool rotationStoreReady=false;
+void loadRotation(){rotationStoreReady=rotationStore.begin("dragon-rotate",false);DragonRotation::Settings v{};if(rotationStore.getBytes("settings",&v,sizeof(v))==sizeof(v)&&DragonRotation::valid(v))rotation.settings=v;}
+bool saveRotation(DragonRotation::Settings v){DragonRotation::Settings check{};if(DragonRotation::valid(v)&&rotationStore.getBytes("settings",&check,sizeof(check))==sizeof(check)&&!memcmp(&v,&check,sizeof(v))){rotation.settings=v;rotation.restart(millis());return true;}if(!DragonRotation::valid(v)||rotationStore.putBytes("settings",&v,sizeof(v))!=sizeof(v)||rotationStore.getBytes("settings",&check,sizeof(check))!=sizeof(check)||memcmp(&v,&check,sizeof(v)))return false;rotation.settings=v;rotation.restart(millis());return true;}
 uint8_t touchGain=100;
 uint8_t ambientGain=100;
 uint8_t rawGlowTest=0; // USB-only transient measurement; zero uses normal dimming.
@@ -169,17 +172,17 @@ void updateLight(uint32_t now){
 uint32_t hashPixel(uint32_t value) {
  value^=value>>16;value*=0x7feb352du;value^=value>>15;value*=0x846ca68bu;return value^(value>>16);
 }
-RGB mixRgb(RGB a,RGB b,uint8_t amount) {
+Dragon::RGB mixRgb(Dragon::RGB a,Dragon::RGB b,uint8_t amount) {
  return {uint8_t((uint16_t(a.r)*(255-amount)+uint16_t(b.r)*amount)/255),
          uint8_t((uint16_t(a.g)*(255-amount)+uint16_t(b.g)*amount)/255),
          uint8_t((uint16_t(a.b)*(255-amount)+uint16_t(b.b)*amount)/255)};
 }
 // Add sparkle light rather than blending away a bright base channel.
-RGB sparkleRgb(RGB base,RGB accent,uint8_t amount) {
+Dragon::RGB sparkleRgb(Dragon::RGB base,Dragon::RGB accent,uint8_t amount) {
  RGB light=scaled(accent,amount,255);
  return {clampByte(uint16_t(base.r)+light.r),clampByte(uint16_t(base.g)+light.g),clampByte(uint16_t(base.b)+light.b)};
 }
-RGB hueRgb(uint16_t hue) {
+Dragon::RGB hueRgb(uint16_t hue) {
  uint8_t region=(hue/256)%6,position=hue&255;
  switch(region){
   case 0:return {255,position,0};case 1:return {uint8_t(255-position),255,0};
@@ -187,11 +190,11 @@ RGB hueRgb(uint16_t hue) {
   case 4:return {position,0,255};default:return {255,0,uint8_t(255-position)};
  }
 }
-bool wingZone(Zone z){return z==LW||z==RW;}
-bool fullWingZone(Zone z){return wingZone(z)||z==LE||z==RE;}
+bool wingZone(Dragon::Zone z){return z==LW||z==RW;}
+bool fullWingZone(Dragon::Zone z){return wingZone(z)||z==LE||z==RE;}
 
 // Per-dragon animation layers apply only to their selected regions.
-RGB presetColor(RGB c,Zone z,int x,int y,uint32_t now) {
+Dragon::RGB presetColor(Dragon::RGB c,Dragon::Zone z,int x,int y,uint32_t now) {
  const DragonPreset& p=currentPreset;
  if(!(p.animatedZones&(1u<<z)))return c;
  const float phase=float(now%p.periodMs)/p.periodMs;
@@ -368,12 +371,13 @@ bool computerUsbConnected(){
  return false;
 #endif
 }
+bool voltageCalibrationPresent=false;
 uint16_t voltageCorrection=1000;
 void loadVoltageCorrection(){
- voltageCorrection=1000;
+ voltageCorrection=1000;voltageCalibrationPresent=false;
 #ifdef ARDUINO
  Preferences cal;DragonVoltage::Record record;
- if(cal.begin("dragon-vcal",true)){if(cal.getBytesLength("unit")==sizeof(record)&&cal.getBytes("unit",&record,sizeof(record))==sizeof(record))voltageCorrection=DragonVoltage::correction(record,ESP.getEfuseMac());cal.end();}
+ if(cal.begin("dragon-vcal",true)){if(cal.getBytesLength("unit")==sizeof(record)&&cal.getBytes("unit",&record,sizeof(record))==sizeof(record)){voltageCalibrationPresent=DragonVoltage::valid(record,ESP.getEfuseMac());voltageCorrection=DragonVoltage::correction(record,ESP.getEfuseMac());}cal.end();}
 #endif
 }
 bool saveVoltageCorrection(uint16_t permille){
@@ -381,7 +385,7 @@ bool saveVoltageCorrection(uint16_t permille){
  if(!computerUsbMode)return false;
  Preferences cal;if(!cal.begin("dragon-vcal",false))return false;
  auto record=DragonVoltage::make(ESP.getEfuseMac(),permille);DragonVoltage::Record check;
- bool ok=cal.putBytes("unit",&record,sizeof(record))==sizeof(record)&&cal.getBytes("unit",&check,sizeof(check))==sizeof(check)&&DragonVoltage::valid(check,ESP.getEfuseMac())&&check.permille==permille;cal.end();return ok;
+ bool ok=cal.putBytes("unit",&record,sizeof(record))==sizeof(record)&&cal.getBytes("unit",&check,sizeof(check))==sizeof(check)&&DragonVoltage::valid(check,ESP.getEfuseMac())&&check.permille==permille;cal.end();if(ok)voltageCalibrationPresent=true;return ok;
 #else
  return false;
 #endif
@@ -491,6 +495,7 @@ void printStatus() {
  const auto* running=esp_ota_get_running_partition();esp_ota_img_states_t state=ESP_OTA_IMG_UNDEFINED;
  esp_ota_get_state_partition(running,&state);Serial.printf("firmware_validation ready=%u partition=%s ota_state=%u\n",firmwareValidated,running?running->label:"none",unsigned(state));
 #endif
+ Serial.printf("startup_validation_reason=%s\n",bootValidation.reason);
  printSensors();
  unsigned customCount=0;for(const auto& c:library.data.customs)customCount+=c.used!=0;
  Serial.printf("library_ready=%u profile=%u profile_name=%s customs=%u generation=%lu\n",library.isReady(),library.data.active,library.data.profiles[library.data.active].name,customCount,(unsigned long)library.data.generation);
@@ -588,6 +593,13 @@ bool networkSerialCommand(char*){return false;}
 #endif
 
 void setup() {
+#ifdef ARDUINO
+ const auto* running=esp_ota_get_running_partition();esp_ota_img_states_t state=ESP_OTA_IMG_UNDEFINED;
+ esp_err_t otaResult=running?esp_ota_get_state_partition(running,&state):ESP_FAIL;
+ if(otaResult==ESP_OK&&state==ESP_OTA_IMG_VALID){bootValidation.state=DragonBoot::State::Valid;firmwareValidated=true;}
+ else if(otaResult==ESP_OK&&(state==ESP_OTA_IMG_PENDING_VERIFY||state==ESP_OTA_IMG_NEW))bootValidation.state=DragonBoot::State::Trial;
+ else if(running&&(otaResult==ESP_ERR_NOT_FOUND||(otaResult==ESP_OK&&state==ESP_OTA_IMG_UNDEFINED)))bootValidation.state=DragonBoot::State::Migration;
+#endif
  Serial.begin(115200);pixels.begin();pixels.clear();pixels.show();
 #if DRAGON_USE_TTP223
  pinMode(Config::TOUCH_PIN,INPUT_PULLDOWN);
@@ -603,7 +615,7 @@ void setup() {
  loadRotation();
  library.begin();
 #ifdef ARDUINO
- if(!DragonWeb::recoverRestore()){Serial.println("Restore incomplete; power cycle to retry. Networking disabled.");return;}
+ if(!DragonWeb::recoverRestore()){computerUsbMode=computerUsbConnected();mode=OFF;Serial.println("Restore blocked; journal retained. USB service: save raw NVS evidence, retry a valid journal or explicitly abandon an invalid one. Networking disabled.");return;}
 #endif
  for(int i=0;i<ZONE_COUNT;i++)zoneGain[i]=100;for(int i=0;i<64;i++)pixelGain[i]=100;
  // Calibrate once per boot; ambient and touch percentages are session-local.
@@ -617,16 +629,19 @@ void setup() {
 }
 void loop() {
 #ifdef ARDUINO
- if(!firmwareValidated&&millis()>30000&&library.isReady()&&alarmStoreReady&&lightStoreReady&&DragonWeb::ready&&(DragonWeb::ap||DragonWeb::joinedSession)&&DragonWeb::restoreStoreReady&&operatingTotal>=400){
-  esp_ota_img_states_t state;const auto* running=esp_ota_get_running_partition();
-  esp_err_t result=esp_ota_get_state_partition(running,&state);
-  // USB migration may start with erased/undefined OTA metadata. Seed the running
-  // slot only after health checks so the first OTA has a confirmed fallback.
-  if(result!=ESP_OK||state==ESP_OTA_IMG_UNDEFINED){result=esp_ota_set_boot_partition(running);state=ESP_OTA_IMG_NEW;}
-  if(result==ESP_OK&&(state==ESP_OTA_IMG_PENDING_VERIFY||state==ESP_OTA_IMG_NEW))result=esp_ota_mark_app_valid_cancel_rollback();
-  firmwareValidated=result==ESP_OK;
+ bool healthy=library.isReady()&&alarmStoreReady&&rotationStoreReady&&lightStoreReady&&DragonWeb::ready&&(DragonWeb::ap||DragonWeb::joinedSession)&&DragonWeb::restoreStoreReady&&operatingTotal>=400;
+ auto action=bootValidation.decide(millis(),healthy);
+ if(action==DragonBoot::Action::Confirm||action==DragonBoot::Action::SeedAndConfirm){
+  esp_err_t result=ESP_OK;
+  if(action==DragonBoot::Action::SeedAndConfirm)result=esp_ota_set_boot_partition(esp_ota_get_running_partition());
+  if(result==ESP_OK)result=esp_ota_mark_app_valid_cancel_rollback();
+  firmwareValidated=result==ESP_OK;bootValidation.reason=firmwareValidated?"startup confirmed":"confirmation failed; service required";
  }
- if(millis()>60000&&!firmwareValidated)esp_ota_mark_app_invalid_rollback_and_reboot();
+ if(action==DragonBoot::Action::Rollback){
+  if(!esp_ota_check_rollback_is_possible())bootValidation.reason="trial failed; no rollback target; service required";
+  else {esp_ota_mark_app_invalid_rollback_and_reboot();bootValidation.reason="rollback failed; service required";}
+  Serial.println(bootValidation.reason);
+ }
 #endif
  readSerial();DragonWeb::update(millis());
  uint32_t now=millis();

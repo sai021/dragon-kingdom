@@ -5,6 +5,14 @@ namespace DragonConnection {
 // Real association retries plus DHCP on the test network exceeded 20 seconds.
 constexpr uint32_t CONNECT_TIMEOUT_MS=60000;
 constexpr uint32_t RETRY_MS=60000;
+struct Reconnect {
+ bool waiting=false;uint8_t failures=0;uint32_t since=0;
+ uint32_t backoff()const{return failures>=5?300000u:(10000u<<failures);}
+ void lost(uint32_t now){waiting=true;since=now;}
+ void failed(uint32_t now){if(failures<5)failures++;lost(now);}
+ void joined(){waiting=false;failures=0;}
+ bool due(uint32_t now,bool busy)const{return waiting&&!busy&&uint32_t(now-since)<0x80000000u&&uint32_t(now-since)>=backoff();}
+};
 constexpr uint32_t AP_IDLE_MS=300000;
 // ESP eFuse returns MAC bytes in little-endian order. Skip the vendor prefix.
 inline uint32_t deviceSuffix(uint64_t efuseMac){return uint32_t(efuseMac>>24)&0xffffff;}

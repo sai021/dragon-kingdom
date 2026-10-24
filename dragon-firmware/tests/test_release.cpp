@@ -86,18 +86,25 @@ int main(){
  DragonBackup::Snapshot backup{};DragonLibrary::Library defaults;backup.library=defaults.data;backup.library.checksum=DragonLibrary::checksum(backup.library);backup.check=DragonBackup::checksum(backup);assert(DragonBackup::valid(backup));backup.library.profiles[0].used=0;backup.library.checksum=DragonLibrary::checksum(backup.library);backup.check=DragonBackup::checksum(backup);assert(!DragonBackup::valid(backup));
  // Exercise the real device update and backup handlers with deterministic flash/crypto adapters.
  firmwareValidated=true;registerUpdateRoutes();registerBackupRoutes();
- std::map<std::string,String> manifest={{"board","s3"},{"size","512"},{"sha256",String(std::string(64,'0'))},{"signature",String(std::string(512,'0'))}};
+ std::map<std::string,String> manifest={{"format","2"},{"tag","v0.3.1"},{"capabilities","1"},{"schema","1"},{"board","s3"},{"size","512"},{"sha256",String(std::string(64,'0'))},{"signature",String(std::string(512,'0'))}};
  server.headers["X-Dragon-Parent"]="";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==401&&erases==0);
  randomHex(parentSession.token);parentSession.issued=millis();server.headers["X-Dragon-Parent"]=parentSession.token;
  server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==403&&erases==0); // unsigned rejected BEFORE erase
  manifest["signature"][0]='2';manifest["signature"][1]='a';manifest["board"]="c3";
  server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==400&&erases==0);
- manifest["board"]="s3";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==200&&erases==1);
+ manifest["board"]="s3";
+ for(const char* schema:{"","2"}){manifest["schema"]=schema;server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);}manifest["schema"]="1";
+ voltageCalibrationPresent=true;manifest["capabilities"]="0";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);manifest["capabilities"]="1";voltageCalibrationPresent=false;
+ for(const char* tag:{"v0.2.0",DragonOnline::CURRENT_TAG}){manifest["tag"]=tag;server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);}manifest["tag"]="v0.3.1";
+ manifest["format"]="1";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);manifest["format"]="2";
+ server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==200&&erases==1);
  server.call("/api/update/finish",HTTP_POST);assert(server.code==409&&bootChanges==0);
  server.call("/api/update/chunk",HTTP_POST,{{"offset","1"},{"data",String(std::string(1024,'0'))}});assert(server.code==409&&writes==0);
  delay(30000);serviceUpdate();assert(!transfer.active&&aborts==1&&bootChanges==0);
  server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==200);
  server.call("/api/update/chunk",HTTP_POST,{{"offset","0"},{"data",String(std::string(1024,'0'))}});assert(server.code==200&&writes==1);
+ auto beforeDuplicate=writes;server.call("/api/update/chunk",HTTP_POST,{{"offset","0"},{"data",String(std::string(1024,'0'))}});assert(server.code==200&&writes==beforeDuplicate);
+ server.call("/api/update/chunk",HTTP_POST,{{"offset","0"},{"data",String(std::string(1024,'1'))}});assert(server.code==409&&writes==beforeDuplicate);
  expectedHash[0]=1;server.call("/api/update/finish",HTTP_POST);assert(server.code==403&&bootChanges==0&&!transfer.active);
  server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==200);
  server.call("/api/update/chunk",HTTP_POST,{{"offset","0"},{"data",String(std::string(1024,'0'))}});assert(server.code==200);
@@ -109,6 +116,19 @@ int main(){
  snapshot.library.profiles[1].used=1;strcpy(snapshot.library.profiles[1].name,"Restored");snapshot.library.checksum=DragonLibrary::checksum(snapshot.library);snapshot.check=DragonBackup::checksum(snapshot);
  assert(queueRestore(snapshot));failStore=true;assert(!recoverRestore());assert(restoreStore.isKey("pending"));assert(!memcmp(&original,&library.data,sizeof(original)));
  failStore=false;assert(recoverRestore());assert(!restoreStore.isKey("pending"));assert(!strcmp(library.data.profiles[1].name,"Restored"));
+ // Interrupt each durable record write and retry the original transaction.
+ auto calibration=std::vector<unsigned char>{1,2,3,4};otherPreferences["dragon-vcal/unit"]=calibration;
+ for(unsigned stage=1;stage<=4;stage++){
+  assert(queueRestore(snapshot));failWriteAt=storeWrites+stage;bool completed=recoverRestore();failWriteAt=0;
+  if(!completed){assert(restoreStore.isKey("pending"));assert(recoverRestore());}
+  assert(otherPreferences["dragon-vcal/unit"]==calibration);
+ }
+ partialWriteAt=storeWrites+1;auto beforePartial=library.data;assert(!queueRestore(snapshot));partialWriteAt=0;assert(!recoverRestore());assert(restoreStore.isKey("pending"));assert(!memcmp(&beforePartial,&library.data,sizeof(beforePartial)));assert(otherPreferences["dragon-vcal/unit"]==calibration);
+ auto rotationWrites=storeWrites;assert(saveRotation(::rotation.settings));assert(storeWrites==rotationWrites);
+ restoreStore.bytes("pending")={1,2,3};assert(!recoverRestore());assert(restoreStore.isKey("pending"));
+ computerUsbMode=false;serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(restoreStore.isKey("pending"));
+ computerUsbMode=true;serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(!restoreStore.isKey("pending"));
+ assert(queueRestore(snapshot));serviceRestoreCommand("restore abandon-invalid EVIDENCE-SAVED");assert(restoreStore.isKey("pending"));assert(recoverRestore());
  auto after=library.data;server.call("/api/restore",HTTP_POST,{{"data","corrupt"}});assert(server.code==400&&!memcmp(&after,&library.data,sizeof(after)));
  // Actual online API handlers: no network work without parent auth; signed metadata before flash.
  registerOnlineRoutes();simulatedAlarmEpoch=1800000000;
@@ -119,7 +139,7 @@ int main(){
  assert(onlineTransport.url.find("/releases/latest/download/")!=std::string::npos);
  auto deliver=[&](const std::string& text){DragonOnline::Message m;m.kind=DragonOnline::DATA;assert(text.size()<=512);m.size=text.size();memcpy(m.bytes,text.data(),m.size);onlineTransport.messages.push_back(m);serviceOnline();};
  auto done=[&](){DragonOnline::Message m;m.kind=DragonOnline::DONE;onlineTransport.messages.push_back(m);serviceOnline();};
- auto metadata=[&](const char* board){return std::string("dragon-online-v1\n")+board+"\nv0.3.1\n512\n"+std::string(64,'0')+"\n2a"+std::string(510,'0')+"\n";};
+ auto metadata=[&](const char* board){return std::string("dragon-update-v2\n")+board+"\nv0.3.1\n512\n"+std::string(64,'0')+"\n1\n1\n2a"+std::string(510,'0')+"\n";};
  auto text=metadata("c3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_FAILED&&erases==beforeErase);
  server.call("/api/update/online/check",HTTP_POST);text=metadata("s3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_READY&&erases==beforeErase);
  server.call("/api/update/online/install",HTTP_POST,{{"release","v0.3.2"}});assert(server.code==409&&erases==beforeErase);
