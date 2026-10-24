@@ -57,6 +57,7 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);builds=root/'build';output=root/'release';keyfile=root/'test-key.pem'
             keyfile.write_bytes(key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption()))
+            (root/'DragonPrototype').mkdir();(root/'DragonPrototype/OnlinePolicy.h').write_text('constexpr const char* CURRENT_TAG="v0.3.0-beta.4";')
             for board in recovery.TARGETS:
                 build=builds/board;build.mkdir(parents=True)
                 raw=b'\xe9'+b'\0'*11+bytes([9 if board=='s3' else 5,0])+b'\0'*9+b'\1'+b'test app'
@@ -65,7 +66,7 @@ class ReleaseTests(unittest.TestCase):
                 (build/'build.options.json').write_text(json.dumps({'fqbn':recovery.TARGETS[board]}))
                 (build/'provenance.json').write_text(json.dumps({'source_commit':'a'*40,'source_sha256':'b'*64,'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5','sha256':{name:flash_support.digest(build/name) for name in recovery.FILES}}))
             def git(args,**kwargs):return 'a'*40 if 'rev-parse' in args else ''
-            with patch.object(prepare_release.subprocess,'check_output',side_effect=git),patch.object(prepare_release,'source_fingerprint',return_value='b'*64),patch.object(prepare_release,'public_key',return_value=key.public_key()),patch.object(release_contract,'public_key',return_value=key.public_key()):
+            with patch.object(prepare_release,'ROOT',root),patch.object(prepare_release.subprocess,'check_output',side_effect=git),patch.object(prepare_release,'source_fingerprint',return_value='b'*64),patch.object(prepare_release,'public_key',return_value=key.public_key()),patch.object(release_contract,'public_key',return_value=key.public_key()):
                 info=prepare_release.prepare(builds,output,keyfile,'v0.3.0-beta.4');release_contract.verify(info)
                 self.assertEqual(json.loads((output/'dragon-c3.dragon.json').read_text())['format'],2)
                 with self.assertRaises(ValueError):prepare_release.prepare(builds,output,keyfile,'v0.3.0-beta.4')

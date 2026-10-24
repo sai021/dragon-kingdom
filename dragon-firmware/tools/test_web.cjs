@@ -210,6 +210,12 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   await page.click('#online-check');await page.locator('#online-install:not([hidden])').waitFor();assert.equal(checkIntents.at(-1),'upgrade');
   await page.check('#return-release');assert.equal(await page.isVisible('#online-install'),false);
   await page.click('#online-check');await page.locator('#online-install:not([hidden])').waitFor();assert.equal(checkIntents.at(-1),'return-release');
+  // Native-sized checkboxes and parent action spacing at phone width.
+  for(const id of ['return-release','rotate-enabled']){const box=await page.locator('#'+id).evaluate(el=>{const r=el.getBoundingClientRect(),c=getComputedStyle(el);return {width:parseFloat(c.width),height:parseFloat(c.height)}});assert.equal(box.width,22);assert.equal(box.height,22)}
+  await page.evaluate(()=>{lastState.accessPoint=false;render(lastState)});assert.match(await page.textContent('#connect-status'),/Connected to home Wi-Fi/);assert.doesNotMatch(await page.textContent('#connect-status'),/closes shortly/);
+  await page.evaluate(()=>{lastState.accessPoint=true;render(lastState)});assert.match(await page.textContent('#connect-status'),/closes shortly/);await page.evaluate(()=>{lastState.accessPoint=false;render(lastState)});
+  assert.match(await page.textContent('#offline-update-help'),/stay here/);
+  const spacing=await page.evaluate(()=>{const rect=id=>document.querySelector(id).getBoundingClientRect();return rect('#backup').top-rect('#support-details').bottom});assert(spacing>=12);
   const downloadPromise=page.waitForEvent('download');await page.click('#support-details');const download=await downloadPromise;
   assert.equal(download.suggestedFilename(),'dragon-support.json');assert.deepEqual(JSON.parse(fs.readFileSync(await download.path(),'utf8')),{firmware:state.firmware,board});
   const pkg={format:2,board,tag:'v0.3.0',capabilities:1,schema:1,size:600,image:'ab'.repeat(600),sha256:'0'.repeat(64),signature:'0'.repeat(512)};
