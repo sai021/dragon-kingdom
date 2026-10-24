@@ -6,6 +6,12 @@ matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
+**Main firmware release:** [0.3.0](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.0),
+promoted from beta 2 with only its version label changed. Existing beta 2 boards
+can stay installed. This checkout also contains the opt-in beta 3 development
+line below. Keep the voltage-corrected C3 on beta 3; 0.3.0 does not apply its
+unit calibration.
+
 **Beta firmware, 24 October 2026:** [0.3.0 beta 3](docs/NEXT-RELEASE.md)
 adds contrasting Glitter, opt-in Beta/default Release update channels,
 login-free play, firmware-enforced parent settings, startup AP/home-network

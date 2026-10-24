@@ -1,5 +1,24 @@
 # Project checkpoint — 19 October 2026
 
+## Beta 2 promoted to main Release — 24 October 2026
+
+Owner requested beta 2 as the main release. GitHub latest now resolves stable
+v0.3.0, built from beta 2 commit bf97f43 with only CURRENT_TAG renamed to v0.3.0.
+Release-source commit 6c52456 is on codex/release-0.3.0; its isolated worktree is
+.tools/stable-source. This primary checkout remains the beta 3 development line.
+Stable manifests are signed for v0.3.0 and accepted by existing Release-channel
+code; published binaries/packages/recovery checksums and signatures were checked.
+43 Python tests, 16 native suites, browser simulations and both pinned cached-
+dependency builds pass for the stable source. No board was flashed for promotion.
+
+Already-installed beta 2 boards can stay as they are. The separately corrected C3
+must remain on beta 3: stable beta-2-based code does not read its chip-bound
+correction. Beta 3 and firmware-beta remain prereleases. The local recovery cache
+is deliberately still beta 3; the stable recovery set is separately held under
+.tools/stable-release/recovery-cache. Do not accidentally downgrade the corrected
+unit while changing recovery targets. This promotion adds no physical acceptance
+evidence; earlier coverage limits remain.
+
 ## Chip-bound divider correction — beta 3, 24 October 2026
 
 Beta 3 adds a USB-only, checksummed, chip-bound NVS multiplier for divider sensing.
