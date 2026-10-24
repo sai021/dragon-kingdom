@@ -1,5 +1,5 @@
 """USB-only migration/recovery. Preserve and verify the original NVS partition."""
-import argparse, json, struct, subprocess, time
+import argparse, json, struct, subprocess, time, os, re
 from pathlib import Path
 from board_targets import TARGETS, detect_board, parse_chip
 from flash_support import ROOT, FILES, load_bundle, digest, check_startup
@@ -13,6 +13,10 @@ def validate_partitions(raw):
     expected={'nvs':(1,2,0x9000,0x5000),'otadata':(1,0,0xe000,0x2000),'app0':(0,0x10,0x10000,0x180000),'app1':(0,0x11,0x190000,0x180000)}
     if any(entries.get(k)!=v for k,v in expected.items()):raise ValueError('Recovery requires the new two-slot partition layout with unchanged NVS offset and size.')
     return entries
+
+def validate_image_target(raw,board):
+    if len(raw)<24 or raw[0]!=0xe9 or int.from_bytes(raw[12:14],'little')!={'s3':9,'c3':5}[board]:
+        raise ValueError('Recovery image does not match the detected ESP32 board. Nothing was written.')
 
 def validate_current_nvs(raw):
     for at in range(0,len(raw)-31,32):
@@ -28,6 +32,20 @@ def esptool_path(cli):
     props=dict(v.split('=',1) for v in json.loads(result.stdout)['build_properties'] if '=' in v)
     return Path(props['runtime.tools.esptool_py.path'])/props['tools.esptool_py.cmd']
 
+def installed_esptool():
+    # Prefer the installed Espressif standalone tool; Arduino CLI may be blocked.
+    base=Path(os.environ.get('LOCALAPPDATA',str(Path.home()/'AppData/Local')))/'Arduino15/packages/esp32/tools/esptool_py'
+    candidates=list(base.glob('*/esptool.exe'))
+    return max(candidates,key=lambda p:tuple(int(n) for n in re.findall(r'\d+',p.parent.name))) if candidates else None
+
+def prepared_release(cache=None):
+    cache=cache or ROOT/'.tools/recovery-release'
+    info=json.loads((cache/'current-set.json').read_text(encoding='utf-8'))
+    for board in TARGETS:
+        build=load_bundle(cache=cache,board=board);validate_partitions((build/FILES[2]).read_bytes())
+        for name in FILES[:2]:validate_image_target((build/name).read_bytes(),board)
+    return info
+
 def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     if not usb_only:raise ValueError('Disconnect external/main power before internal laptop USB recovery.')
     if tool:
@@ -37,6 +55,7 @@ def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     emit('Verified ESP32-'+board.upper())
     build=load_bundle(board=board,cache=cache or ROOT/'.tools/recovery-release')
     validate_partitions((build/FILES[2]).read_bytes())
+    for name in FILES[:2]:validate_image_target((build/name).read_bytes(),board)
     tool=Path(tool) if tool else esptool_path(cli);session=ROOT/'.tools/recovery'/time.strftime('%Y%m%d-%H%M%S');session.mkdir(parents=True,exist_ok=False)
     def run(*args):
         result=subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--after','no-reset',*map(str,args)],capture_output=True,text=True,timeout=180)
@@ -54,12 +73,14 @@ def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     if digest(before)!=digest(after):raise RuntimeError('Saved-data verification FAILED. Keep the NVS backup; do not claim successful migration.')
     emit('Saved NVS bytes verified unchanged. Resetting the verified board for startup checks.')
     subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
-    check_startup(port,emit)
+    info=json.loads(((cache or ROOT/'.tools/recovery-release')/'current-set.json').read_text(encoding='utf-8')) if ((cache or ROOT/'.tools/recovery-release')/'current-set.json').exists() else {}
+    emit('Waiting for firmware startup validation. This can take about a minute.')
+    check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True)
     emit('Recovery complete. Keep USB-only power until unplugged. Setup Wi-Fi opens at startup.')
     return session
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',required=True);p.add_argument('--cli',default=str(ROOT/'.tools/arduino-cli/arduino-cli.exe'));p.add_argument('--esptool',type=Path,help='Use an installed standalone esptool, without Arduino CLI');p.add_argument('--usb-only',action='store_true');a=p.parse_args()
-    recover(a.cli,a.port,a.usb_only,tool=a.esptool)
+    recover(a.cli,a.port,a.usb_only,tool=a.esptool or installed_esptool())
 
 if __name__=='__main__':main()

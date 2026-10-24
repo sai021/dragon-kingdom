@@ -1,5 +1,23 @@
 # Project checkpoint — 19 October 2026
 
+## Visible firmware and prepared recovery — beta 2, 24 October 2026
+
+`v0.3.0-beta.2` shows actual installed firmware and board type on the main page,
+without unlocking Parent settings. Device state and serial status expose the same
+compiled tag. Recovery now prefers installed standalone esptool, verifies both
+board image headers as well as bundle hashes/layouts, shows the prepared version,
+and waits for expected firmware plus VALID startup before reporting success.
+Per-board power confirmation resets after each operation; startup-only retry does
+not rewrite flash. Both S3/C3 beta 2 bundles are prepared in the local recovery cache.
+
+43 Python tests, 16 native suites and browser simulations pass; both targets
+compile/link with pinned cached dependencies (clean Arduino CLI remains blocked
+by Windows Application Control). Final images: S3 1,367,040 bytes, C3 1,409,952
+bytes, both within the slots. Real RSA signatures and packaged hashes/layouts
+were checked. The actual recovery GUI preflight succeeds using the local runtime,
+new bundle and installed standalone tool. This is software/readiness evidence:
+no additional board was probed/flashed, and C3 physical acceptance remains open.
+
 ## Beta update channel and Glitter contrast — 24 October 2026
 
 The `v0.3.0-beta.1` release adds a 10% silhouette for the Glitter button while white

@@ -12,6 +12,7 @@
 #include "DragonLibrary.h"
 #include "SunriseAlarm.h"
 #include "Rotation.h"
+#include "OnlinePolicy.h"
 #ifdef ARDUINO
 #include <time.h>
 #include <sys/time.h>
@@ -462,6 +463,11 @@ void printSensors(){
 }
 void printStatus() {
 #ifdef ARDUINO
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+ Serial.printf("firmware_version=%s board=c3\n",DragonOnline::CURRENT_TAG);
+#else
+ Serial.printf("firmware_version=%s board=s3\n",DragonOnline::CURRENT_TAG);
+#endif
  const auto* running=esp_ota_get_running_partition();esp_ota_img_states_t state=ESP_OTA_IMG_UNDEFINED;
  esp_ota_get_state_partition(running,&state);Serial.printf("firmware_validation ready=%u partition=%s ota_state=%u\n",firmwareValidated,running?running->label:"none",unsigned(state));
 #endif

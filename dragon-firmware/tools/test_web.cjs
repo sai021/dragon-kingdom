@@ -13,7 +13,7 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
  try{
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,timezoneId:'Australia/Sydney'});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  let state={connected:false,accessPoint:true,connecting:false,mode:0,hostname:'Dragon-test',ip:'192.168.1.23',message:'Ready to play',dragon:0,brightness:100,profile:0};
+  let state={firmware:'v0.3.0-beta.2',board:'s3',connected:false,accessPoint:true,connecting:false,mode:0,hostname:'Dragon-test',ip:'192.168.1.23',message:'Ready to play',dragon:0,brightness:100,profile:0};
   let board="s3";
   let online={phase:0,busy:false,current:'v0.3.0-candidate',release:'',message:'Ready to check.',progress:0,channel:'release'};
   let profiles=[{id:0,name:"All",brightness:100,favorites:[]}],customs=[];
@@ -72,7 +72,7 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
    return route.fulfill({status:404,body:'Missing mock endpoint'});
   });
   await page.goto('http://dragon.test/');
-  await page.locator('#dragon:not([disabled])').waitFor();
+  await page.locator('#dragon:not([disabled])').waitFor();await page.waitForFunction(()=>document.querySelector('#device-firmware').textContent.includes('v0.3.0-beta.2'));assert.match(await page.textContent('#device-firmware'),/v0\.3\.0-beta\.2.*ESP32-S3/);assert.equal(await page.isVisible('#device-firmware'),true);assert.equal(await page.isVisible('#parent-controls'),false);state.board='c3';await page.evaluate(()=>refresh());assert.match(await page.textContent('#device-firmware'),/ESP32-C3/);state.board='s3';await page.evaluate(()=>refresh());
   await page.locator('#save-alarm:not([disabled])').waitFor({state:'attached'});assert.equal(clockSyncs,1);
   await page.click('#alarm summary');await page.check('#alarm-enabled');await page.fill('#alarm-time','06:30');await page.fill('#alarm-duration','30');await page.click('#save-alarm');
   await page.waitForFunction(()=>document.querySelector('#alarm-status').textContent.startsWith('Daily sunrise saved'));

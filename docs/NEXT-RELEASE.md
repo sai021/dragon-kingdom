@@ -1,8 +1,24 @@
-# Firmware 0.3.0 beta 1
+# Firmware 0.3.0 beta 2
 
 This source implements the 24 October 2026 product direction and is published
-as `v0.3.0-beta.1` for experienced testers. It is not a stable release; physical
+as `v0.3.0-beta.2` for experienced testers. It is not a stable release; physical
 acceptance checks below remain open. The previous published prototype is 0.2.4.
+
+## Visible firmware identity and ready recovery
+
+The main page shows the installed version and ESP32-S3/C3 type directly beneath
+its title, without a parent login. These values come from the device's ordinary
+state API; they do not describe the selected update channel or available release.
+
+The prepared recovery set includes both targets and records its firmware tag.
+The launcher verifies both image headers, hashes and partition layouts and shows
+the prepared version. It prefers the installed standalone Espressif tool, avoiding
+the blocked Arduino CLI on this PC. Each board requires selecting its current
+port and confirming USB-only power. ROM detection selects S3/C3 before writing;
+NVS is backed up and checked unchanged. Completion additionally requires the
+expected firmware tag, increasing uptime, ready storage, the USB ceiling and
+firmware/OTA validation. Startup can be checked again without reflashing. See
+[USB recovery](USB-RECOVERY.md).
 
 ## Everyday use and parent boundary
 

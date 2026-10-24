@@ -81,13 +81,14 @@ def source_fingerprint(root=ROOT):
     return hasher.hexdigest()
 
 
-def save_release(builds, cache=CACHE, source_sha256=None):
+def save_release(builds, cache=CACHE, source_sha256=None, firmware_tag=None):
     if set(builds) != set(TARGETS):
         raise ValueError('Both S3 and C3 firmware are required before publication.')
     targets={board:bundle_manifest(build, board) for board,build in builds.items()}
     if any(build.parent.resolve()!=cache.resolve() for build in builds.values()):
         raise ValueError('Release bundles must be inside the firmware cache.')
     manifest={'schema':1,'source_sha256':source_sha256,'targets':targets}
+    if firmware_tag:manifest['firmware_tag']=firmware_tag
     temporary=cache / 'current-set.json.tmp'
     temporary.write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     # One atomic replacement publishes both targets, or neither of them.
@@ -152,7 +153,7 @@ class StartupEvidence:
                 and self.uptimes[-1] - self.uptimes[0] >= 2000)
 
 
-def check_startup(port, emit, timeout=45):
+def check_startup(port, emit, timeout=45, expected_firmware=None, require_validation=False):
     serial, list_ports = serial_modules()
     initial = list(list_ports.comports())
     identity = next((p.serial_number for p in initial if p.device == port), None)
@@ -161,6 +162,8 @@ def check_startup(port, emit, timeout=45):
     connection = None
     evidence = StartupEvidence()
     last_request = 0
+    version_ok = not expected_firmware
+    validation_ok = not require_validation
     try:
         while time.monotonic() < deadline:
             if connection is None:
@@ -182,6 +185,8 @@ def check_startup(port, emit, timeout=45):
                     connection.open()
                     connection.reset_input_buffer()
                     evidence = StartupEvidence()
+                    version_ok = not expected_firmware
+                    validation_ok = not require_validation
                     last_request = 0
                     emit('Checking Dragon Kingdom on ' + chosen + '…\n')
                 except (serial.SerialException, OSError):
@@ -196,9 +201,14 @@ def check_startup(port, emit, timeout=45):
                     last_request = time.monotonic()
                 line = connection.readline().decode('utf-8', errors='replace').strip()
                 # Display only expected status fields; never capture setup passwords.
-                if line.startswith(('uptime_ms=', 'library_ready=', 'dragon=')):
+                if line.startswith(('uptime_ms=', 'library_ready=', 'dragon=', 'firmware_version=', 'firmware_validation ')):
                     emit(line + '\n')
-                if evidence.observe(line):
+                if line.startswith('firmware_version='):
+                    version_ok = line.split()[0] == 'firmware_version='+str(expected_firmware) if expected_firmware else True
+                    if not version_ok:raise RuntimeError('The connected board is not running the prepared firmware version.')
+                if line.startswith('firmware_validation '):
+                    validation_ok = 'ready=1 ' in line and 'ota_state=2' in line
+                if evidence.observe(line) and version_ok and validation_ok:
                     return 'Dragon Kingdom responded with increasing uptime and ready library.'
             except (serial.SerialException, OSError):
                 connection.close()
