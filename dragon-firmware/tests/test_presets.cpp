@@ -15,6 +15,16 @@ int main(){
    for(auto c:frame)assert(c.r<=204&&c.g<=204&&c.b<=204);
   }
  }
+ // Glitter dims the entire silhouette, retains bright wing sparkles and obeys power caps.
+ setPalette(0);mode=PATRONUS_GLITTER;operatingTotal=StartupPower::levels[0];
+ // Inspect uncapped background via a non-wing pixel in a full frame at the largest budget.
+ operatingTotal=StartupPower::levels[sizeof(StartupPower::levels)/sizeof(StartupPower::levels[0])-1];
+ bool sawSparkle=false;
+ for(uint32_t t=0;t<420;t+=35){composeFrame(t);for(int y=0;y<8;y++)for(int x=0;x<8;x++){
+  RGB c=frame[logicalIndex(x,y,wiring)];
+  if(!fullWingZone(ZONES[y][x]))assert(c.r<=20&&c.g<=20&&c.b<=20);
+  else if(c.r>100&&c.g>100&&c.b>100)sawSparkle=true;
+ }}assert(sawSparkle);
  // Sparkles add light without darkening saturated base colours.
  auto sparkle=sparkleRgb({255,30,0},{255,255,255},255);
  assert(sparkle.r==255&&sparkle.g==255&&sparkle.b==255);

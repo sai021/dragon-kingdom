@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SUITES = ('core', 'load', 'power', 'presets', 'sensors', 'startup', 'voltage', 'connection', 'library', 'creations', 'c3', 'alarm', 'network_serial', 'library_web', 'http')
+SUITES = ('core', 'load', 'power', 'presets', 'sensors', 'startup', 'voltage', 'connection', 'library', 'creations', 'c3', 'alarm', 'network_serial', 'library_web', 'http', 'release')
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

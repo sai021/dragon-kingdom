@@ -4,7 +4,7 @@
 #include <string.h>
 
 namespace DragonHttp {
-constexpr size_t MAX_HEADERS=2048,MAX_BODY=1536,MAX_REQUEST=MAX_HEADERS+MAX_BODY;
+constexpr size_t MAX_HEADERS=2048,MAX_BODY=6144,MAX_REQUEST=MAX_HEADERS+MAX_BODY;
 constexpr uint32_t REQUEST_MS=3000,RESPONSE_MS=5000;
 constexpr size_t WRITE_CHUNK=1024,MAX_RESPONSE=65536;
 enum Result { WAIT, READY, REJECT };

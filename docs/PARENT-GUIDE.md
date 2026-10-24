@@ -1,5 +1,8 @@
 # Using Dragon Kingdom
 
+> This guide describes the installed 0.2.4 prototype. For the new startup, parent
+> authentication and update behavior, use the [0.3.0 candidate notes](NEXT-RELEASE.md).
+
 This guide is for one child and their grown-ups using a prepared prototype.
 Keep its printed setup card. No app, account or coding is needed for normal play.
 The printable [user manual](../output/pdf/dragon-kingdom-user-manual.pdf) is edition

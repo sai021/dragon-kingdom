@@ -1,5 +1,8 @@
 # System architecture
 
+> This guide describes the installed 0.2.4 prototype. For the new startup, parent
+> authentication and update behavior, use the [0.3.0 candidate notes](NEXT-RELEASE.md).
+
 The ESP32-S3 hosts an offline HTML/JavaScript interface and local HTTP API.
 The phone controls the device directly over its setup access point or the home
 LAN. There is no cloud backend, remote-control service, child account or audio

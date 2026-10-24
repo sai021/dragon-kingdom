@@ -1,5 +1,142 @@
 # Project checkpoint — 19 October 2026
 
+## Beta update channel and Glitter contrast — 24 October 2026
+
+The `v0.3.0-beta.1` release adds a 10% silhouette for the Glitter button while white
+wing sparkle peaks retain the existing 80% channel ceiling. Session power, ambient
+and user gains still apply. Native tests check contrast and all current budgets.
+Release is the default update channel; Beta is an explicit parent choice with a
+USB recovery notice. Device handlers validate channel selection, use separate
+manifest locations and reject beta metadata in Release. Signed immutable release
+assets are selected through the `firmware-beta` prerelease pointer. Ordinary users
+will not receive this beta through Release. Older candidate firmware needs one
+file upload to gain the channel selector. Browser simulations cover board labels,
+beta selection and return to Release on locking. Software checks pass: 39 Python tests, 16 native suites and browser simulations.
+Both targets compile/link with cached pinned dependencies (clean Arduino CLI is
+blocked by Windows Application Control). Final signed beta images are S3
+1,366,384 bytes and C3 1,409,360 bytes, within 1,572,864-byte slots. RSA signatures
+were independently verified after packaging; the recovery bundle passed layout
+and checksum validation. No new physical pass is claimed.
+
+## Board-specific update guidance — 24 October 2026
+
+The parent firmware panel reads the protected board API after unlocking and names
+ESP32-S3 or ESP32-C3 with the exact matching `dragon-s3.dragon.json` or
+`dragon-c3.dragon.json` download. Direct updates select the target automatically.
+File upload still checks the device target before starting, with a specific
+wrong-board message. Browser simulations cover both labels; both targets compile
+and link using the cached pinned dependencies. The live device at its home-network
+address reports S3. The new guidance is packaged for user upload testing; it has
+not yet been installed or physically verified. No GitHub release was published.
+
+## Simplified parent access — 24 October 2026
+
+Latest user decision: parent access is a deliberate settings action using the
+fixed shared password `dragon123`. No password change or USB setup code is needed.
+The parent area shows only its password form until accepted; settings are hidden
+and inert while locked. Existing sessions and independent firmware API checks
+remain. Lock, reload, expiry and rejected tokens hide the controls again. The
+old password-change route is retired, and saved custom parent credentials are
+ignored. This supersedes USB-code/password-setup instructions in earlier entries.
+
+Software checks pass: 39 Python tests, 16 native suites and phone-sized browser
+simulations including fixed login, wrong-password rejection, hidden controls,
+locking and expiry. Setup Wi-Fi is explicitly described as having no internet:
+users download offline files before joining it, and direct checks remain disabled
+until home Wi-Fi is connected and setup Wi-Fi closes. Both targets compile/link
+with cached pinned dependencies. The S3 update was installed over USB without
+changing partition table, NVS or OTA metadata. Updated app0 validated, with
+two creations/generation 14 and the 400 mA ceiling intact; physical evidence is
+recorded separately. A local HTTP upload attempt interrupted at roughly 67% left the
+previous app0 VALID and saved data intact. No complete web OTA or rollback pass
+is claimed.
+
+
+## Direct online updates and physical S3 migration — 24 October 2026
+
+The parent page now offers Check for updates, explicit installation approval,
+progress and cancellation. A background HTTPS task downloads bounded signed release
+metadata and the board-specific binary from GitHub; the main loop retains OTA and
+lighting ownership. The pinned CA bundle, hostname checks, HTTPS-only release-host
+redirects, signed board/tag/size/hash metadata and complete image verification are
+required. File uploads still work offline. No online release assets have been
+published during this work; old releases without a manifest return a clear message.
+
+Software checks: 39 Python tests, 16 native suites and phone-sized browser
+simulations passed. Actual online route handlers are tested with deterministic
+network/crypto adapters for authentication, signed-check-before-erase, wrong board,
+parent-approved install, progress and expiry cancellation. Separate Python tests
+use real RSA signatures including tag tampering. Both boards compile/link with
+cached pinned dependencies; generated images are S3 1,364,064 bytes and C3
+1,407,216 bytes, within the 1,572,864-byte slots. Clean CLI builds remain blocked
+by Windows Application Control. The installed standalone esptool runs normally;
+recovery can explicitly select it with `--esptool` without changing Windows policy.
+
+Physical evidence is recorded separately in the [24 October S3 record](HARDWARE-TEST-2026-10-24.md).
+After explicit USB-only power confirmation and ROM identity verification, the S3
+was migrated to two slots. A complete original flash backup is preserved privately;
+NVS matched byte-for-byte across migration and against that original backup.
+Two creations, All and generation 14 survived, with the 400 mA USB ceiling intact.
+Startup confirmed app0 VALID. Saved home Wi-Fi did not join (reason 210); the bounded
+attempt stopped and AP remained active through about 158 seconds uptime.
+
+Windows initially denied WLAN access. After the user enabled Location services,
+access succeeded without elevation. The laptop joined the real AP: the embedded
+page and ordinary APIs worked without login, all 16 tested sensitive routes
+returned HTTP 401 without parent credentials, and headless Edge confirmed automatic
+clock sync against the actual device. The previous laptop network was restored
+and the temporary profile removed. This is live desktop/device evidence, not
+physical phone coverage. Home Wi-Fi did not connect, so actual online firmware
+installation remains unverified.
+No signed GitHub assets were published. Physical rollback/interruption, real-phone
+setup/channel handover and the C3 remain open gates. The earlier software-source
+checkpoint below retains its historical scope before this physical session.
+
+
+## Next firmware release source — 24 October 2026
+
+The [0.3.0 candidate](NEXT-RELEASE.md) implements the latest product direction:
+login-free ordinary controls; device-enforced parent sessions for Wi-Fi, backup,
+restore, updates, reset and credentials; AP at every startup; one bounded saved
+home-network attempt; explicit retry; AP shutdown after successful join; no automatic
+AP reopening after a later drop; no setup touch hold/purple cue. Automatic phone
+clock sync is visibly confirmed. Collection rotation pauses for sleep/sunrise.
+Signed offline updates use two slots and defer startup validation/rollback.
+Backups use validated snapshots and an interrupted-restore redo journal.
+
+First parent credential setup/recovery uses a USB-generated ten-minute one-use code,
+separate from the unchanged AP password. The [single-device recovery tool](USB-RECOVERY.md)
+backs up and verifies unchanged NVS around a board-matched migration. Existing
+manufacturing tooling and previous local release bundles are retained separately.
+Only the public update verification key is source-controlled. Keep the private
+signing key in ignored local storage and back it up privately before distribution.
+
+Software evidence (not physical): 38 Python tests, 16 native suites and the updated
+390x844 browser workflow pass. Native tests execute the actual parent, update and
+backup routes with deterministic crypto/flash adapters, covering auth rejection,
+invalid/wrong-board manifests before erase, interrupted/incomplete/tampered uploads,
+session expiry and restore-journal retry. Separate Python tests use real RSA signing
+and verification and simulated NVS-preserving USB writes. Existing wing-isolation,
+All/membership, saved-data migration and 400 mA USB ceiling regressions remain.
+
+Both pinned board compilers accept the real translation unit; linking succeeds
+against cached pinned dependencies. ELF inspection confirms a strong C-linkage
+`verifyRollbackLater` symbol. Application images are 1,179,664 bytes (S3) and 1,206,880 bytes (C3),
+within the 1,572,864-byte slots. Signed candidate packages and checksum-verified
+recovery bundles are isolated under ignored `.tools/next-release/` and
+`.tools/recovery-release/`. Clean
+Arduino CLI builds are blocked by Windows Application Control (WinError 4551)
+on this machine, so direct compiler/link/image checks are recorded separately.
+Candidate images, signatures, private key and logs remain ignored local outputs.
+
+No port was probed and no device was flashed in this session. Actual iPhone/Android,
+radio-channel association/handover, AP shutdown, later disconnect, power-cycle
+recovery, interrupted physical updates/rollback, NVS preservation across migration,
+restore interruption and USB recovery remain mandatory physical gates on both boards.
+Earlier physical evidence below applies to the earlier installed release only.
+Supplied hardware files and power safety policy are unchanged.
+
+
 ## Printable setup cards published — 24 October 2026
 
 The existing universal A5 setup card and A4 rear-label sheet are now tracked in

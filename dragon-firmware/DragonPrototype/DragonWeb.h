@@ -6,6 +6,15 @@
 #include <esp_system.h>
 #include "ConnectionPolicy.h"
 #include "NetworkSerial.h"
+#include "ParentPolicy.h"
+#include <mbedtls/md.h>
+#include <mbedtls/pk.h>
+#include <mbedtls/sha256.h>
+#include <esp_ota_ops.h>
+#include "UpdatePolicy.h"
+#include "BackupPolicy.h"
+#include "UpdatePublicKey.h"
+#include "OnlineTransport.h"
 
 // Included after lighting functions so web and touch share the same state.
 namespace DragonWeb {
@@ -16,16 +25,18 @@ struct Credentials { char ssid[33]; char password[65]; } saved{}, pending{};
 String deviceName, password, message="Ready to play";
 bool ap=false, connecting=false, configured=false, ready=false;
 bool scanRequested=false,joinAfterReply=false,forgetAfterReply=false;
-bool lastJoinSaved=false;
+bool lastJoinSaved=false,joinedSession=false,rebootPending=false,onlineBusy=false;
+uint32_t joinedAt=0;
 volatile uint16_t lastDisconnectReason=0;
 uint32_t started=0, retryAt=0, apActivity=0;
 #include "DragonWebPage.h"
 static_assert(sizeof(page)+1024<=DragonHttp::MAX_RESPONSE,"Embedded page exceeds the bounded HTTP response capacity.");
 String quote(const String& value){String out="\"";for(size_t i=0;i<value.length();i++){char c=value[i];if(c=='"'||c=='\\'){out+='\\';out+=c;}else if(uint8_t(c)<32){char escape[7];snprintf(escape,sizeof(escape),"\\u%04x",uint8_t(c));out+=escape;}else out+=c;}return out+'"';}
-bool authorize(){if(!server.authenticate("parent",password.c_str())){server.requestAuthentication();return false;}if(server.method()==HTTP_POST&&server.header("X-Dragon-Request")!="1"){server.send(403,"text/plain","Open the Dragon Kingdom to make changes.");return false;}apActivity=millis();server.sendHeader("Cache-Control","no-store");return true;}
+bool authorize(){if(rebootPending&&server.method()==HTTP_POST){server.send(409,"text/plain","Restart pending. Reconnect after startup.");return false;}if(server.method()==HTTP_POST&&server.header("X-Dragon-Request")!="1"){server.send(403,"text/plain","Open the Dragon Kingdom to make changes.");return false;}server.sendHeader("Cache-Control","no-store");return true;}
 void reply(int code,const String& text){server.send(code,"application/json",text);}
-bool openAP(){if(ap)return true;WiFi.mode(WIFI_AP_STA);if(!WiFi.softAP(deviceName.c_str(),password.c_str())){message="Could not start setup Wi-Fi. Restart your dragon.";return false;}ap=true;apActivity=millis();dns.start(53,"*",WiFi.softAPIP());return true;}
+bool openAP(){if(ap)return true;if(joinedSession){message="Power cycle to open setup Wi-Fi.";return false;}WiFi.mode(WIFI_AP_STA);if(!WiFi.softAP(deviceName.c_str(),password.c_str())){message="Could not start setup Wi-Fi. Restart your dragon.";return false;}ap=true;apActivity=millis();dns.start(53,"*",WiFi.softAPIP());return true;}
 void connect(const Credentials& credentials){
+ if(joinedSession){message="Power cycle to try home Wi-Fi again.";return;}
  lastJoinSaved=false;
  // Stop the responder before destroying/recreating its station interface.
  MDNS.end();
@@ -46,7 +57,10 @@ void connect(const Credentials& credentials){
  started=millis();connecting=result!=WL_CONNECT_FAILED;
  if(!connecting){message="Could not start home Wi-Fi. Try again.";retryAt=started;}
 }
+bool authorizeParent();
+#include "ParentWeb.h"
 bool serialControl(char* line){
+
  if(strncmp(line,"wifi ",5))return false;
  char* context=nullptr;char* action=strtok_r(line+5," ", &context);
  if(!ready&&action&&strcmp(action,"status")){Serial.println("network_unavailable reason=power_or_storage");return true;}
@@ -96,6 +110,9 @@ bool serialControl(char* line){
 }
 #include "LibraryWeb.h"
 #include "AlarmWeb.h"
+#include "UpdateWeb.h"
+#include "OnlineWeb.h"
+#include "BackupWeb.h"
 void begin(bool requested){
  ready=store.begin("dragon-wifi",false);if(!ready){Serial.println("Wi-Fi storage unavailable; networking disabled");return;}
  char suffix[7];snprintf(suffix,sizeof(suffix),"%06lx",(unsigned long)DragonConnection::deviceSuffix(ESP.getEfuseMac()));deviceName=String("Dragon-Kingdom-")+suffix;
@@ -106,21 +123,26 @@ void begin(bool requested){
  // connect()/openAP() starts the required interface once. Starting STA here
  // would immediately tear it down again in connect() on every saved-network
  // boot, needlessly cycling the pinned core's asynchronous event/netif setup.
- WiFi.persistent(false);WiFi.setHostname(deviceName.c_str());WiFi.setAutoReconnect(true);
+ WiFi.persistent(false);WiFi.setHostname(deviceName.c_str());WiFi.setAutoReconnect(false);
  WiFi.onEvent([](arduino_event_id_t event,arduino_event_info_t info){
   if(event==ARDUINO_EVENT_WIFI_STA_DISCONNECTED)lastDisconnectReason=info.wifi_sta_disconnected.reason;
  });
  // UTC only; the phone supplies actual local timezone/DST transition rules.
  configTime(0,0,"pool.ntp.org","time.cloudflare.com");
- if(configured)connect(saved);if(DragonConnection::openAtBoot(configured,requested))openAP();
- Serial.printf("Dragon web: network=%s password=%s login=parent setup=http://192.168.4.1 home=http://%s.local\n",deviceName.c_str(),password.c_str(),deviceName.c_str());
+ openAP();if(configured)connect(saved);
+ Serial.printf("Dragon web: network=%s password=%s setup=http://192.168.4.1 home=http://%s.local\n",deviceName.c_str(),password.c_str(),deviceName.c_str());
  server.on("/",HTTP_GET,[]{if(authorize())server.send_P(200,"text/html",page);});
  server.on("/api/state",HTTP_GET,[]{if(!authorize())return;bool online=WiFi.status()==WL_CONNECTED;reply(200,String("{\"connected\":")+(online?"true":"false")+",\"accessPoint\":"+(ap?"true":"false")+",\"connecting\":"+(connecting?"true":"false")+",\"mode\":"+String(unsigned(mode))+",\"hostname\":"+quote(deviceName)+",\"ip\":"+quote(WiFi.localIP().toString())+",\"message\":"+quote(message)+",\"dragon\":"+String(palette)+",\"profile\":"+String(library.data.active)+",\"brightness\":"+String(brightness)+"}");});
  server.on("/api/dragons",HTTP_GET,[]{if(!authorize())return;String out="[";unsigned added=0;for(int i=0;i<PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT;i++){if(!(server.arg("catalog")=="1"?DragonLibrary::selectable(library.data,i,library.data.active):DragonLibrary::contains(library.data,i,library.data.active)))continue;if(added++)out+=',';auto p=library.resolve(i);out+="{\"id\":"+String(i)+",\"name\":"+quote(p.name)+",\"custom\":"+(i>=PRESET_COUNT?"true":"false")+",\"owned\":"+(i>=PRESET_COUNT&&library.data.customs[i-PRESET_COUNT].owner==library.data.active?"true":"false")+"}";}reply(200,out+"]");});
+ registerParentRoutes();
  registerLibraryRoutes();
  registerAlarmRoutes();
+ registerUpdateRoutes();
+ registerOnlineRoutes();
+ registerBackupRoutes();
  server.on("/api/scan",HTTP_POST,[]{
-  if(!authorize())return;
+  if(!authorizeParent())return;
+  if(onlineBusy||transfer.active){server.send(409,"text/plain","Wait for the firmware operation to finish.");return;}
   if(connecting){server.send(409,"text/plain","Wait for the Wi-Fi connection attempt to finish.");return;}
   if(WiFi.scanComplete()==WIFI_SCAN_RUNNING){reply(202,"{}");return;}
   WiFi.scanDelete();scanRequested=true;
@@ -129,7 +151,7 @@ void begin(bool requested){
   reply(202,"{}");
  });
  server.on("/api/scan",HTTP_GET,[]{
-  if(!authorize())return;
+  if(!authorizeParent())return;
   int count=WiFi.scanComplete();
   if(!scanRequested){reply(200,"{\"scanning\":false,\"networks\":[]}");return;}
   if(count==WIFI_SCAN_RUNNING){reply(200,"{\"scanning\":true,\"networks\":[]}");return;}
@@ -143,20 +165,21 @@ void begin(bool requested){
   }
   reply(200,data+"]}");
  });
- server.on("/api/wifi",HTTP_POST,[]{if(!authorize())return;if(WiFi.scanComplete()==WIFI_SCAN_RUNNING){server.send(409,"text/plain","Wait for the Wi-Fi search to finish.");return;}if(connecting){server.send(409,"text/plain","Already trying Wi-Fi. Please wait.");return;}String ssid=server.arg("ssid"),key=server.arg("password");bool validKey=key.length()==0||(key.length()>=8&&key.length()<=63);if(key.length()==64){validKey=true;for(size_t i=0;i<64;i++)if(!isxdigit(key[i]))validKey=false;}if(!ssid.length()||ssid.length()>32||!validKey){server.send(400,"text/plain","Check the Wi-Fi name and password length.");return;}pending={};ssid.toCharArray(pending.ssid,sizeof(pending.ssid));key.toCharArray(pending.password,sizeof(pending.password));message="Trying home Wi-Fiâ€¦";reply(202,"{}");joinAfterReply=true;});
+ server.on("/api/wifi",HTTP_POST,[]{if(!authorizeParent())return;if(onlineBusy||transfer.active){server.send(409,"text/plain","Wait for the firmware operation to finish.");return;}if(joinedSession){server.send(409,"text/plain","Power cycle before changing Wi-Fi. The dragon network opens at every startup.");return;}if(WiFi.scanComplete()==WIFI_SCAN_RUNNING){server.send(409,"text/plain","Wait for the Wi-Fi search to finish.");return;}if(connecting){server.send(409,"text/plain","Already trying Wi-Fi. Please wait.");return;}String ssid=server.arg("ssid"),key=server.arg("password");bool validKey=key.length()==0||(key.length()>=8&&key.length()<=63);if(key.length()==64){validKey=true;for(size_t i=0;i<64;i++)if(!isxdigit(key[i]))validKey=false;}if(!ssid.length()||ssid.length()>32||!validKey){server.send(400,"text/plain","Check the Wi-Fi name and password length.");return;}pending={};ssid.toCharArray(pending.ssid,sizeof(pending.ssid));key.toCharArray(pending.password,sizeof(pending.password));message="Trying home Wi-Fiâ€¦";reply(202,"{}");joinAfterReply=true;});
+ server.on("/api/wifi/retry",HTTP_POST,[]{if(!authorizeParent())return;if(onlineBusy||transfer.active||joinedSession||connecting||!configured||WiFi.scanComplete()==WIFI_SCAN_RUNNING){server.send(409,"text/plain","Retry is available after a failed join with saved Wi-Fi. Power cycle after a successful session.");return;}pending=saved;joinAfterReply=true;message="Trying saved home Wi-Fi. Your phone may briefly disconnect while the radio changes channel.";reply(202,"{}");});
  server.on("/api/play",HTTP_POST,[]{if(!authorize())return;if(!DragonLibrary::contains(library.data,library.next(255),library.data.active)){server.send(409,"text/plain","Add favourites or make a dragon for this profile first.");return;}String action=server.arg("action"),value=server.arg("value");bool ok=false;int number=0;char buffer[16];value.toCharArray(buffer,sizeof(buffer));if(action=="dragon"&&value.length()<sizeof(buffer)&&readNumber(buffer,0,PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT-1,number)&&DragonLibrary::contains(library.data,number,library.data.active)){if(mode==OFF||!brightness)wakeLighting();setPalette(number);mode=ZONE_VIEW;ok=true;}else if(action=="brightness"&&value.length()<sizeof(buffer)&&readNumber(buffer,0,100,number)){if(number&&mode==OFF)wakeLighting();setBrightness(number);ok=true;}else if(action=="toggle"){toggleLighting();ok=true;}else if(action=="effect"){const char* names[]={"zones","breathe","colorcycle","glitter","incendio","leviosa"};for(int i=0;i<6;i++)if(value==names[i]){if(mode==OFF||!brightness)wakeLighting();mode=Mode(i);ok=true;}}if(ok){rawGlowTest=0;sunrise.stop();rememberLighting();reply(200,"{}");}else server.send(400,"text/plain","Unknown dragon control.");});
  server.on("/api/forget-wifi",HTTP_POST,[]{
-  if(!authorize())return;
-  if(!openAP()){server.send(503,"text/plain","Could not open setup Wi-Fi. Saved settings were kept.");return;}
+  if(!authorizeParent())return;
+  if(onlineBusy||transfer.active){server.send(409,"text/plain","Wait for the firmware operation to finish.");return;}
   if(store.isKey("home")&&!store.remove("home")){server.send(500,"text/plain","Could not forget Wi-Fi. Try again.");return;}
   configured=false;connecting=false;saved={};pending={};
-  message="Home Wi-Fi forgotten. Join the dragon network to continue playing.";
+  message="Home Wi-Fi forgotten. Power cycle to open the dragon network.";
   reply(200,"{}");forgetAfterReply=true;
  });
- const char* headers[]={"X-Dragon-Request"};server.collectHeaders(headers,1);
+ const char* headers[]={"X-Dragon-Request","X-Dragon-Parent"};server.collectHeaders(headers,2);
  server.onNotFound([]{server.sendHeader("Location",ap?"http://192.168.4.1/":"/");server.send(302,"text/plain","");});server.begin();
 }
-void update(uint32_t now){if(!ready)return;server.handleClient();if(ap)dns.processNextRequest();
+void update(uint32_t now){if(!ready)return;server.handleClient();serviceOnline();serviceUpdate();if(ap)dns.processNextRequest();
  // Requests can start timers after the caller sampled now. Refresh before
  // unsigned elapsed checks, or a new attempt can appear 49 days overdue.
  now=millis();
@@ -165,9 +188,8 @@ void update(uint32_t now){if(!ready)return;server.handleClient();if(ap)dns.proce
   forgetAfterReply=false;joinAfterReply=false;MDNS.end();WiFi.setAutoReconnect(false);WiFi.enableSTA(false);
  }
  if(!server.sending()&&joinAfterReply){joinAfterReply=false;connect(pending);now=millis();}
- if(DragonConnection::joinedExpectedNetwork(WiFi.status()==WL_CONNECTED,connecting,pending.ssid[0],String(pending.ssid)==WiFi.SSID())){connecting=false;WiFi.setAutoReconnect(true);if(pending.ssid[0]){if(store.putBytes("home",&pending,sizeof(pending))==sizeof(pending)){saved=pending;configured=true;lastJoinSaved=true;message="Home Wi-Fi saved";}else message="Connected, but settings could not be saved. Try again.";pending={};}else message="Ready to play";MDNS.end();MDNS.begin(deviceName.c_str());MDNS.addService("http","tcp",80);retryAt=now;}
+ if(DragonConnection::joinedExpectedNetwork(WiFi.status()==WL_CONNECTED,connecting,pending.ssid[0],String(pending.ssid)==WiFi.SSID())){connecting=false;joinedSession=true;joinedAt=now;WiFi.setAutoReconnect(false);if(pending.ssid[0]){if(store.putBytes("home",&pending,sizeof(pending))==sizeof(pending)){saved=pending;configured=true;lastJoinSaved=true;message="Home Wi-Fi saved";}else message="Connected, but settings could not be saved. Try again.";pending={};}else message="Ready to play";MDNS.end();MDNS.begin(deviceName.c_str());MDNS.addService("http","tcp",80);retryAt=now;}
  if(connecting&&DragonConnection::elapsed(now,started,DragonConnection::CONNECT_TIMEOUT_MS)){MDNS.end();WiFi.setAutoReconnect(false);WiFi.enableSTA(false);pending={};connecting=false;message="Could not join home Wi-Fi. Check the name and password, then try again.";retryAt=now;}
- if(!connecting&&configured&&WiFi.status()!=WL_CONNECTED&&DragonConnection::elapsed(now,retryAt,DragonConnection::RETRY_MS)){retryAt=now;pending={};connect(saved);}
- if(ap&&DragonConnection::closeAccessPoint(configured,connecting,WiFi.softAPgetStationNum(),millis(),apActivity)){dns.stop();WiFi.softAPdisconnect(true);WiFi.mode(WIFI_STA);ap=false;}
+ if(ap&&DragonConnection::closeAccessPoint(joinedSession,connecting,WiFi.softAPgetStationNum(),millis(),joinedAt)&&!server.sending()){dns.stop();WiFi.softAPdisconnect(true);WiFi.mode(WIFI_STA);ap=false;}
 }
 }

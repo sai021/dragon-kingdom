@@ -19,18 +19,11 @@ inline bool joinedExpectedNetwork(bool online,bool connecting,bool pending,bool 
  // Only commit a pending candidate if the actual network matches it.
  return online&&(pending?matches:connecting);
 }
-inline bool openAtBoot(bool configured,bool requested){return !configured||requested;}
-inline bool closeAccessPoint(bool configured,bool connecting,unsigned clients,uint32_t now,uint32_t activity){
- return configured&&!connecting&&!clients&&elapsed(now,activity,AP_IDLE_MS);
+// Every powered session starts with setup available. A successful join closes it
+// after a short handover window, irrespective of associated phone count.
+constexpr uint32_t HANDOVER_MS=15000;
+inline bool openAtBoot(bool,bool){return true;}
+inline bool closeAccessPoint(bool joined,bool connecting,unsigned,uint32_t now,uint32_t successAt){
+ return joined&&!connecting&&elapsed(now,successAt,HANDOVER_MS);
 }
-struct StartupHold {
- bool released=false,tracking=false,requested=false;
- uint32_t since=0;
- void observe(bool pressed,uint32_t now){
-  if(!pressed){released=true;tracking=false;return;}
-  if(released)return;
-  if(!tracking){since=now;tracking=true;}
-  if(elapsed(now,since,2000))requested=true;
- }
-};
 }

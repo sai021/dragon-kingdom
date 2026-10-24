@@ -11,9 +11,16 @@
 #include "ConnectionPolicy.h"
 #include "DragonLibrary.h"
 #include "SunriseAlarm.h"
+#include "Rotation.h"
 #ifdef ARDUINO
 #include <time.h>
 #include <sys/time.h>
+#include <esp_ota_ops.h>
+#if !CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE || !CONFIG_APP_ROLLBACK_ENABLE
+#error "This release requires bootloader and application rollback support."
+#endif
+// Prevent Arduino from confirming an update before our storage/network/startup checks.
+extern "C" bool verifyRollbackLater(){return true;}
 #endif
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3)
@@ -50,6 +57,7 @@ StartupPower startupPower;
 bool autoLight=true;
 bool computerUsbMode=false;
 DragonAlarm::Alarm sunrise;
+bool firmwareValidated=false;
 Preferences alarmStore;
 bool alarmStoreReady=false;
 #ifndef ARDUINO
@@ -78,8 +86,10 @@ bool saveAlarmSettings(DragonAlarm::Settings value){
     memcmp(&value,&verify,sizeof(value)))return false;
  sunrise.apply(value);return true;
 }
-bool setupRequested=false;
-DragonConnection::StartupHold setupHold;
+DragonRotation::State rotation;
+Preferences rotationStore;
+void loadRotation(){rotationStore.begin("dragon-rotate",false);DragonRotation::Settings v{};if(rotationStore.getBytes("settings",&v,sizeof(v))==sizeof(v)&&DragonRotation::valid(v))rotation.settings=v;}
+bool saveRotation(DragonRotation::Settings v){DragonRotation::Settings check{};if(!DragonRotation::valid(v)||rotationStore.putBytes("settings",&v,sizeof(v))!=sizeof(v)||rotationStore.getBytes("settings",&check,sizeof(check))!=sizeof(check)||memcmp(&v,&check,sizeof(v)))return false;rotation.settings=v;rotation.restart(millis());return true;}
 uint8_t touchGain=100;
 uint8_t ambientGain=100;
 uint8_t rawGlowTest=0; // USB-only transient measurement; zero uses normal dimming.
@@ -120,6 +130,7 @@ LightingState resumeState={ZONE_VIEW,100,0,{255,160,80}};
 void setPalette(uint8_t p) {
  rawGlowTest=0;
  sunrise.stop();
+ rotation.restart(millis());
  palette=DragonLibrary::selectable(library.data,p,library.data.active)?p:DEFAULT_PRESET;
  currentPreset=library.resolve(palette);
  for(int z=0;z<ZONE_COUNT;z++)zoneColors[z]=currentPreset.zones[z];
@@ -230,6 +241,7 @@ void composeFrame(uint32_t now) {
   }
   if(mode==ZONE_VIEW)c=presetColor(c,z,x,y,now);
   if(mode==BREATHE)c=visibleScale(c,breathe,100);
+  if(mode==PATRONUS_GLITTER)c=scaled(c,10,100);
   if(mode==PATRONUS_GLITTER&&fullWingZone(z)){
    uint32_t age=now%420,key=hashPixel((now/420)*131+y*8+x);
    // Hold the white peak before fading so a sparkle is easier to see.
@@ -343,11 +355,7 @@ void startupStabilize(){
  for(uint8_t pulse=0;pulse<5;pulse++){
   clear(frame);frame[logicalIndex(3,2,wiring)]={0,0,12};showFrame();delay(200);
   pixels.clear();pixels.show();delay(300);
-#if DRAGON_USE_TTP223
-  // Ignore the sensor's first 500 ms, then require a continuous two-second hold.
-  setupHold.observe(digitalRead(Config::TOUCH_PIN)!=0,millis());
-  setupRequested=setupHold.requested;
-#endif
+
  }
  clear(frame);pixels.clear();pixels.show();delay(300);
 }
@@ -417,11 +425,6 @@ bool readTouchPressed(uint32_t now,int& event) {
 }
 void updateTouch(uint32_t now) {
  if(!sunrise.active&&!DragonLibrary::contains(library.data,library.next(255),library.data.active))return;
- if(setupRequested){
-  // Consume the setup hold; releasing it must not change brightness or dragon.
-  if(digitalRead(Config::TOUCH_PIN)==0){setupRequested=false;gestures=TouchGestures{};}
-  return;
- }
  if(uint32_t(now-lastTouch)<Config::TOUCH_SAMPLE_MS)return;lastTouch=now;
 #if DRAGON_USE_TTP223
  bool pressed=digitalRead(Config::TOUCH_PIN)!=0;
@@ -458,6 +461,10 @@ void printSensors(){
  digitalRead(Config::TOUCH_PIN),(unsigned long)touchPresses,ambient.raw,ambient.filtered,ambient.night,autoLight,ambient.step,ambientGain,brightness/10,touchGain,ambient.dark,ambient.bright,lightCalibrated);
 }
 void printStatus() {
+#ifdef ARDUINO
+ const auto* running=esp_ota_get_running_partition();esp_ota_img_states_t state=ESP_OTA_IMG_UNDEFINED;
+ esp_ota_get_state_partition(running,&state);Serial.printf("firmware_validation ready=%u partition=%s ota_state=%u\n",firmwareValidated,running?running->label:"none",unsigned(state));
+#endif
  printSensors();
  unsigned customCount=0;for(const auto& c:library.data.customs)customCount+=c.used!=0;
  Serial.printf("library_ready=%u profile=%u profile_name=%s customs=%u generation=%lu\n",library.isReady(),library.data.active,library.data.profiles[library.data.active].name,customCount,(unsigned long)library.data.generation);
@@ -561,20 +568,34 @@ void setup() {
  loadSavedFailure();
  loadLightSettings();
  loadAlarmSettings();
+ loadRotation();
  library.begin();
+#ifdef ARDUINO
+ if(!DragonWeb::recoverRestore()){Serial.println("Restore incomplete; power cycle to retry. Networking disabled.");return;}
+#endif
  for(int i=0;i<ZONE_COUNT;i++)zoneGain[i]=100;for(int i=0;i<64;i++)pixelGain[i]=100;
  // Calibrate once per boot; ambient and touch percentages are session-local.
  setPalette(DEFAULT_PRESET);delay(250);printHelp();
  ambient.update(analogRead(Config::LIGHT_PIN),millis());startupCheck();
  const auto& profile=library.data.profiles[library.data.active];
  setPalette(library.next(255));mode=DragonLibrary::contains(library.data,palette,library.data.active)?ZONE_VIEW:OFF;setBrightness(profile.brightness);rememberLighting();
- if(networkBudgetAvailable(operatingTotal))DragonWeb::begin(setupRequested);
+ if(networkBudgetAvailable(operatingTotal))DragonWeb::begin(false);
  else if(operatingTotal)Serial.println("Touch-only power fallback: Wi-Fi remains off at this session ceiling.");
- if(DragonWeb::ap&&operatingTotal){
-  clear(frame);frame[logicalIndex(3,2,wiring)]={8,0,8};showFrame();delay(700);
- }
+
 }
 void loop() {
+#ifdef ARDUINO
+ if(!firmwareValidated&&millis()>30000&&library.isReady()&&alarmStoreReady&&lightStoreReady&&DragonWeb::ready&&(DragonWeb::ap||DragonWeb::joinedSession)&&DragonWeb::restoreStoreReady&&operatingTotal>=400){
+  esp_ota_img_states_t state;const auto* running=esp_ota_get_running_partition();
+  esp_err_t result=esp_ota_get_state_partition(running,&state);
+  // USB migration may start with erased/undefined OTA metadata. Seed the running
+  // slot only after health checks so the first OTA has a confirmed fallback.
+  if(result!=ESP_OK||state==ESP_OTA_IMG_UNDEFINED){result=esp_ota_set_boot_partition(running);state=ESP_OTA_IMG_NEW;}
+  if(result==ESP_OK&&(state==ESP_OTA_IMG_PENDING_VERIFY||state==ESP_OTA_IMG_NEW))result=esp_ota_mark_app_valid_cancel_rollback();
+  firmwareValidated=result==ESP_OK;
+ }
+ if(millis()>60000&&!firmwareValidated)esp_ota_mark_app_invalid_rollback_and_reboot();
+#endif
  readSerial();DragonWeb::update(millis());
  uint32_t now=millis();
  sunrise.update(alarmEpoch(),now);
@@ -586,7 +607,13 @@ void loop() {
    if(operatingTotal>400){operatingTotal=400;startupResult="computer USB cap";}
   }
  }
- updateTouch(now);updateLight(now);render(now);
+ updateTouch(now);
+ if(rotation.due(now,mode==OFF||!brightness||sunrise.active)){
+  uint8_t next=library.next(palette);
+  if(rotation.settings.shuffle){uint8_t ids[PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT],count=0;for(uint8_t id=0;id<PRESET_COUNT+DragonLibrary::CUSTOM_LIMIT;id++)if(id!=palette&&DragonLibrary::contains(library.data,id,library.data.active))ids[count++]=id;if(count)next=ids[hashPixel(now^rotation.sequence++)%count];}
+  if(DragonLibrary::contains(library.data,next,library.data.active)){setPalette(next);mode=ZONE_VIEW;rememberLighting();}
+ }
+ updateLight(now);render(now);
  if(telemetry&&uint32_t(now-lastReport)>=2000){lastReport=now;if(Serial)printStatus();}
  delay(1);
 }

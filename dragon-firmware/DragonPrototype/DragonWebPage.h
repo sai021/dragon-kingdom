@@ -7,6 +7,7 @@ const char page[] PROGMEM=R"DRAGONWEB(<!doctype html>
 </style></head><body>
 <p class="eyebrow">THE CARE &amp; TRAINING OF YOUR WALL DRAGON</p><h1>Dragon Kingdom</h1>
 <p id="status" class="status" role="status" aria-live="polite">Waking your dragon…</p>
+<p id="setup-internet-warning" class="notice" hidden>This dragon setup Wi-Fi has no internet. Stay connected to control your dragon. Switch to home Wi-Fi or mobile data when you need the internet.</p>
 <p id="home-address" class="notice" role="status" aria-live="polite" hidden></p>
 <p id="feedback" class="notice" role="status" aria-live="polite" hidden></p>
 <p id="busy-status" class="status" role="status" hidden>Please wait for your dragon…</p>
@@ -39,23 +40,47 @@ const char page[] PROGMEM=R"DRAGONWEB(<!doctype html>
 <button id="save-alarm" style="margin-top:16px" disabled>Save alarm</button></form>
 <p id="alarm-status" class="status" role="status" aria-live="polite">Loading alarm…</p>
 <button id="preview-alarm" class="secondary">Try a 30-second sunrise</button><button id="stop-alarm" class="secondary" hidden>Stop sunrise</button>
+<p id="clock-status" role="status">Clock sync pending. Without home Wi-Fi, open this page after each power loss.</p>
 <button id="sync-alarm" class="secondary">Set clock from my phone</button>
 <small>Keep your dragon powered for its alarm. Saving borrows your phone's time and daylight-saving rules. After a power cut, it needs internet time or this page opened again. A pat or play button stops the current sunrise.</small>
 </div></details>
-<details id="parents"><summary>For grown-ups · Wi-Fi &amp; help</summary><div class="parent">
+<details id="rotation"><summary>Automatic dragon rotation</summary><form id="rotation-form">
+<label><input id="rotate-enabled" type="checkbox"> Rotate through my active collection</label>
+<label for="rotate-seconds">Seconds between dragons (10-86400)</label><input id="rotate-seconds" type="number" min="10" max="86400" value="300" required>
+<label for="rotate-order">Order</label><select id="rotate-order"><option value="0">In collection order</option><option value="1">Shuffle</option></select><button>Save rotation</button>
+<small>Pauses during sleep and sunrise. Choosing a dragon restarts the interval.</small></form></details>
+<details id="parents"><summary>Parent settings · Wi-Fi, backups &amp; updates</summary><div class="parent">
+<p>Enter the parent password to deliberately unlock settings. Normal play needs no login.</p>
+<form id="parent-login"><label for="parent-password">Parent password</label><input id="parent-password" type="password" autocomplete="current-password" required><button>Unlock parent settings</button></form>
+<p id="parent-status" role="status">Parent settings are locked.</p>
+<div id="parent-controls" hidden inert><button id="parent-lock" class="secondary">Lock parent settings</button><small>Settings lock after 15 minutes, when you reload the page, or when the dragon restarts.</small>
 <h2>Teach your dragon home Wi-Fi</h2><p>Internet is optional. You can always play by touch or while connected directly to your dragon.</p>
 <button id="scan" type="button">Find my Wi-Fi</button><p id="scan-status" class="status" role="status"></p>
 <form id="wifi"><label for="ssid">Home Wi-Fi name</label><input id="ssid" name="ssid" list="networks" maxlength="32" required autocomplete="off" autocapitalize="none" spellcheck="false"><datalist id="networks"></datalist>
 <label for="wifi-password">Wi-Fi password</label><input id="wifi-password" name="password" type="password" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false">
 <div class="check"><input id="show-password" type="checkbox"><label for="show-password">Show password</label></div>
-<button id="connect">Connect my dragon</button></form>
+<button id="connect">Connect my dragon</button><span id="connect-status" role="status" aria-live="polite"></span></form><button id="retry-wifi" class="secondary">Retry home Wi-Fi</button>
 <small>Choose a 2.4 GHz network. If your Wi-Fi name doesn't appear, type it yourself. Leave the password blank only for an open network.</small>
 <h2 style="margin-top:26px">Open setup Wi-Fi again</h2>
-<small>Hold the touch button on the right side while connecting the bottom USB-C power port. Keep holding through the five blue eye-blinks, then release when its scales turn purple. Join the dragon network using your setup card and open <a href="http://192.168.4.1/">192.168.4.1</a>.<br><br>If your phone says the dragon network has no internet, choose to stay connected.</small>
+<small>Power cycle your dragon. Its password-protected network opens at every startup. Join it using your setup card and open <a href="http://192.168.4.1/">192.168.4.1</a>, or scan the local-controls QR on the card. Your phone may offer a sign-in page; automatic opening is not guaranteed. Choose to stay connected if it says there is no internet.<br><br>Saved home Wi-Fi is tried for up to 60 seconds. Failure keeps setup Wi-Fi open until you retry. Success closes setup Wi-Fi after 15 seconds, even if your phone is still connected. Join your home Wi-Fi and reopen the home address shown above. A later home-network drop requires a power cycle to reopen setup.</small>
 <button id="forget" class="secondary">Forget home Wi-Fi</button><small>This keeps your creations and your dragon's setup-network password (dragon123).</small>
-</div></details>
+<hr><h2>Backup &amp; restore</h2><p>Backups include collections, creations, sunrise, rotation and light calibration. Wi-Fi and parent passwords are excluded.</p>
+<button id="backup">Download backup</button><label for="restore-file">Restore a backup</label><input id="restore-file" type="file" accept="application/json,.json"><button id="restore">Restore selected backup</button>
+<h2>Firmware update</h2><p id="update-board" role="status" aria-live="polite">Checking your board type…</p><p>On home Wi-Fi with internet, a parent can check GitHub and approve installation. Your dragon verifies the signed release and downloads it directly. It never installs updates automatically.</p>
+<p id="online-prerequisite" class="notice">Direct updates need the dragon connected to home Wi-Fi with internet. Its setup network has no internet.</p>
+<p id="firmware-version"></p><label for="update-channel">Firmware channel</label><select id="update-channel"><option value="release">Release (recommended)</option><option value="beta">Beta (experienced users)</option></select><small id="beta-warning" hidden>Beta firmware is experimental. Choose it only if you are comfortable recovering your ESP32 through its internal USB connector. Have the recovery instructions and a computer ready.</small>
+<button id="online-check" disabled>Check for updates</button><button id="online-install" hidden>Install signed release</button><button id="online-cancel" class="secondary" hidden>Cancel download</button><p id="online-status" role="status" aria-live="polite">Online updates need home Wi-Fi and a synced clock. File upload works offline.</p><p id="offline-update-help">For an offline update: first use home Wi-Fi or mobile data to download the matching signed .dragon.json package from <a href="https://github.com/sai021/dragon-kingdom/releases" target="_blank" rel="noopener">GitHub releases</a> on your phone or PC. Then join the dragon network again, reopen this page, unlock Parent settings and select the saved file below. Uploading that file needs no internet. Keep power connected throughout the update.</p>
+<label for="update-file">Signed firmware package</label><input id="update-file" type="file" accept="application/json,.json"><button id="update">Install firmware</button><p id="update-status" role="status"></p>
+<button id="reset-device" class="secondary">Reset all saved data</button>
+<small>USB recovery: disconnect the bottom product USB-C power cable before connecting laptop USB. Remove one screw to access the internal ESP32 USB. The bottom USB-C port is power-only. Never connect laptop USB and external/main power simultaneously.</small>
+</div></div></details>
 <script>
 const $=selector=>document.querySelector(selector),effects=['zones','breathe','colorcycle','glitter','incendio','leviosa'];
+let parentToken="",onlineState=null,parentExpiry=0,parentTimer;
+const firmwareBoards={s3:{name:'ESP32-S3',file:'dragon-s3.dragon.json'},c3:{name:'ESP32-C3',file:'dragon-c3.dragon.json'}};
+async function loadUpdateBoard(){const token=parentToken;try{const target=await request('/api/update'),board=firmwareBoards[target.board];if(parentToken!==token)return;if(!board)throw Error('Board type could not be identified. Reload before choosing firmware.');$('#update-board').textContent='Detected board: '+board.name+'. Download '+board.file+' for file upload. Direct updates select the matching version automatically.'}catch(error){if(parentToken===token)$('#update-board').textContent='Could not check board type: '+error.message}}
+function lockParent(message="Parent settings are locked."){parentToken="";parentExpiry=0;$("#update-channel").value="release";$("#beta-warning").hidden=true;onlineState=null;$("#update-board").textContent="Checking your board type…";clearTimeout(parentTimer);$("#parent-controls").hidden=true;$("#parent-controls").inert=true;$("#parent-login").hidden=false;$("#parent-password").value="";$("#parent-status").textContent=message;}
+function unlockParent(token){parentToken=token;parentExpiry=Date.now()+15*60*1000;$("#parent-controls").hidden=false;$("#parent-controls").inert=false;$("#parent-login").hidden=true;$("#parent-password").value="";$("#parent-status").textContent="Parent settings unlocked.";clearTimeout(parentTimer);parentTimer=setTimeout(()=>lockParent("Parent session expired. Enter the password again."),15*60*1000);loadUpdateBoard();}
 let loading=false,commandBusy=false,scanBusy=false,pollTimer,lastState=null,alarmState=null,alarmFieldsLoaded=false,alarmLoading=false;
 function phoneClock(){
  const epoch=Math.floor(Date.now()/1000),validFrom=epoch-86400,validUntil=epoch+400*86400;
@@ -88,12 +113,15 @@ function updateControls(){
  $('#save-alarm').disabled=commandBusy||alarmLoading||!alarmFieldsLoaded;
  for(const id of ['alarm-enabled','alarm-time','alarm-duration'])$('#'+id).disabled=commandBusy||!alarmFieldsLoaded;
  $('#scan').disabled=$('#connect').disabled=commandBusy||scanBusy||Boolean(lastState?.connecting);
+ $('#online-check').disabled=commandBusy||Boolean(onlineState?.busy)||(!lastState?.connected||Boolean(lastState?.accessPoint));
+ $('#online-install').disabled=commandBusy||(!lastState?.connected||Boolean(lastState?.accessPoint));
+ $('#online-prerequisite').textContent=lastState?.connected&&!lastState?.accessPoint?'Your dragon is on home Wi-Fi. Direct updates require internet access on that network.':'Direct updates are unavailable on the dragon setup network. Connect the dragon to home Wi-Fi with internet, or download a file before joining setup Wi-Fi and upload it offline.';
  document.body.setAttribute('aria-busy',String(commandBusy));$('#busy-status').hidden=!commandBusy;
 }
 function setCommandBusy(value){commandBusy=value;updateControls()}
 async function loadAlarm(){
  alarmLoading=true;updateControls();
- try{renderAlarm(await request('/api/alarm'),true);renderAlarm(await request('/api/alarm/clock',phoneClock()));updateControls()}
+ try{renderAlarm(await request('/api/alarm'),true);renderAlarm(await request('/api/alarm/clock',phoneClock()));$('#clock-status').textContent='Clock synced from your phone.';updateControls()}
  catch(error){$('#alarm-status').textContent='Could not load the alarm. '+error.message}finally{alarmLoading=false;updateControls()}
 }
 async function alarmAction(path,data){
@@ -104,16 +132,19 @@ async function alarmAction(path,data){
 }
 function feedback(message){$('#feedback').hidden=!message;$('#feedback').textContent=message}
 async function request(path,data){
+ if(parentToken&&Date.now()>=parentExpiry)lockParent("Parent session expired. Enter the password again.");
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
- try{const options={signal:controller.signal,cache:'no-store'};if(data){options.method='POST';options.headers={'X-Dragon-Request':'1'};options.body=new URLSearchParams(data)}const response=await fetch(path,options);if(!response.ok)throw Error(await response.text());return await response.json()}finally{clearTimeout(timer)}
+ try{const options={signal:controller.signal,cache:'no-store',headers:parentToken?{'X-Dragon-Parent':parentToken}:{}};if(data){options.method='POST';options.headers={...options.headers,'X-Dragon-Request':'1'};options.body=new URLSearchParams(data)}const response=await fetch(path,options);if(response.status===401){lockParent('Parent settings are locked. Enter your password to continue.')}if(!response.ok)throw Error(await response.text());return await response.json()}finally{clearTimeout(timer)}
 }
 function render(state){
+ $('#setup-internet-warning').hidden=!state.accessPoint;$('#setup-internet-warning').textContent=state.connected?'Your dragon joined home Wi-Fi and its setup network is closing. Rejoin home Wi-Fi to continue with internet access.':'This dragon setup Wi-Fi has no internet. Stay connected to control your dragon. Switch to home Wi-Fi or mobile data when you need the internet.';
  if(lastState&&state.profile!==undefined&&state.profile!==lastState.profile)reloadCollection();lastState=state;$('#status').textContent=state.connecting?'Connecting to home Wi-Fi…':state.connected?'Your dragon is on home Wi-Fi. Ready to play!':state.accessPoint?'Connected directly to your dragon. Ready to play!':'Home Wi-Fi is unavailable. Touch play still works.';
  if(document.activeElement!==$('#dragon')&&Array.from($('#dragon').options).some(option=>option.value===String(state.dragon)))$('#dragon').value=state.dragon;if(document.activeElement!==$('#brightness'))$('#brightness').value=state.brightness;
  const asleep=state.mode===9||state.brightness===0;$('#sleep').textContent=asleep?'Wake my dragon':'Put dragon to sleep';
  for(const button of document.querySelectorAll('[data-effect]'))button.setAttribute('aria-pressed',String(!asleep&&effects[state.mode]===button.dataset.effect));
  if(typeof updateCreateButtonLabel==='function')updateCreateButtonLabel();
  updateControls();
+ $('#connect-status').textContent=state.connecting?'Connecting… up to 60 seconds. Your phone may briefly disconnect during a radio channel change.':state.connected?'Connected successfully. Setup Wi-Fi closes shortly; join home Wi-Fi and open the address above.':state.message;
  if(state.message.startsWith('Could not')||state.message.includes('could not be saved'))feedback(state.message);
  if(state.connected){const hostname='http://'+state.hostname+'.local/',ip='http://'+state.ip+'/';try{sessionStorage.setItem('dragon-home',JSON.stringify({hostname,ip}))}catch(e){}showHomeAddress({hostname,ip})}
 }
@@ -128,7 +159,7 @@ function showHomeAddress(home){
 }
 async function refresh(){
  if(loading||commandBusy)return;loading=true;
- try{render(await request('/api/state'));if(alarmFieldsLoaded)renderAlarm(await request('/api/alarm'));else await loadAlarm()}catch(error){$('#status').textContent='Connection lost. Rejoin the dragon network, or reconnect to home Wi-Fi.';try{const home=JSON.parse(sessionStorage.getItem('dragon-home'));if(home)showHomeAddress(home)}catch(e){}}finally{loading=false}
+ try{render(await request('/api/state'));if(parentToken)try{renderOnline(await request('/api/update/online'))}catch(e){$('#online-status').textContent=e.message}if(alarmFieldsLoaded)renderAlarm(await request('/api/alarm'));else await loadAlarm()}catch(error){$('#status').textContent='Connection lost. If joining Wi-Fi, wait up to 60 seconds: a channel change can briefly disconnect your phone. On success join home Wi-Fi and open the saved address; on failure rejoin the dragon network. Power cycle to reopen setup Wi-Fi.';try{const home=JSON.parse(sessionStorage.getItem('dragon-home'));if(home)showHomeAddress(home)}catch(e){}}finally{loading=false}
 }
 async function play(action,value){if(commandBusy)return;setCommandBusy(true);feedback('');try{await request('/api/play',{action,value});render(await request('/api/state'))}catch(error){feedback('Could not reach your dragon. '+error.message)}finally{setCommandBusy(false)}}
 $('#dragon').onchange=event=>play('dragon',event.target.value);$('#brightness').onchange=event=>play('brightness',event.target.value);
@@ -141,11 +172,34 @@ $('#scan').onclick=async()=>{
  if(commandBusy||scanBusy)return;scanBusy=true;updateControls();$('#scan').disabled=true;$('#connect').disabled=true;$('#scan-status').textContent='Looking for nearby Wi-Fi…';
  try{await request('/api/scan',{});let results;for(let attempt=0;attempt<20;attempt++){results=await request('/api/scan');if(!results.scanning)break;await new Promise(resolve=>setTimeout(resolve,500))}if(results.scanning)throw Error('The search took too long. Try again, or type your network name.');$('#networks').replaceChildren();for(const network of results.networks){const option=document.createElement('option');option.value=network.name;$('#networks').append(option)}$('#scan-status').textContent=results.networks.length?'Tap the Wi-Fi name box to choose your network.':'No networks found. You can type the name yourself.';$('#ssid').focus()}catch(error){$('#scan-status').textContent=error.message}finally{scanBusy=false;updateControls()}
 };
-$('#forget').onclick=async()=>{if(commandBusy||!confirm('Forget home Wi-Fi? Your dragon will open its setup network. You will need to join it again using your setup card.'))return;setCommandBusy(true);try{await request('/api/forget-wifi',{});feedback('Home Wi-Fi forgotten. Join the dragon network using your setup card.');$('#home-address').hidden=true;try{sessionStorage.removeItem('dragon-home')}catch(e){}}catch(error){feedback(error.message)}finally{setCommandBusy(false)}};
+$('#forget').onclick=async()=>{if(commandBusy||!confirm('Forget home Wi-Fi? Power cycle afterwards to open the dragon network.'))return;setCommandBusy(true);try{await request('/api/forget-wifi',{});feedback('Home Wi-Fi forgotten. Power cycle, then join the dragon network using your setup card.');$('#home-address').hidden=true;try{sessionStorage.removeItem('dragon-home')}catch(e){}}catch(error){feedback(error.message)}finally{setCommandBusy(false)}};
 async function initialize(){
- try{const dragons=await request('/api/dragons?catalog=1');await loadLibrary(dragons);$('#brightness').replaceChildren();for(let value=0;value<=100;value+=10){const option=document.createElement('option');option.value=value;option.textContent=value?value+'%':'Off';$('#brightness').append(option)}updateControls();await loadAlarm();await refresh()}catch(error){feedback('Could not load your dragons. Reconnect and refresh this page.')}
+ try{const dragons=await request('/api/dragons?catalog=1');await loadLibrary(dragons);$('#brightness').replaceChildren();for(let value=0;value<=100;value+=10){const option=document.createElement('option');option.value=value;option.textContent=value?value+'%':'Off';$('#brightness').append(option)}updateControls();await loadAlarm();await refresh();try{const r=await request('/api/rotation');$('#rotate-enabled').checked=Boolean(r.enabled);$('#rotate-seconds').value=r.seconds;$('#rotate-order').value=r.shuffle}catch(e){}}catch(error){feedback('Could not load your dragons. Reconnect and refresh this page.')}
  clearTimeout(pollTimer);pollTimer=setTimeout(async function poll(){await refresh();if(!collection)await initialize();else pollTimer=setTimeout(poll,3000)},3000);
 }
+$('#parent-login').onsubmit=async e=>{e.preventDefault();try{const result=await request('/api/parent/login',{password:$('#parent-password').value});unlockParent(result.token)}catch(error){lockParent(error.message)}};
+$('#parent-lock').onclick=async()=>{const logout=request('/api/parent/logout',{});lockParent();try{await logout}catch(e){}};
+$('#retry-wifi').onclick=async()=>{try{await request('/api/wifi/retry',{});await refresh()}catch(error){feedback(error.message)}};
+$('#rotation-form').onsubmit=async e=>{e.preventDefault();try{await request('/api/rotation',{enabled:$('#rotate-enabled').checked?1:0,shuffle:$('#rotate-order').value,seconds:$('#rotate-seconds').value});feedback('Rotation saved.')}catch(error){feedback(error.message)}};
+function downloadJson(value,name){const url=URL.createObjectURL(new Blob([JSON.stringify(value)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('#backup').onclick=async()=>{try{downloadJson(await request('/api/backup'),'dragon-backup.json')}catch(error){feedback(error.message)}};
+$('#restore').onclick=async()=>{try{const file=$('#restore-file').files[0];if(!file)throw Error('Choose a backup first.');if(file.size>12000)throw Error('Backup is too large.');const value=JSON.parse(await file.text());if(value.format!=='dragon-backup-v1')throw Error('Unsupported backup format.');if(!confirm('Replace collections, creations and settings with this backup?'))return;await request('/api/restore',{data:value.data});feedback('Restore staged. Dragon is restarting; reconnect after startup.')}catch(error){feedback(error.message)}};
+$('#reset-device').onclick=async()=>{if(prompt('This deletes collections, creations, settings and saved home Wi-Fi. Type RESET to continue.')!=='RESET')return;try{await request('/api/reset',{confirm:'RESET'});lockParent();feedback('Reset staged. Reconnect after restart. The parent password remains dragon123.')}catch(error){feedback(error.message)}};
+$('#update').onclick=async()=>{
+ if(commandBusy)return;setCommandBusy(true);const status=$('#update-status');
+ try{const file=$('#update-file').files[0];if(!file)throw Error('Choose a signed firmware package first.');if(file.size>3200000)throw Error('Firmware package is too large.');const pkg=JSON.parse(await file.text());if(pkg.format!==1||typeof pkg.image!=='string'||pkg.image.length!==pkg.size*2||!/^[0-9a-f]+$/.test(pkg.image))throw Error('Invalid firmware package.');
+ const target=await request('/api/update');if(!firmwareBoards[target.board])throw Error('Board type could not be identified. Reload before choosing firmware.');if(pkg.board!==target.board)throw Error('Wrong board package. Your '+firmwareBoards[target.board].name+' needs '+firmwareBoards[target.board].file+'.');
+ await request('/api/update/start',{board:pkg.board,size:pkg.size,sha256:pkg.sha256,signature:pkg.signature});
+ for(let offset=0;offset<pkg.size;offset+=512){const result=await request('/api/update/chunk',{offset,data:pkg.image.slice(offset*2,(offset+512)*2)});status.textContent='Uploading: '+Math.floor(result.offset*100/pkg.size)+'%. Keep power connected.'}
+ await request('/api/update/finish',{});lockParent();feedback('Firmware verified. Restarting; reconnect after one minute.');status.textContent='Verified. Restarting and checking startup. Reconnect after one minute; failed startup rolls back automatically.';
+ }catch(error){status.textContent=error.message;try{await request('/api/update/abort',{})}catch(e){}}finally{setCommandBusy(false)}
+};
+function renderOnline(state){$('#firmware-version').textContent='Installed firmware: '+state.current;if(state.channel&&state.channel!==$('#update-channel').value)return;onlineState=state;$('#update-channel').disabled=state.busy||commandBusy;$('#online-status').textContent=state.message+(state.phase===4?' '+state.progress+'%':'');$('#online-install').hidden=state.phase!==2;$('#online-install').textContent='Install '+(state.release||'signed release');$('#online-check').disabled=state.busy||commandBusy||(!lastState?.connected||Boolean(lastState?.accessPoint));$('#online-install').disabled=commandBusy||(!lastState?.connected||Boolean(lastState?.accessPoint));$('#online-cancel').hidden=!state.busy;$('#update').disabled=state.busy}
+async function onlineAction(path,data){if(commandBusy)return;try{renderOnline(await request(path,data))}catch(error){$('#online-status').textContent=error.message}}
+$('#update-channel').onchange=()=>{$('#beta-warning').hidden=$('#update-channel').value!=='beta';$('#online-install').hidden=true;onlineState=null;$('#online-status').textContent='Channel changed. Check for updates before installing.'};
+$('#online-check').onclick=()=>onlineAction('/api/update/online/check',{channel:$('#update-channel').value});
+$('#online-install').onclick=()=>{if(onlineState&&confirm('Install '+onlineState.release+'? Keep power connected. Your dragon will restart.'))onlineAction('/api/update/online/install',{release:onlineState.release})};
+$('#online-cancel').onclick=()=>onlineAction('/api/update/online/cancel',{});
 initialize();
 </script>
 <script>

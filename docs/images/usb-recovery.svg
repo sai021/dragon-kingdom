@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" role="img" aria-labelledby="title desc">
+<title id="title">Dragon USB recovery power sequence</title><desc id="desc">Disconnect product power, remove one screw to reach the internal ESP32 connector, then connect laptop USB only. Diagram is schematic, not a map of the enclosure.</desc>
+<rect width="1000" height="380" fill="#f5f4ee"/>
+<g font-family="Arial,sans-serif" fill="#24243e">
+<text x="28" y="38" font-size="25" font-weight="bold">USB recovery: one power source at a time</text>
+<g fill="#fff" stroke="#aaa" stroke-width="2"><rect x="25" y="65" width="300" height="260" rx="16"/><rect x="350" y="65" width="300" height="260" rx="16"/><rect x="675" y="65" width="300" height="260" rx="16"/></g>
+<text x="45" y="100" font-size="21" font-weight="bold">1. Disconnect product power</text>
+<rect x="88" y="135" width="165" height="95" rx="15" fill="#d4e1da"/><path d="M170 230v18m0 25v25" stroke="#434a55" stroke-width="8"/><path d="M145 247l50 25m-50 0l50-25" stroke="#bf3b3b" stroke-width="5"/>
+<text x="45" y="315" font-size="17">Bottom USB-C is power-only.</text>
+<text x="370" y="100" font-size="21" font-weight="bold">2. Open the access cover</text>
+<rect x="410" y="130" width="180" height="125" rx="15" fill="#d4e1da"/><circle cx="500" cy="145" r="10" fill="#fff" stroke="#434a55"/><path d="M494 145h12" stroke="#434a55" stroke-width="2"/><rect x="450" y="179" width="100" height="48" rx="6" fill="#4c7a66"/><rect x="485" y="218" width="30" height="14" fill="#bbc5c9"/>
+<text x="370" y="284" font-size="17">Remove the single access screw.</text><text x="370" y="308" font-size="17">Find the internal ESP32 USB.</text>
+<text x="695" y="100" font-size="21" font-weight="bold">3. Connect laptop USB only</text>
+<rect x="705" y="145" width="100" height="70" rx="7" fill="#bbc5c9"/><path d="M695 225h120" stroke="#434a55" stroke-width="7"/><path d="M805 180h50v40h30" fill="none" stroke="#4c7a66" stroke-width="5"/><rect x="885" y="160" width="55" height="70" fill="#4c7a66"/><text x="695" y="284" font-size="17">Choose the verified board port.</text><text x="695" y="308" font-size="17">Keep product power unplugged.</text>
+<text x="28" y="359" font-size="16">Schematic only: connector and screw positions are not to scale. Unplug laptop USB before restoring product power.</text>
+</g></svg>

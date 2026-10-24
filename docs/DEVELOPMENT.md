@@ -1,5 +1,8 @@
 # Developer guide: building and testing
 
+> This guide describes the installed 0.2.4 prototype. For the new startup, parent
+> authentication and update behavior, use the [0.3.0 candidate notes](NEXT-RELEASE.md).
+
 Start here for firmware setup, S3/C3 builds, uploads and regression checks.
 For related developer tasks, see [batch flashing](BATCH-FLASHING.md),
 [hardware wiring](../dragon-firmware/HARDWARE-WIRING.md),
