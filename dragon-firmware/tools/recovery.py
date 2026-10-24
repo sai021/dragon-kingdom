@@ -1,6 +1,7 @@
 """USB-only migration/recovery. Preserve and verify the original NVS partition."""
 import argparse, json, struct, subprocess, time, os, re
 from pathlib import Path
+from release_contract import verify as verify_contract
 from board_targets import TARGETS, detect_board, parse_chip
 from flash_support import ROOT, FILES, load_bundle, digest, check_startup, serial_modules
 
@@ -40,7 +41,7 @@ def installed_esptool():
 
 def prepared_release(cache=None):
     cache=cache or ROOT/'.tools/recovery-release'
-    info=json.loads((cache/'current-set.json').read_text(encoding='utf-8'))
+    info=verify_contract(json.loads((cache/'current-set.json').read_text(encoding='utf-8')))
     for board in TARGETS:
         build=load_bundle(cache=cache,board=board);validate_partitions((build/FILES[2]).read_bytes())
         for name in FILES[:2]:validate_image_target((build/name).read_bytes(),board)
@@ -48,6 +49,7 @@ def prepared_release(cache=None):
 
 def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     if not usb_only:raise ValueError('Disconnect external/main power before internal laptop USB recovery.')
+    info=prepared_release(cache) # Signed compatibility, hashes and layout before any device write.
     if tool:
         probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--baud','115200','--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
         board=parse_chip(probe.stdout+probe.stderr)
@@ -73,11 +75,18 @@ def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     if digest(before)!=digest(after):raise RuntimeError('Saved-data verification FAILED. Keep the NVS backup; do not claim successful migration.')
     emit('Saved NVS bytes verified unchanged. Resetting the verified board for startup checks.')
     subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
-    info=json.loads(((cache or ROOT/'.tools/recovery-release')/'current-set.json').read_text(encoding='utf-8')) if ((cache or ROOT/'.tools/recovery-release')/'current-set.json').exists() else {}
     emit('Waiting for firmware startup validation. This can take about a minute.')
-    check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True)
+    check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True,expected_board=board,production=True)
     emit('Recovery complete. Keep USB-only power until unplugged. Setup Wi-Fi opens at startup.')
     return session
+
+def verify_production_startup(port,emit=print,cache=None,tool=None):
+    info=prepared_release(cache);tool=tool or installed_esptool()
+    if not tool:raise ValueError('Installed esptool required')
+    probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
+    board=parse_chip(probe.stdout+probe.stderr)
+    subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
+    return check_startup(port,emit,timeout=75,expected_firmware=info['firmware_tag'],require_validation=True,expected_board=board,production=True)
 
 def firmware_version(tag):
     match=re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?',tag or '')
@@ -114,12 +123,13 @@ def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
     emit('Reading the connected firmware version...');current=read_running_version(port)
     if current is not None:
         running=firmware_version(current);emit('Running '+current+'; prepared '+target+'.')
-        if running>=wanted:
+        if running>wanted:raise ValueError('Connected firmware is newer than the selected production release. Select its matching signed bundle; no write or production pass.')
+        if running==wanted:
             # Still identify the ROM and verify a healthy startup; skip all flash writes.
             probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--baud','115200','--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
             board=parse_chip(probe.stdout+probe.stderr);emit('Verified ESP32-'+board.upper()+'. No newer firmware; no flash write required.')
             subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
-            check_startup(port,emit,timeout=75,expected_firmware=current,require_validation=True)
+            check_startup(port,emit,timeout=75,expected_firmware=current,require_validation=True,expected_board=board,production=True)
             return 'Already current or newer; startup verified.'
     else:emit('Legacy or unreported firmware version: applying the prepared recovery firmware.')
     recover(cli,port,usb_only,emit,cache=cache,tool=tool)
@@ -127,7 +137,7 @@ def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',required=True);p.add_argument('--cli',default=str(ROOT/'.tools/arduino-cli/arduino-cli.exe'));p.add_argument('--esptool',type=Path,help='Use an installed standalone esptool, without Arduino CLI');p.add_argument('--usb-only',action='store_true');a=p.parse_args()
-    recover(a.cli,a.port,a.usb_only,tool=a.esptool or installed_esptool())
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',required=True);p.add_argument('--cli',default=str(ROOT/'.tools/arduino-cli/arduino-cli.exe'));p.add_argument('--esptool',type=Path,help='Use an installed standalone esptool, without Arduino CLI');p.add_argument('--usb-only',action='store_true');p.add_argument('--bundle',type=Path,required=True,help='Explicit immutable signed release directory');a=p.parse_args()
+    recover(a.cli,a.port,a.usb_only,tool=a.esptool or installed_esptool(),cache=a.bundle)
 
 if __name__=='__main__':main()

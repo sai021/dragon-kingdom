@@ -21,6 +21,10 @@ jobs:
           python-version: '3.12'
       - name: Install Tk/display dependencies
         run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+      - name: Install declared Python test dependencies
+        run: python -m pip install -r requirements-test.txt
+      - name: Check generated sources
+        run: python tools/check_generated.py
       - name: Python or native firmware tests
         run: xvfb-run -a python tools/run_tests.py --group ${{ matrix.group }} --cxx g++
   browser:

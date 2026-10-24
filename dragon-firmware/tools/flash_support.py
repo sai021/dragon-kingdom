@@ -131,7 +131,8 @@ def serial_modules():
 
 
 class StartupEvidence:
-    def __init__(self):
+    def __init__(self,production=False):
+        self.production=production
         self.uptimes = []
         self.library = False
         self.dragon = False
@@ -141,7 +142,7 @@ class StartupEvidence:
             raise RuntimeError('Firmware reported a crash during startup.')
         match = re.match(r'uptime_ms=(\d+) session_max=(\d+)mA computer_usb_cap=([01]) voltage_sampling=stopped', line)
         if match:
-            if match[3] != '1' or int(match[2]) > 400:
+            if match[3] != '1' or int(match[2]) > 400 or (self.production and int(match[2])<400):
                 raise RuntimeError('Computer USB power ceiling was not detected. Startup check failed.')
             uptime = int(match[1])
             if self.uptimes and uptime < self.uptimes[-1]:
@@ -153,14 +154,15 @@ class StartupEvidence:
                 and self.uptimes[-1] - self.uptimes[0] >= 2000)
 
 
-def check_startup(port, emit, timeout=45, expected_firmware=None, require_validation=False):
+def check_startup(port, emit, timeout=45, expected_firmware=None, require_validation=False,expected_board=None,production=False):
+    if production and not(expected_firmware and require_validation):raise ValueError("Production needs an expected version and VALID application state.")
     serial, list_ports = serial_modules()
     initial = list(list_ports.comports())
     identity = next((p.serial_number for p in initial if p.device == port), None)
     baseline = {p.device for p in initial if p.device != port}
     deadline = time.monotonic() + timeout
     connection = None
-    evidence = StartupEvidence()
+    evidence = StartupEvidence(production)
     last_request = 0
     version_ok = not expected_firmware
     validation_ok = not require_validation
@@ -184,7 +186,7 @@ def check_startup(port, emit, timeout=45, expected_firmware=None, require_valida
                     connection.port = chosen
                     connection.open()
                     connection.reset_input_buffer()
-                    evidence = StartupEvidence()
+                    evidence = StartupEvidence(production)
                     version_ok = not expected_firmware
                     validation_ok = not require_validation
                     last_request = 0
@@ -205,9 +207,10 @@ def check_startup(port, emit, timeout=45, expected_firmware=None, require_valida
                     emit(line + '\n')
                 if line.startswith('firmware_version='):
                     version_ok = line.split()[0] == 'firmware_version='+str(expected_firmware) if expected_firmware else True
+                    if expected_board and ('board='+expected_board) not in line.split():raise RuntimeError('Unexpected board in firmware startup report.')
                     if not version_ok:raise RuntimeError('The connected board is not running the prepared firmware version.')
                 if line.startswith('firmware_validation '):
-                    validation_ok = 'ready=1 ' in line and 'ota_state=2' in line
+                    validation_ok = 'ready=1 ' in line and 'ota_state=2' in line.split()
                 if evidence.observe(line) and version_ok and validation_ok:
                     return 'Dragon Kingdom responded with increasing uptime and ready library.'
             except (serial.SerialException, OSError):

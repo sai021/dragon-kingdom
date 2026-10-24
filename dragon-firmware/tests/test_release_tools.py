@@ -26,11 +26,57 @@ class ReleaseTests(unittest.TestCase):
             for board,size,digest in [('c3',pkg['size'],pkg['sha256']),('s3',pkg['size']+1,pkg['sha256']),('s3',pkg['size'],'0'*64)]:
                 with self.assertRaises(InvalidSignature):key.public_key().verify(signature,sign_update.canonical(board,size,digest),padding.PKCS1v15(),hashes.SHA256())
             self.assertEqual(hashlib.sha256(bytes.fromhex(pkg['image'])).hexdigest(),pkg['sha256'])
+    def test_v2_signature_binds_compatibility_and_tag(self):
+        key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+        message=sign_update.canonical('c3',512,'0'*64,'v0.3.1',1,1)
+        signature=key.sign(message,padding.PKCS1v15(),hashes.SHA256())
+        key.public_key().verify(signature,message,padding.PKCS1v15(),hashes.SHA256())
+        for altered in [message.replace(b'v0.3.1',b'v0.3.2'),message[:-4]+b'0\n1\n',message[:-2]+b'2\n']:
+            with self.assertRaises(InvalidSignature):key.public_key().verify(signature,altered,padding.PKCS1v15(),hashes.SHA256())
+
+    def test_production_rejects_zero_budget_and_missing_contract(self):
+        with self.assertRaises(RuntimeError):flash_support.StartupEvidence(production=True).observe('uptime_ms=10000 session_max=0mA computer_usb_cap=1 voltage_sampling=stopped')
+        with self.assertRaises(ValueError):flash_support.check_startup('unused',print,production=True)
+
+    def test_signed_usb_contract_rejects_tampering_missing_capability_and_schema(self):
+        import release_contract
+        key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+        info={'contract':2,'firmware_tag':'v0.3.1','source_commit':'a'*40,'saved_schema':1,'capabilities':1,'targets':{'c3':{'sha256':'a'*64}}}
+        def sign(value):return {**value,'signature':key.sign(release_contract.canonical(value),padding.PKCS1v15(),hashes.SHA256()).hex()}
+        with patch.object(release_contract,'public_key',return_value=key.public_key()):
+            signed=sign(info);release_contract.verify(signed)
+            with self.assertRaises(InvalidSignature):release_contract.verify({**signed,'firmware_tag':'v0.3.2'})
+            with self.assertRaises(ValueError):release_contract.verify(sign({**info,'saved_schema':2}))
+            with self.assertRaises(ValueError):release_contract.verify(sign({**info,'capabilities':0}))
+            with self.assertRaises(KeyError):release_contract.verify(info)
+
+    def test_release_preparation_is_immutable_and_binds_fresh_provenance(self):
+        import prepare_release,release_contract
+        from cryptography.hazmat.primitives import serialization
+        key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);builds=root/'build';output=root/'release';keyfile=root/'test-key.pem'
+            keyfile.write_bytes(key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption()))
+            for board in recovery.TARGETS:
+                build=builds/board;build.mkdir(parents=True)
+                for name in recovery.FILES[:2]:(build/name).write_bytes(b'\xe9'+b'\0'*11+bytes([9 if board=='s3' else 5,0])+b'\0'*10)
+                (build/recovery.FILES[2]).write_bytes(partition_table())
+                (build/'build.options.json').write_text(json.dumps({'fqbn':recovery.TARGETS[board]}))
+                (build/'provenance.json').write_text(json.dumps({'source_commit':'a'*40,'source_sha256':'b'*64,'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5'}))
+            def git(args,**kwargs):return 'a'*40 if 'rev-parse' in args else ''
+            with patch.object(prepare_release.subprocess,'check_output',side_effect=git),patch.object(prepare_release,'source_fingerprint',return_value='b'*64),patch.object(prepare_release,'public_key',return_value=key.public_key()),patch.object(release_contract,'public_key',return_value=key.public_key()):
+                info=prepare_release.prepare(builds,output,keyfile,'v0.3.0-beta.4');release_contract.verify(info)
+                self.assertEqual(json.loads((output/'dragon-c3.dragon.json').read_text())['format'],2)
+                with self.assertRaises(ValueError):prepare_release.prepare(builds,output,keyfile,'v0.3.0-beta.4')
+                (builds/'c3/provenance.json').write_text('{}')
+                with self.assertRaises(ValueError):prepare_release.prepare(builds,root/'stale',keyfile,'v0.3.0-beta.4')
+                self.assertFalse((root/'stale').exists())
+
     def test_online_signature_binds_release_tag(self):
         key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
         pkg={'board':'s3','size':512,'sha256':'0'*64}
         manifest=sign_update.online_manifest(pkg,'v0.3.1',key)
-        fields=manifest.splitlines();message='\n'.join(fields[:5])+'\n';signature=bytes.fromhex(fields[5])
+        fields=manifest.splitlines();message='\n'.join(fields[:7])+'\n';signature=bytes.fromhex(fields[7])
         key.public_key().verify(signature,message.encode(),padding.PKCS1v15(),hashes.SHA256())
         with self.assertRaises(InvalidSignature):key.public_key().verify(signature,message.replace('v0.3.1','v0.3.2').encode(),padding.PKCS1v15(),hashes.SHA256())
         with self.assertRaises(ValueError):sign_update.online_manifest(pkg,'../../other',key)
@@ -64,7 +110,7 @@ class ReleaseTests(unittest.TestCase):
                 calls.append(args)
                 if 'read-flash' in args:Path(args[-1]).write_bytes(partition_table() if args[args.index('read-flash')+1]=='0x8000' else original)
                 return type('Result',(),{'returncode':0,'stderr':''})()
-            with patch.object(recovery,'ROOT',root),patch.object(recovery,'detect_board',return_value='c3'),patch.object(recovery,'load_bundle',return_value=build),patch.object(recovery,'esptool_path',return_value=Path('esptool')),patch.object(recovery.subprocess,'run',side_effect=run),patch.object(recovery,'check_startup') as startup:
+            with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.1'}),patch.object(recovery,'ROOT',root),patch.object(recovery,'detect_board',return_value='c3'),patch.object(recovery,'load_bundle',return_value=build),patch.object(recovery,'esptool_path',return_value=Path('esptool')),patch.object(recovery.subprocess,'run',side_effect=run),patch.object(recovery,'check_startup') as startup:
                 session=recovery.recover('cli','COM-test',True,lambda text:None)
             write=next(c for c in calls if 'write-flash' in c)
             self.assertEqual(write[write.index('write-flash')+1::2],['0x0','0x8000','0xe000','0x10000'])
@@ -94,7 +140,7 @@ class ReleaseTests(unittest.TestCase):
                 yield from descendants(child)
         listing=SimpleNamespace(comports=lambda:[SimpleNamespace(device='COM-test')])
         with patch.object(recovery_gui,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery_gui,'installed_esptool',return_value=Path(__file__)),patch.object(recovery_gui,'serial_modules',return_value=(None,listing)),patch.object(recovery_gui,'recover') as flash:
-            window=recovery_gui.create_window(visible=False)
+            window=recovery_gui.create_window(visible=False,bundle_path=Path("simulated-bundle"))
             try:
                 widgets=list(descendants(window));button=next(w for w in widgets if w.winfo_class()=='TButton' and w.cget('text')=='Update / recover firmware')
                 port=next(w for w in widgets if w.winfo_class()=='TCombobox');port.set('COM-test')
@@ -107,7 +153,7 @@ class ReleaseTests(unittest.TestCase):
                 button.invoke();self.assertEqual(flash.call_count,1) # The next board needs confirmation again.
             finally:window.destroy()
         with patch.object(recovery_gui,'prepared_release',side_effect=ValueError('bad bundle')):
-            window=recovery_gui.create_window(visible=False)
+            window=recovery_gui.create_window(visible=False,bundle_path=Path("simulated-bundle"))
             try:
                 button=next(w for w in descendants(window) if w.winfo_class()=='TButton' and w.cget('text')=='Update / recover firmware');self.assertTrue(button.instate(['disabled']))
             finally:window.destroy()

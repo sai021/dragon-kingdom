@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Portable Arduino CLI setup, build, upload and monitor helper."""
 import argparse
+import json
 import os
 from pathlib import Path
 import shutil
@@ -51,6 +52,9 @@ def main():
         app = build / 'DragonPrototype.ino.bin'
         if not app.is_file() or not 0 < app.stat().st_size <= 0x180000:
             parser.error('application is missing, empty or exceeds the custom 0x180000-byte app partition')
+        from flash_support import source_fingerprint
+        commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+        (build/'provenance.json').write_text(json.dumps({'source_commit':commit,'source_sha256':source_fingerprint(),'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5'}))
         if args.action == 'upload':
             run('upload', '--fqbn', fqbn, '--port', args.port,
                 '--input-dir', str(build), str(ROOT / 'DragonPrototype'))

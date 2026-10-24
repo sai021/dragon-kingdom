@@ -26,11 +26,15 @@ class BatchTests(unittest.TestCase):
         for tag in ('','garbage','v0.3.0-candidate'):
             with self.assertRaises(ValueError):recovery.firmware_version(tag)
     def test_same_or_newer_board_is_identified_checked_and_never_written(self):
-        for tag in ('v0.3.0-beta.2','v0.3.0-beta.3','v0.3.0'):
+        for tag in ('v0.3.0-beta.2',):
             with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value=tag),patch.object(recovery,'recover') as flash,patch.object(recovery,'check_startup') as startup,patch.object(recovery.subprocess,'run',return_value=SimpleNamespace(stdout='Chip type: ESP32-C3',stderr='')) as run:
                 recovery.update_if_newer('cli','COM-test',True,lambda text:None,tool=Path('tool'))
-                flash.assert_not_called();self.assertEqual(run.call_count,2);startup.assert_called_once_with('COM-test',unittest.mock.ANY,timeout=75,expected_firmware=tag,require_validation=True)
+                flash.assert_not_called();self.assertEqual(run.call_count,2);startup.assert_called_once_with('COM-test',unittest.mock.ANY,timeout=75,expected_firmware=tag,require_validation=True,expected_board='c3',production=True)
                 self.assertTrue(all('write-flash' not in call.args[0] for call in run.call_args_list))
+    def test_newer_than_selected_release_is_not_production_accepted(self):
+        with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value='v0.3.0'),patch.object(recovery,'recover') as flash,patch.object(recovery,'check_startup') as startup:
+            with self.assertRaises(ValueError):recovery.update_if_newer('cli','COM-test',True,lambda text:None,tool=Path('tool'))
+            flash.assert_not_called();startup.assert_not_called()
     def test_older_and_legacy_boards_use_verified_recovery(self):
         for tag in ('v0.3.0-beta.1',None):
             with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value=tag),patch.object(recovery,'recover') as flash:
@@ -51,7 +55,7 @@ class BatchTests(unittest.TestCase):
                 yield from descendants(child)
         listing=SimpleNamespace(comports=lambda:[SimpleNamespace(device='COM-test',vid=0x303a)])
         with patch.object(recovery_gui,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery_gui,'installed_esptool',return_value=Path(__file__)),patch.object(recovery_gui,'serial_modules',return_value=(None,listing)),patch.object(recovery_gui,'update_if_newer',return_value='Verified') as update:
-            w=recovery_gui.create_window(visible=False)
+            w=recovery_gui.create_window(visible=False,bundle_path=Path("simulated-bundle"))
             try:
                 widgets=list(descendants(w));checks=[x for x in widgets if x.winfo_class()=='TCheckbutton'];safety=checks[0];auto=checks[1]
                 auto.invoke();self.assertFalse(auto.instate(['selected']));update.assert_not_called()

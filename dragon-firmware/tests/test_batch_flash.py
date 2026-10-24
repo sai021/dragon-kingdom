@@ -25,6 +25,10 @@ def destroy_window(window):
 
 
 class BatchFlashTests(unittest.TestCase):
+    def setUp(self):
+        contract=patch('batch_flash.prepared_release',return_value={'firmware_tag':'v0.3.1'})
+        contract.start();self.addCleanup(contract.stop)
+
     def test_build_window_finishes_reuses_workspace_and_preserves_saved_images(self):
         import tkinter as tk
         with tempfile.TemporaryDirectory() as directory:
@@ -260,6 +264,8 @@ class AutoFlashTests(unittest.TestCase):
     """Real Tk/worker event flow with discovery, ROM, upload and startup fakes."""
 
     def setUp(self):
+        contract=patch('batch_flash.prepared_release',return_value={'firmware_tag':'v0.3.1'})
+        contract.start();self.addCleanup(contract.stop)
         import tkinter as tk
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
@@ -309,7 +315,7 @@ class AutoFlashTests(unittest.TestCase):
         self.app.update_ports(['COM7'])
         self.finish()
         self.assertIn(TARGETS['c3'], self.app.run.call_args.args)
-        self.assertIn('STARTUP PASS', self.app.status.get())
+        self.assertIn('DEVELOPER CHECK', self.app.status.get())
         self.app.verify.assert_called_once_with('COM8')
         for ports in (['COM7'], ['COM8'], [], ['COM8'], ['COM8']):
             self.app.update_ports(ports)
@@ -396,7 +402,7 @@ class AutoFlashTests(unittest.TestCase):
         self.app.auto_mode.set(False)
         self.app.toggle_auto()
         self.finish()
-        self.assertIn('STARTUP PASS', self.app.status.get())
+        self.assertIn('DEVELOPER CHECK', self.app.status.get())
         self.app.update_ports([])
         self.app.update_ports([])
         self.app.update_ports(['COM7'])

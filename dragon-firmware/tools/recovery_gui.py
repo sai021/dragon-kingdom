@@ -1,12 +1,12 @@
 """USB recovery and opt-in automatic S3/C3 batches; no compiler controls."""
 import queue, threading, tkinter as tk
-from tkinter import ttk
-from recovery import recover, installed_esptool, prepared_release, esptool_path, update_if_newer
+from tkinter import ttk, filedialog
+from recovery import recover, installed_esptool, prepared_release, esptool_path, update_if_newer, verify_production_startup
 from recovery_batch import BatchGate
 from flash_support import ROOT, serial_modules, check_startup
 
 
-def create_window(visible=True):
+def create_window(visible=True,bundle_path=None):
     window=tk.Tk();window.title('Dragon Kingdom - USB update and recovery');window.geometry('780x740')
     if not visible:window.withdraw()
     timers={'poll':None,'auto':None}
@@ -26,9 +26,11 @@ def create_window(visible=True):
     auto=tk.BooleanVar(value=False);batch=BatchGate();passes=0
     auto_status=tk.StringVar(value='Auto off. Confirm USB-only power, then enable Auto for a batch.')
     events=queue.Queue();busy=False;tool=None;info=None
+    selected_cache=bundle_path
     cli=str(ROOT/'.tools/arduino-cli/arduino-cli.exe')
     def emit(text):events.put(('log',str(text)))
     def controls():
+        select_button.configure(state='disabled' if busy or batch.enabled else 'normal')
         update.configure(state='disabled' if busy or batch.enabled or not info else 'normal')
         startup.configure(state='disabled' if busy or batch.enabled or not info else 'normal')
         refresh_button.configure(state='disabled' if busy or batch.enabled else 'normal')
@@ -38,7 +40,8 @@ def create_window(visible=True):
         if busy:return
         safe.set(False);info=None
         try:
-            candidate=prepared_release();tool=installed_esptool() or esptool_path(cli)
+            if selected_cache is None:raise ValueError('Select an immutable signed release bundle first.')
+            candidate=prepared_release(selected_cache);tool=installed_esptool() or esptool_path(cli)
             if not tool.is_file():raise RuntimeError('ESP32 tool not found.')
             _,listing=serial_modules();values=[p.device for p in listing.comports()];ports['values']=values
             if ports.get() not in values:ports.set('')
@@ -51,7 +54,7 @@ def create_window(visible=True):
     def toggle_auto():
         if not auto.get():stop_auto('Any current board will finish normally.');controls();return
         if busy or not info or not safe.get():stop_auto('Confirm USB-only power for every board in this batch first.');controls();return
-        batch.arm();auto_status.set('Auto on: one ESP32 at a time. Older/legacy firmware updates automatically; same/newer firmware is checked without rewriting.');controls()
+        batch.arm();auto_status.set('Auto on: one ESP32 at a time. Older/legacy firmware updates automatically; equal firmware is checked without rewriting; newer firmware is refused.');controls()
     def start(only_check=False,automatic=False):
         nonlocal busy
         if busy or not info:return
@@ -59,12 +62,19 @@ def create_window(visible=True):
         busy=True;port=ports.get();status.set('Working. Keep USB connected until validation finishes.');output.delete('1.0','end');controls()
         def work():
             try:
-                if only_check:check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True)
-                elif automatic:emit(update_if_newer(cli,port,True,emit,tool=tool))
-                else:recover(cli,port,True,emit,tool=tool)
+                if only_check:verify_production_startup(port,emit,cache=selected_cache,tool=tool)
+                elif automatic:emit(update_if_newer(cli,port,True,emit,tool=tool,cache=selected_cache))
+                else:recover(cli,port,True,emit,tool=tool,cache=selected_cache)
                 events.put(('done','STARTUP PASS - firmware, storage, uptime and USB ceiling verified.'))
             except Exception as e:events.put(('error',str(e)))
         threading.Thread(target=work,daemon=True).start()
+    def select_bundle():
+        nonlocal selected_cache
+        folder=filedialog.askdirectory(title='Select immutable signed release bundle')
+        if folder:
+            from pathlib import Path
+            selected_cache=Path(folder);refresh()
+    select_button=ttk.Button(frame,text='Select signed release bundle',command=select_bundle);select_button.pack(anchor='w')
     row=ttk.Frame(frame);row.pack(fill='x')
     refresh_button=ttk.Button(row,text='Refresh ports',command=refresh);refresh_button.pack(side='left')
     update=ttk.Button(row,text='Update / recover firmware',command=start);update.pack(side='left',padx=10)

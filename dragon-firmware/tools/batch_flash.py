@@ -13,6 +13,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from dev import ROOT
+from recovery import prepared_release
 from board_targets import TARGETS, detect_board
 from palettes import generate as generate_palettes
 from embed_web import generate as generate_web
@@ -60,13 +61,13 @@ class Flasher:
         self.window.geometry('820x720')
         frame = ttk.Frame(window, padding=16)
         frame.pack(fill='both', expand=True)
-        ttk.Label(frame, text='Dragon Kingdom batch flasher', font=('', 18, 'bold')).pack(anchor='w')
+        ttk.Label(frame, text='Dragon Kingdom developer flasher - NOT production acceptance', font=('', 18, 'bold')).pack(anchor='w')
         ttk.Label(frame, text='Laptop USB only. Disconnect external/main power before connecting USB.',
                   foreground='#b00020').pack(anchor='w', pady=8)
         ttk.Label(frame, text='Saved firmware is ready to flash. Build only after changing the sources.\n'
                   '1. Connect one board; its port is detected automatically.\n'
                   '2. Click Flash this ESP32, or enable Auto mode for a batch.\n'
-                  '3. Wait for STARTUP PASS, unplug, then wait for Auto ready before the next board.').pack(anchor='w')
+                  '3. Wait for DEVELOPER CHECK, unplug, then wait for Auto ready before the next board.').pack(anchor='w')
         row = ttk.Frame(frame)
         row.pack(fill='x', pady=12)
         self.build_button = ttk.Button(row, text='Build firmware', command=self.compile)
@@ -233,7 +234,7 @@ class Flasher:
         self.auto_absent_scans = 0
         self.auto_initial = False
         if self.auto_mode.get():
-            self.auto_status.set('Auto on — processing this board. Wait for STARTUP PASS before unplugging.')
+            self.auto_status.set('Auto on — processing this board. Wait for DEVELOPER CHECK before unplugging.')
 
     def maybe_auto_flash(self, ports, added):
         if not self.auto_mode.get() or self.busy or not self.ready:
@@ -268,6 +269,7 @@ class Flasher:
             return
         self.wait_for_disconnect(port)
         def work():
+            prepared_release(CACHE) # Same signed compatibility/hash/layout gate as recovery, even for developer uploads.
             serial_modules()  # Check dependency before uploading.
             # Recheck presence immediately before upload. Never erase the whole flash/NVS.
             result = subprocess.run([self.cli, 'board', 'list', '--format', 'json'],
@@ -296,7 +298,8 @@ class Flasher:
             with (self.session / 'startup.log').open('a', encoding='utf-8') as capture:
                 capture.write(line)
             self.events.put(('log', line))
-        return check_startup(port, emit)
+        result=check_startup(port, emit)
+        return 'DEVELOPER CHECK ONLY: '+result+' Use Recover Dragon with a signed release for production.'
 
     def check(self):
         if self.busy:
@@ -358,7 +361,7 @@ class Flasher:
                         self.status.set('Firmware ready. Connect a board; its port will appear automatically. If several are present, select one.')
                     elif action in ('flash', 'check'):
                         self.checked += 1
-                        self.status.set(f'STARTUP PASS — safe to unplug and swap boards. Uploads: {self.count}. Startup passes: {self.checked}.')
+                        self.status.set(f'DEVELOPER CHECK — not production acceptance; unplug before swapping. Uploads: {self.count}. Startup passes: {self.checked}.')
                         if self.auto_mode.get():
                             self.auto_status.set('Auto on — unplug the finished board, then wait for Auto ready.')
                 self.build_button.configure(state='normal')

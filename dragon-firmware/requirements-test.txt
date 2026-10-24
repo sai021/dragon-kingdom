@@ -1,0 +1,4 @@
+# Python release signing/verification tests; GUI uses standard-library Tk.
+cryptography==50.0.2
+cffi==2.1.1
+pycparser==3.12
