@@ -14,7 +14,7 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,timezoneId:'Australia/Sydney'});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   let state={firmware:'v0.3.0-beta.2',board:'s3',connected:false,accessPoint:true,connecting:false,mode:0,hostname:'Dragon-test',ip:'192.168.1.23',message:'Ready to play',dragon:0,brightness:100,profile:0};
-  let board="s3";
+  let board="s3";let updateMode="retry",chunks=[],starts=[],finishes=0,aborts=0,stateReads=0,checkIntents=[];
   let online={phase:0,busy:false,current:'v0.3.0-candidate',release:'',message:'Ready to check.',progress:0,channel:'release'};
   let profiles=[{id:0,name:"All",brightness:100,favorites:[]}],customs=[];
   let scanReads=0,scanWrites=0,forgot=false,generation=0,alarmGetFailures=0,heldPlay=null,playStarted=null;
@@ -26,8 +26,13 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
    if(url.pathname==='/api/parent/login')return data.get('password')==='dragon123'?json({token:'test-session'}):route.fulfill({status:401,body:'Parent password did not match.'});
    if(url.pathname==='/api/parent/logout')return json({});
    if(['/api/wifi','/api/scan','/api/forget-wifi','/api/backup','/api/restore','/api/reset','/api/update','/api/wifi/retry'].includes(url.pathname)&&request.headers()['x-dragon-parent']!=='test-session')return route.fulfill({status:401,body:'Unlock parent settings.'});
+   if(url.pathname==='/api/support'){assert.equal(request.headers()['x-dragon-parent'],'test-session');return json({firmware:state.firmware,board})}
+   if(url.pathname==='/api/update/start'){starts.push(Object.fromEntries(data));return json({})}
+   if(url.pathname==='/api/update/chunk'){chunks.push(Object.fromEntries(data));if(updateMode==='cancel')await page.evaluate(()=>document.querySelector('#cancel-upload').click());if(updateMode==='retry'&&chunks.length===1)return route.fulfill({status:503,body:'Lost acknowledgement'});return json({offset:Number(data.get('offset'))+data.get('data').length/2})}
+   if(url.pathname==='/api/update/finish'){finishes++;return json({})}
+   if(url.pathname==='/api/update/abort'){aborts++;return json({})}
    if(url.pathname==='/api/update')return json({board,active:false,offset:0});
-   if(url.pathname.startsWith('/api/update/online')){if(request.headers()['x-dragon-parent']!=='test-session')return route.fulfill({status:401,body:'Unlock parent settings.'});if(url.pathname.endsWith('/check')){assert(['release','beta'].includes(data.get('channel')));online={...online,channel:data.get('channel'),phase:2,busy:false,release:'v0.3.1',message:'Signed release v0.3.1 is available.'}};if(url.pathname.endsWith('/install')){assert.equal(data.get('release'),'v0.3.1');online={...online,phase:4,busy:true,message:'Downloading verified firmware.',progress:25}}if(url.pathname.endsWith('/cancel'))online={...online,phase:6,busy:false,message:'Online update cancelled. Existing firmware was kept.'};return json(online)}
+   if(url.pathname.startsWith('/api/update/online')){if(request.headers()['x-dragon-parent']!=='test-session')return route.fulfill({status:401,body:'Unlock parent settings.'});if(url.pathname.endsWith('/check')){checkIntents.push(data.get('intent'));assert(['release','beta'].includes(data.get('channel')));online={...online,channel:data.get('channel'),phase:2,busy:false,release:'v0.3.1',message:'Signed release v0.3.1 is available.'}};if(url.pathname.endsWith('/install')){assert.equal(data.get('release'),'v0.3.1');online={...online,phase:4,busy:true,message:'Downloading verified firmware.',progress:25}}if(url.pathname.endsWith('/cancel'))online={...online,phase:6,busy:false,message:'Online update cancelled. Existing firmware was kept.'};return json(online)}
    if(url.pathname==='/api/rotation')return json({enabled:0,shuffle:0,seconds:300});
    if(request.method()==='POST')assert.equal(request.headers()['x-dragon-request'],'1');
    if(request.method()==='POST'&&['/api/profile','/api/custom','/api/delete-profile','/api/delete-custom'].includes(url.pathname)){assert(data.has('profile')&&data.has('generation'));if(Number(data.get('profile'))!==state.profile||Number(data.get('generation'))!==generation)return route.fulfill({status:409,body:'Your collection changed. Reload the page before saving. Your changes have not been saved.'});generation++}
@@ -51,7 +56,7 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
    if(url.pathname==='/api/delete-profile'){const id=Number(data.get('id'));assert.notEqual(id,0);for(const custom of customs)if(custom.owner===id)custom.owner=0;profiles[id]=null;state.profile=0;state.dragon=0;return json({})}
    if(url.pathname==='/api/delete-custom'){const id=Number(data.get('id'));customs=customs.filter(d=>d.id!==id);for(const p of profiles)if(p)p.favorites=p.favorites.filter(value=>value!==id);if(state.dragon===id)state.dragon=0;return json({})}
    if(url.pathname==='/api/profile'){const action=data.get('action');if(action==='create'){state.profile=profiles.length;profiles.push({id:state.profile,name:data.get('name'),brightness:100,favorites:[]})}else if(action==='select')state.profile=Number(data.get('id'));else{Object.assign(profiles[state.profile],{name:data.get('name'),brightness:Number(data.get('brightness')),favorites:data.get('favorites')?data.get('favorites').split(',').map(Number):[]})}state.dragon=profiles[state.profile].favorites[0]??0;state.brightness=profiles[state.profile].brightness;state.mode=0;return json({})}
-   if(url.pathname==='/api/state')return json(state);
+   if(url.pathname==='/api/state'){stateReads++;return json(state)}
    if(url.pathname==='/api/play'){
     if(heldPlay){playStarted();await heldPlay}
     if(data.get('action')==='dragon'){state.dragon=Number(data.get('value'));state.mode=0}
@@ -194,7 +199,29 @@ const zoneMap=[[8,1,1,8,9,2,2,9],[1,8,3,5,5,4,9,2],[1,8,5,5,5,5,9,2],[8,8,5,5,5,
   await page.click('#create-dragon');await page.locator('#editor:not([hidden])').waitFor();await page.fill('#custom-name','Unsaved draft');generation++;
   await page.click('#save-custom');await page.getByText('Your collection changed.',{exact:false}).waitFor();
   assert.equal(await page.inputValue('#custom-name'),'Unsaved draft');assert.equal(await page.locator('#editor').isVisible(),true);assert.equal(customs.length,0);
+  // Shipping controls: visibility suppression, explicit intent, retry identity and cancellation.
+  await page.reload();await page.waitForFunction(()=>collection!==null&&!loading);
+  await page.evaluate(()=>{clearTimeout(pollTimer);Object.defineProperty(document,'hidden',{configurable:true,get:()=>true})});
+  const readsBefore=stateReads;await page.evaluate(()=>refresh());assert.equal(stateReads,readsBefore);
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'))});
+  await page.waitForFunction(()=>!loading);assert(stateReads>readsBefore);
+  await page.click('#parents summary');await page.fill('#parent-password','dragon123');await page.locator('#parent-login button').click();await page.waitForFunction(()=>parentToken&&!loading);
+  state.connected=true;state.accessPoint=false;await page.evaluate(()=>refresh());
+  await page.click('#online-check');await page.locator('#online-install:not([hidden])').waitFor();assert.equal(checkIntents.at(-1),'upgrade');
+  await page.check('#return-release');assert.equal(await page.isVisible('#online-install'),false);
+  await page.click('#online-check');await page.locator('#online-install:not([hidden])').waitFor();assert.equal(checkIntents.at(-1),'return-release');
+  const downloadPromise=page.waitForEvent('download');await page.click('#support-details');const download=await downloadPromise;
+  assert.equal(download.suggestedFilename(),'dragon-support.json');assert.deepEqual(JSON.parse(fs.readFileSync(await download.path(),'utf8')),{firmware:state.firmware,board});
+  const pkg={format:2,board,tag:'v0.3.0',capabilities:1,schema:1,size:600,image:'ab'.repeat(600),sha256:'0'.repeat(64),signature:'0'.repeat(512)};
+  await page.setInputFiles('#update-file',{name:'test.dragon.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(pkg))});
+  await page.click('#update');await page.waitForFunction(()=>!commandBusy&&document.querySelector('#update-status').textContent.startsWith('Verified.'));
+  assert.equal(finishes,1);assert.equal(starts.at(-1).intent,'return-release');assert.deepEqual(chunks[0],chunks[1]);assert.equal(chunks.length,3);
+  await page.fill('#parent-password','dragon123');await page.locator('#parent-login button').click();await page.waitForFunction(()=>parentToken&&!loading);
+  updateMode='cancel';chunks=[];pkg.size=20;pkg.image='ab'.repeat(20);
+  await page.setInputFiles('#update-file',{name:'test.dragon.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(pkg))});
+  await page.click('#update');await page.waitForFunction(()=>!commandBusy&&document.querySelector('#update-status').textContent.startsWith('Upload cancelled.'));
+  assert.equal(finishes,1);assert.equal(aborts,1);assert.equal(chunks.length,1);
   assert.deepEqual(errors,[]);
-  console.log('PASS: initial alarm failure recovery, safe clock-sync hydration, busy controls, empty-profile reload and stale-draft preservation; daily sunrise save/reload, DST clock payloads, preview/stop, save failure and draft preservation; phone layout, play/effects, Wi-Fi setup, custom editing and profiles.');
+  console.log('PASS: shipping upload retry/cancel, return intent, support download, hidden polling; initial alarm failure recovery, safe clock-sync hydration, busy controls, empty-profile reload and stale-draft preservation; daily sunrise save/reload, DST clock payloads, preview/stop, save failure and draft preservation; phone layout, play/effects, Wi-Fi setup, custom editing and profiles.');
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});

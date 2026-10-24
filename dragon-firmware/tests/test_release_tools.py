@@ -131,20 +131,20 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual((session/'nvs-before.bin').read_bytes(),(session/'nvs-after.bin').read_bytes())
             startup.assert_called_once()
     def test_startup_requires_expected_version_and_completed_validation(self):
-        for version,validation,success in [('v0.3.0-beta.2',0,False),('v0.3.0-beta.1',1,False),('v0.3.0-beta.2',1,True)]:
-            lines=iter([f'firmware_version={version} board=s3',
+        for version,validation,board,image,ota,success in [('v0.3.0-beta.2',0,'s3','a'*64,2,False),('v0.3.0-beta.1',1,'s3','a'*64,2,False),('v0.3.0-beta.2',1,'c3','a'*64,2,False),('v0.3.0-beta.2',1,'s3','b'*64,2,False),('v0.3.0-beta.2',1,'s3','',2,False),('v0.3.0-beta.2',1,'s3','a'*64,20,False),('v0.3.0-beta.2',1,'s3','a'*64,2,True)]:
+            lines=iter([f'firmware_version={version} board={board}',f'firmware_image_sha256={image}',
                 'library_ready=1 profile=0 profile_name=All',
                 'dragon=blue name=Blue effects=0 presets=81',
                 'uptime_ms=10000 session_max=400mA computer_usb_cap=1 voltage_sampling=stopped',
                 'uptime_ms=12000 session_max=400mA computer_usb_cap=1 voltage_sampling=stopped',
-                f'firmware_validation ready={validation} partition=app0 ota_state=2'])
+                f'firmware_validation ready={validation} partition=app0 ota_state={ota}'])
             connection=Mock();connection.readline.side_effect=lambda:next(lines,'').encode()
             serial=SimpleNamespace(Serial=Mock(return_value=connection),SerialException=OSError)
             ports=SimpleNamespace(comports=lambda:[SimpleNamespace(device='COM-test',serial_number='test',vid=0x303a)])
             with patch.object(flash_support,'serial_modules',return_value=(serial,ports)),patch.object(flash_support.time,'monotonic',side_effect=itertools.count(100)):
-                if success:flash_support.check_startup('COM-test',lambda text:None,timeout=20,expected_firmware='v0.3.0-beta.2',require_validation=True)
+                if success:flash_support.check_startup('COM-test',lambda text:None,timeout=20,expected_firmware='v0.3.0-beta.2',require_validation=True,expected_board='s3',expected_image_sha256='a'*64,production=True)
                 else:
-                    with self.assertRaises(RuntimeError):flash_support.check_startup('COM-test',lambda text:None,timeout=20,expected_firmware='v0.3.0-beta.2',require_validation=True)
+                    with self.assertRaises(RuntimeError):flash_support.check_startup('COM-test',lambda text:None,timeout=20,expected_firmware='v0.3.0-beta.2',require_validation=True,expected_board='s3',expected_image_sha256='a'*64,production=True)
             connection.close.assert_called_once()
     def test_recovery_gui_preflight_and_explicit_confirmation(self):
         import recovery_gui
