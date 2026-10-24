@@ -10,13 +10,24 @@ inline bool networkBudgetAvailable(uint16_t ceiling){return ceiling>=BASE_TOTAL_
 inline uint16_t runtimeReserve(uint16_t ceiling){return Config::ESP_RESERVE_MA+(networkBudgetAvailable(ceiling)?Config::WIFI_RESERVE_MA:0);}
 
 inline RGB visibleScale(RGB c,uint32_t numerator,uint32_t denominator) {
- RGB out=scaled(c,numerator,denominator);
- if(numerator&&(c.r||c.g||c.b)&&!(out.r||out.g||out.b)) {
-  if(c.r>=c.g&&c.r>=c.b)out.r=1;
-  else if(c.g>=c.b)out.g=1;else out.b=1;
- }
+ // Nearest rounding avoids consistently discarding weaker components.
+ RGB out={clampByte((uint32_t(c.r)*numerator+denominator/2)/denominator),
+          clampByte((uint32_t(c.g)*numerator+denominator/2)/denominator),
+          clampByte((uint32_t(c.b)*numerator+denominator/2)/denominator)};
+ if(!numerator)return out;
+ uint8_t peak=c.r>c.g?c.r:c.g;if(c.b>peak)peak=c.b;
+ // At the one-count floor, quantise the normalised colour symmetrically.
+ // A channel at least half the peak is significant. Keep it visible even
+ // before its rounded scale reaches one: white stays RGB, yellow stays RG.
+ // Applying the fixed mask at every positive gain also keeps each channel
+ // monotonic, which the session current-limit binary search requires.
+ uint16_t threshold=(uint16_t(peak)+1)/2;
+ if(c.r&&c.r>=threshold&&!out.r)out.r=1;
+ if(c.g&&c.g>=threshold&&!out.g)out.g=1;
+ if(c.b&&c.b>=threshold&&!out.b)out.b=1;
  return out;
 }
+
 inline void capVisibleCurrent(RGB* f,uint16_t panelBudget) {
  if(estimatedMilliAmps(f)<=panelBudget)return;
  const uint32_t allowed=panelBudget>Config::PANEL_IDLE_MA?

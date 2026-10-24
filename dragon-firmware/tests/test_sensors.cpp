@@ -11,7 +11,15 @@ int main(){
  for(auto& g:zoneGain)g=100;for(auto& g:pixelGain)g=100;
  mode=SOLID;solidColor={255,255,255};composeFrame(100);RGB base[64];memcpy(base,frame,sizeof(frame));
  ambientGainPermille=600;touchGain=50;composeFrame(100);
- for(int i=0;i<64;i++){auto expected=scaled(scaled(base[i],60,100),50,100);assert(!memcmp(&frame[i],&expected,sizeof(RGB)));}
+ for(int i=0;i<64;i++){auto expected=visibleScale(base[i],30000,100000);assert(!memcmp(&frame[i],&expected,sizeof(RGB)));}
+ // The former two-stage floor turned dim neutral whites into red.
+ // Across all manual levels, neutral solid output must retain all channels.
+ operatingTotal=2400;mode=SOLID;solidColor={20,20,20};
+ for(unsigned room:{15u,25u,50u,90u,150u,1000u})for(unsigned glow=10;glow<=100;glow+=10){
+  ambientGainPermille=room;touchGain=glow;composeFrame(100);
+  for(auto c:frame)assert(c.r&&c.r==c.g&&c.g==c.b);
+  assert(estimatedMa+runtimeReserve(operatingTotal)<=operatingTotal);
+ }
  // Four-corner reference matches the bench: max 204/255, night 3/255.
  operatingTotal=2400;mode=CORNERS;ambientGainPermille=1000;touchGain=100;composeFrame(100);memcpy(base,frame,sizeof(frame));
  unsigned peak=0;for(auto c:frame)peak=std::max(peak,unsigned(std::max(c.r,std::max(c.g,c.b))));assert(peak==204);

@@ -273,14 +273,15 @@ void composeFrame(uint32_t now) {
  if(operatingTotal<BASE_TOTAL_MA)clear(frame);
  // Additional provisional allowance for Wi-Fi; verify on the actual supply.
  else capVisibleCurrent(frame,operatingTotal-runtimeReserve(operatingTotal));
- // Exactly one scaling per hierarchy level: session power -> ambient -> touch.
+ // Session power is enforced first. Combine ambient and selected Glow before
+ // the final quantisation to avoid an extra colour-ratio rounding step.
+ const uint32_t finalGain=uint32_t(ambientGainPermille)*touchGain;
  if(!sunrise.active)for(auto& pixel:frame){
   if(rawGlowTest){pixel=scaled(pixel,rawGlowTest,100);continue;}
   // Keep an awake, already power-limited pixel visible at the lowest gains.
   // Zero gains and intentionally black pixels remain black; output never
   // exceeds the frame that passed the session current cap above.
-  pixel=visibleScale(pixel,ambientGainPermille,1000);
-  pixel=visibleScale(pixel,touchGain,100);
+  pixel=visibleScale(pixel,finalGain,100000);
  }
  estimatedMa=estimatedMilliAmps(frame);
 }

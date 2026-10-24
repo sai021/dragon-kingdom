@@ -5,7 +5,7 @@
 #include "UpdatePolicy.h"
 #include "CompatibilityPolicy.h"
 namespace DragonOnline {
-constexpr const char* CURRENT_TAG="v0.3.0-beta.8";
+constexpr const char* CURRENT_TAG="v0.3.0-beta.9";
 inline bool releaseTag(const char* tag){if(*tag!='v')return false;for(tag++;*tag;tag++)if((*tag<'0'||*tag>'9')&&*tag!='.')return false;return true;}
 inline bool channelTag(const char* channel,const char* tag){return !strcmp(channel,"beta")?strstr(tag,"-beta.")!=nullptr:releaseTag(tag);}
 constexpr size_t MANIFEST_MAX=1024;
