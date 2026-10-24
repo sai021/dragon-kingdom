@@ -27,12 +27,12 @@ class BatchTests(unittest.TestCase):
             with self.assertRaises(ValueError):recovery.firmware_version(tag)
     def test_same_or_newer_board_is_identified_checked_and_never_written(self):
         for tag in ('v0.3.0-beta.2',):
-            with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value=tag),patch.object(recovery,'recover') as flash,patch.object(recovery,'check_startup') as startup,patch.object(recovery.subprocess,'run',return_value=SimpleNamespace(stdout='Chip type: ESP32-C3',stderr='')) as run:
+            with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value=tag),patch.object(recovery,'release_image_digest',return_value='a'*64),patch.object(recovery,'recover') as flash,patch.object(recovery,'check_startup') as startup,patch.object(recovery.subprocess,'run',return_value=SimpleNamespace(stdout='Chip type: ESP32-C3',stderr='')) as run:
                 recovery.update_if_newer('cli','COM-test',True,lambda text:None,tool=Path('tool'))
-                flash.assert_not_called();self.assertEqual(run.call_count,2);startup.assert_called_once_with('COM-test',unittest.mock.ANY,timeout=75,expected_firmware=tag,require_validation=True,expected_board='c3',production=True)
+                flash.assert_not_called();self.assertEqual(run.call_count,2);startup.assert_called_once_with('COM-test',unittest.mock.ANY,timeout=75,expected_firmware=tag,require_validation=True,expected_board='c3',production=True,expected_image_sha256='a'*64)
                 self.assertTrue(all('write-flash' not in call.args[0] for call in run.call_args_list))
     def test_newer_than_selected_release_is_not_production_accepted(self):
-        with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value='v0.3.0'),patch.object(recovery,'recover') as flash,patch.object(recovery,'check_startup') as startup:
+        with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.0-beta.2'}),patch.object(recovery,'read_running_version',return_value='v0.3.0'),patch.object(recovery,'release_image_digest',return_value='a'*64),patch.object(recovery,'recover') as flash,patch.object(recovery,'check_startup') as startup:
             with self.assertRaises(ValueError):recovery.update_if_newer('cli','COM-test',True,lambda text:None,tool=Path('tool'))
             flash.assert_not_called();startup.assert_not_called()
     def test_older_and_legacy_boards_use_verified_recovery(self):

@@ -1,5 +1,5 @@
 """USB-only migration/recovery. Preserve and verify the original NVS partition."""
-import argparse, json, struct, subprocess, time, os, re
+import argparse, json, struct, subprocess, time, os, re, hashlib
 from pathlib import Path
 from release_contract import verify as verify_contract
 from board_targets import TARGETS, detect_board, parse_chip
@@ -39,17 +39,27 @@ def installed_esptool():
     candidates=list(base.glob('*/esptool.exe'))
     return max(candidates,key=lambda p:tuple(int(n) for n in re.findall(r'\d+',p.parent.name))) if candidates else None
 
+def image_app_digest(raw):
+    if len(raw)<56 or raw[23]!=1 or hashlib.sha256(raw[:-32]).digest()!=raw[-32:]:raise ValueError('Application lacks a valid appended ESP image digest')
+    return raw[-32:].hex()
+
+def release_image_digest(cache,board):
+    build=load_bundle(cache=cache or ROOT/'.tools/recovery-release',board=board)
+    return image_app_digest((build/FILES[0]).read_bytes())
+
 def prepared_release(cache=None):
     cache=cache or ROOT/'.tools/recovery-release'
     info=verify_contract(json.loads((cache/'current-set.json').read_text(encoding='utf-8')))
     for board in TARGETS:
         build=load_bundle(cache=cache,board=board);validate_partitions((build/FILES[2]).read_bytes())
         for name in FILES[:2]:validate_image_target((build/name).read_bytes(),board)
+        image_app_digest((build/FILES[0]).read_bytes())
     return info
 
-def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
+def recover(cli,port,usb_only,emit=print,cache=None,tool=None,source_schema=None):
     if not usb_only:raise ValueError('Disconnect external/main power before internal laptop USB recovery.')
     info=prepared_release(cache) # Signed compatibility, hashes and layout before any device write.
+    check_source_compatibility(port,info['saved_schema'],source_schema)
     if tool:
         probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--baud','115200','--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
         board=parse_chip(probe.stdout+probe.stderr)
@@ -76,7 +86,7 @@ def recover(cli,port,usb_only,emit=print,cache=None,tool=None):
     emit('Saved NVS bytes verified unchanged. Resetting the verified board for startup checks.')
     subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
     emit('Waiting for firmware startup validation. This can take about a minute.')
-    check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True,expected_board=board,production=True)
+    check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True,expected_board=board,production=True,expected_image_sha256=release_image_digest(cache,board))
     emit('Recovery complete. Keep USB-only power until unplugged. Setup Wi-Fi opens at startup.')
     return session
 
@@ -86,13 +96,41 @@ def verify_production_startup(port,emit=print,cache=None,tool=None):
     probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
     board=parse_chip(probe.stdout+probe.stderr)
     subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
-    return check_startup(port,emit,timeout=75,expected_firmware=info['firmware_tag'],require_validation=True,expected_board=board,production=True)
+    return check_startup(port,emit,timeout=75,expected_firmware=info['firmware_tag'],require_validation=True,expected_board=board,production=True,expected_image_sha256=release_image_digest(cache,board))
 
 def firmware_version(tag):
     match=re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)(?:-beta\.(\d+))?',tag or '')
     if not match:raise ValueError('Unrecognised firmware version; use manual recovery instead of Auto.')
     major,minor,patch,beta=match.groups()
     return (int(major),int(minor),int(patch),1 if beta is None else 0,int(beta or 0))
+
+def compatible_source(tag,schema,target_schema):
+    if schema is None:
+        # Only explicitly known published legacy versions have this historical contract.
+        known={'v0.2.4-prototype','v0.3.0','v0.3.0-beta.1','v0.3.0-beta.2','v0.3.0-beta.3'}
+        if tag not in known:raise ValueError('Source saved-data schema is unknown. Retain a private NVS dump and review the installed source before explicit service recovery with --source-schema 1.')
+        schema=1
+    if schema!=target_schema:raise ValueError('Saved-data schema is incompatible. Nothing was written.')
+
+def check_source_compatibility(port,target_schema,source_schema=None):
+    if source_schema is not None:
+        compatible_source(None,source_schema,target_schema);return
+    serial,_=serial_modules();connection=serial.Serial(port=None,baudrate=115200,timeout=.2,write_timeout=1)
+    connection.dtr=True;connection.rts=False;connection.port=port
+    tag=None;schema=None;reports=0;last=0;deadline=time.monotonic()+18
+    try:
+        connection.open();connection.reset_input_buffer()
+        while time.monotonic()<deadline:
+            if time.monotonic()-last>=1:connection.write(b'status\n');last=time.monotonic()
+            line=connection.readline().decode('utf-8',errors='replace').strip()
+            if line.startswith('firmware_version='):tag=line.split()[0].split('=',1)[1]
+            match=re.match(r'firmware_compatibility schema=(\d+)\b',line)
+            if match:schema=int(match[1])
+            if line.startswith('uptime_ms='):
+                reports+=1
+                if schema is not None or reports>=2:compatible_source(tag,schema,target_schema);return
+        raise ValueError('Cannot establish source schema from runtime. Use the documented evidence-preserving service recovery procedure.')
+    finally:connection.close()
 
 def read_running_version(port,timeout=18):
     # Status output may contain user data. Keep it in memory and emit only the version.
@@ -129,7 +167,7 @@ def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
             probe=subprocess.run([str(tool),'--chip','auto','--port',port,'--baud','115200','--after','no-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
             board=parse_chip(probe.stdout+probe.stderr);emit('Verified ESP32-'+board.upper()+'. No newer firmware; no flash write required.')
             subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
-            check_startup(port,emit,timeout=75,expected_firmware=current,require_validation=True,expected_board=board,production=True)
+            check_startup(port,emit,timeout=75,expected_firmware=current,require_validation=True,expected_board=board,production=True,expected_image_sha256=release_image_digest(cache,board))
             return 'Already current or newer; startup verified.'
     else:emit('Legacy or unreported firmware version: applying the prepared recovery firmware.')
     recover(cli,port,usb_only,emit,cache=cache,tool=tool)
@@ -137,7 +175,7 @@ def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',required=True);p.add_argument('--cli',default=str(ROOT/'.tools/arduino-cli/arduino-cli.exe'));p.add_argument('--esptool',type=Path,help='Use an installed standalone esptool, without Arduino CLI');p.add_argument('--usb-only',action='store_true');p.add_argument('--bundle',type=Path,required=True,help='Explicit immutable signed release directory');a=p.parse_args()
-    recover(a.cli,a.port,a.usb_only,tool=a.esptool or installed_esptool(),cache=a.bundle)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--port',required=True);p.add_argument('--cli',default=str(ROOT/'.tools/arduino-cli/arduino-cli.exe'));p.add_argument('--esptool',type=Path,help='Use an installed standalone esptool, without Arduino CLI');p.add_argument('--usb-only',action='store_true');p.add_argument('--bundle',type=Path,required=True,help='Explicit immutable signed release directory');p.add_argument('--source-schema',type=int,choices=[1],help='Service-only assertion after private NVS backup and source-schema review when runtime is unavailable');a=p.parse_args()
+    recover(a.cli,a.port,a.usb_only,tool=a.esptool or installed_esptool(),cache=a.bundle,source_schema=a.source_schema)
 
 if __name__=='__main__':main()

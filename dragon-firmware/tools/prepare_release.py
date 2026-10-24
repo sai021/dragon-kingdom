@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from flash_support import ROOT, FILES, bundle_manifest, source_fingerprint
 from board_targets import TARGETS
-from recovery import validate_partitions, validate_image_target
+from recovery import validate_partitions, validate_image_target, image_app_digest
 from release_contract import canonical, public_key
 from sign_update import package, online_manifest
 
@@ -28,8 +28,9 @@ def prepare(builds,output,key_path,tag):
         targets[board]=bundle_manifest(build,board)
         validate_partitions((build/FILES[2]).read_bytes())
         for name in FILES[:2]:validate_image_target((build/name).read_bytes(),board)
+        image_app_digest((build/FILES[0]).read_bytes())
         provenance=json.loads((build/'provenance.json').read_text())
-        if provenance!={'source_commit':commit,'source_sha256':source_fingerprint(),'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5'}:
+        if provenance!={'source_commit':commit,'source_sha256':source_fingerprint(),'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5','sha256':targets[board]['sha256']}:
             raise ValueError('Build provenance does not match this committed source. Rebuild both targets.')
     output.mkdir(parents=True)
     for board in TARGETS:

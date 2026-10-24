@@ -47,14 +47,17 @@ def main():
         fqbn = args.fqbn or TARGETS[board]
         generate_palettes()
         generate_web()
+        from flash_support import source_fingerprint, digest, FILES
+        source_before=source_fingerprint()
+        commit_before=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
         build = ROOT / 'build' / board
         run('compile', '--fqbn', fqbn, '--build-path', str(build), str(ROOT / 'DragonPrototype'))
         app = build / 'DragonPrototype.ino.bin'
         if not app.is_file() or not 0 < app.stat().st_size <= 0x180000:
             parser.error('application is missing, empty or exceeds the custom 0x180000-byte app partition')
-        from flash_support import source_fingerprint
-        commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
-        (build/'provenance.json').write_text(json.dumps({'source_commit':commit,'source_sha256':source_fingerprint(),'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5'}))
+        if source_before!=source_fingerprint() or commit_before!=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip():
+            parser.error('Sources changed during compilation; rebuild before preparing release provenance.')
+        (build/'provenance.json').write_text(json.dumps({'source_commit':commit_before,'source_sha256':source_before,'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5','sha256':{name:digest(build/name) for name in FILES}}))
         if args.action == 'upload':
             run('upload', '--fqbn', fqbn, '--port', args.port,
                 '--input-dir', str(build), str(ROOT / 'DragonPrototype'))

@@ -59,10 +59,11 @@ class ReleaseTests(unittest.TestCase):
             keyfile.write_bytes(key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption()))
             for board in recovery.TARGETS:
                 build=builds/board;build.mkdir(parents=True)
-                for name in recovery.FILES[:2]:(build/name).write_bytes(b'\xe9'+b'\0'*11+bytes([9 if board=='s3' else 5,0])+b'\0'*10)
+                raw=b'\xe9'+b'\0'*11+bytes([9 if board=='s3' else 5,0])+b'\0'*9+b'\1'+b'test app'
+                for name in recovery.FILES[:2]:(build/name).write_bytes(raw+hashlib.sha256(raw).digest())
                 (build/recovery.FILES[2]).write_bytes(partition_table())
                 (build/'build.options.json').write_text(json.dumps({'fqbn':recovery.TARGETS[board]}))
-                (build/'provenance.json').write_text(json.dumps({'source_commit':'a'*40,'source_sha256':'b'*64,'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5'}))
+                (build/'provenance.json').write_text(json.dumps({'source_commit':'a'*40,'source_sha256':'b'*64,'board':board,'toolchain':'esp32:esp32@3.2.1;Adafruit NeoPixel@1.12.5','sha256':{name:flash_support.digest(build/name) for name in recovery.FILES}}))
             def git(args,**kwargs):return 'a'*40 if 'rev-parse' in args else ''
             with patch.object(prepare_release.subprocess,'check_output',side_effect=git),patch.object(prepare_release,'source_fingerprint',return_value='b'*64),patch.object(prepare_release,'public_key',return_value=key.public_key()),patch.object(release_contract,'public_key',return_value=key.public_key()):
                 info=prepare_release.prepare(builds,output,keyfile,'v0.3.0-beta.4');release_contract.verify(info)
@@ -71,6 +72,19 @@ class ReleaseTests(unittest.TestCase):
                 (builds/'c3/provenance.json').write_text('{}')
                 with self.assertRaises(ValueError):prepare_release.prepare(builds,root/'stale',keyfile,'v0.3.0-beta.4')
                 self.assertFalse((root/'stale').exists())
+
+    def test_usb_source_schema_missing_unknown_and_incompatible(self):
+        recovery.compatible_source('v0.3.0-beta.3',None,1)
+        recovery.compatible_source('v0.3.0',None,1)
+        recovery.compatible_source('v0.3.0-beta.4',1,1)
+        for tag,schema in [(None,None),('v0.4.0',None),('v0.4.0',2)]:
+            with self.assertRaises(ValueError):recovery.compatible_source(tag,schema,1)
+
+    def test_application_digest_verifies_bytes_not_just_tag(self):
+        raw=b'\xe9'+b'\0'*22+b'\1'+b'example firmware'
+        signed=raw+hashlib.sha256(raw).digest()
+        self.assertEqual(recovery.image_app_digest(signed),hashlib.sha256(raw).hexdigest())
+        with self.assertRaises(ValueError):recovery.image_app_digest(signed[:-1]+bytes([signed[-1]^1]))
 
     def test_online_signature_binds_release_tag(self):
         key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
@@ -110,7 +124,7 @@ class ReleaseTests(unittest.TestCase):
                 calls.append(args)
                 if 'read-flash' in args:Path(args[-1]).write_bytes(partition_table() if args[args.index('read-flash')+1]=='0x8000' else original)
                 return type('Result',(),{'returncode':0,'stderr':''})()
-            with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.1'}),patch.object(recovery,'ROOT',root),patch.object(recovery,'detect_board',return_value='c3'),patch.object(recovery,'load_bundle',return_value=build),patch.object(recovery,'esptool_path',return_value=Path('esptool')),patch.object(recovery.subprocess,'run',side_effect=run),patch.object(recovery,'check_startup') as startup:
+            with patch.object(recovery,'prepared_release',return_value={'firmware_tag':'v0.3.1','saved_schema':1}),patch.object(recovery,'check_source_compatibility'),patch.object(recovery,'release_image_digest',return_value='a'*64),patch.object(recovery,'ROOT',root),patch.object(recovery,'detect_board',return_value='c3'),patch.object(recovery,'load_bundle',return_value=build),patch.object(recovery,'esptool_path',return_value=Path('esptool')),patch.object(recovery.subprocess,'run',side_effect=run),patch.object(recovery,'check_startup') as startup:
                 session=recovery.recover('cli','COM-test',True,lambda text:None)
             write=next(c for c in calls if 'write-flash' in c)
             self.assertEqual(write[write.index('write-flash')+1::2],['0x0','0x8000','0xe000','0x10000'])

@@ -17,7 +17,7 @@ one screw, for service. Confirm the current identity and port on every board.
    board. Signed compatibility, hashes and partition layout are checked before any
    write. NVS is privately backed up; only bootloader, partition table, OTA metadata
    and app0 are written. Whole-flash erase is never used.
-6. NVS must read back unchanged. After reset the expected firmware/board, increasing
+6. NVS must read back unchanged. After reset the expected firmware/board/running-image digest, increasing
    uptime, ready library, 400 mA USB estimate and VALID application are required.
    Missing version/validation, rollback to another tag, or zero-budget bare-board
    startup cannot receive a production pass. Check saved contents separately.
@@ -43,3 +43,12 @@ its own [evidence-preserving service path](RESTORE-SERVICE.md).
 These are tool contracts, not new physical evidence. S3/C3 candidate migration,
 rollback and power tests remain pending. Keep all NVS files and unit identifiers
 under ignored local output; they may contain household credentials.
+
+
+USB source-schema gate: runtime now reports its saved-data schema. Recovery refuses
+unknown or mismatched source schemas before any write. Known stable 0.3.0/beta 1-3
+use the historical schema-1 contract. For an unbootable or unreported legacy image,
+first retain a verified private raw NVS dump with `restore_service.py`, review its
+original firmware/schema, then deliberately supply `--source-schema 1` to CLI recovery.
+This service assertion is never inferred by Auto mode and does not bypass signed
+target compatibility. A future schema needs a separate migration, not this assertion.

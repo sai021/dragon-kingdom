@@ -492,7 +492,11 @@ void printStatus() {
 #else
  Serial.printf("firmware_version=%s board=s3\n",DragonOnline::CURRENT_TAG);
 #endif
+ Serial.printf("firmware_compatibility schema=%u calibration_present=%u\n",unsigned(DragonCompatibility::SCHEMA),voltageCalibrationPresent);
  const auto* running=esp_ota_get_running_partition();esp_ota_img_states_t state=ESP_OTA_IMG_UNDEFINED;
+ static uint8_t imageDigest[32];static bool imageDigestReady=false;
+ if(!imageDigestReady&&running)imageDigestReady=esp_partition_get_sha256(running,imageDigest)==ESP_OK;
+ if(imageDigestReady){Serial.print("firmware_image_sha256=");for(auto byte:imageDigest)Serial.printf("%02x",byte);Serial.println();}
  esp_ota_get_state_partition(running,&state);Serial.printf("firmware_validation ready=%u partition=%s ota_state=%u\n",firmwareValidated,running?running->label:"none",unsigned(state));
 #endif
  Serial.printf("startup_validation_reason=%s\n",bootValidation.reason);

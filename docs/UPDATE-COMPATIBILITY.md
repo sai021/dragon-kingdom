@@ -74,3 +74,12 @@ USB set without a board or network publication. Missing/stale build provenance i
 an error, not permission to package cached binaries. Preserve accepted bundles
 unchanged. Reproducibility here means recorded inputs and verified outputs; it
 does not claim bit-identical builds across different host/toolchain installations.
+
+
+USB source-schema gate: runtime now reports its saved-data schema. Recovery refuses
+unknown or mismatched source schemas before any write. Known stable 0.3.0/beta 1-3
+use the historical schema-1 contract. For an unbootable or unreported legacy image,
+first retain a verified private raw NVS dump with `restore_service.py`, review its
+original firmware/schema, then deliberately supply `--source-schema 1` to CLI recovery.
+This service assertion is never inferred by Auto mode and does not bypass signed
+target compatibility. A future schema needs a separate migration, not this assertion.

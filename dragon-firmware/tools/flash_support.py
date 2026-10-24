@@ -154,8 +154,8 @@ class StartupEvidence:
                 and self.uptimes[-1] - self.uptimes[0] >= 2000)
 
 
-def check_startup(port, emit, timeout=45, expected_firmware=None, require_validation=False,expected_board=None,production=False):
-    if production and not(expected_firmware and require_validation):raise ValueError("Production needs an expected version and VALID application state.")
+def check_startup(port, emit, timeout=45, expected_firmware=None, require_validation=False,expected_board=None,production=False,expected_image_sha256=None):
+    if production and not(expected_firmware and require_validation and expected_board and expected_image_sha256):raise ValueError("Production needs expected version, board, image digest and VALID application state.")
     serial, list_ports = serial_modules()
     initial = list(list_ports.comports())
     identity = next((p.serial_number for p in initial if p.device == port), None)
@@ -165,6 +165,7 @@ def check_startup(port, emit, timeout=45, expected_firmware=None, require_valida
     evidence = StartupEvidence(production)
     last_request = 0
     version_ok = not expected_firmware
+    image_ok = not expected_image_sha256
     validation_ok = not require_validation
     try:
         while time.monotonic() < deadline:
@@ -188,6 +189,7 @@ def check_startup(port, emit, timeout=45, expected_firmware=None, require_valida
                     connection.reset_input_buffer()
                     evidence = StartupEvidence(production)
                     version_ok = not expected_firmware
+                    image_ok = not expected_image_sha256
                     validation_ok = not require_validation
                     last_request = 0
                     emit('Checking Dragon Kingdom on ' + chosen + '…\n')
@@ -209,9 +211,12 @@ def check_startup(port, emit, timeout=45, expected_firmware=None, require_valida
                     version_ok = line.split()[0] == 'firmware_version='+str(expected_firmware) if expected_firmware else True
                     if expected_board and ('board='+expected_board) not in line.split():raise RuntimeError('Unexpected board in firmware startup report.')
                     if not version_ok:raise RuntimeError('The connected board is not running the prepared firmware version.')
+                if line.startswith('firmware_image_sha256='):
+                    image_ok=line.partition('=')[2]==expected_image_sha256 if expected_image_sha256 else True
+                    if not image_ok:raise RuntimeError('Running image differs from the selected immutable release.')
                 if line.startswith('firmware_validation '):
                     validation_ok = 'ready=1 ' in line and 'ota_state=2' in line.split()
-                if evidence.observe(line) and version_ok and validation_ok:
+                if evidence.observe(line) and version_ok and validation_ok and image_ok:
                     return 'Dragon Kingdom responded with increasing uptime and ready library.'
             except (serial.SerialException, OSError):
                 connection.close()
