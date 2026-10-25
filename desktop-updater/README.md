@@ -1,5 +1,13 @@
 # Dragon Kingdom Easy Update
 
+Version 1.6.0 (26 October): Dragon Kingdom workshop theme, a static
+USB-only power warning without a confirmation checkbox, and optional USB Auto.
+Update and keep saved dragons remains default; Fresh install / reuse this board
+selects replacement without a second acknowledgement. Backups run automatically.
+If a backup fails, the only choices are Abort or Continue without backup. The latter
+is recorded and results explicitly state that the backup/data check was unavailable.
+Empty boards can initialize after verified empty-flash detection. The version notes below describe earlier releases.
+
 Version 1.5.0 adds USB cable mode alongside AP batch updates and Home Wi-Fi.
 The default remains offline/AP mode. In USB mode disconnect product/external power
 BEFORE connecting laptop USB to the internal ESP32. Confirm USB-only power for

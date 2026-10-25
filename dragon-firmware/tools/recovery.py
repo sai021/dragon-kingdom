@@ -56,7 +56,70 @@ def prepared_release(cache=None):
         image_app_digest((build/FILES[0]).read_bytes())
     return info
 
-def recover(cli,port,usb_only,emit=print,cache=None,tool=None,source_schema=None):
+
+def install_fresh(port,usb_only,replace_existing=False,emit=print,cache=None,tool=None,backup_decision=None):
+    """Initialize a proven-empty board, or explicitly replace one after full backup."""
+    if not usb_only:raise ValueError('Disconnect external/main power before USB installation.')
+    info=prepared_release(cache)
+    tool=tool or installed_esptool()
+    if not tool:raise ValueError('USB tool is unavailable.')
+    session=ROOT/'.tools/recovery'/('fresh-'+time.strftime('%Y%m%d-%H%M%S')+'-'+os.urandom(4).hex())
+    session.mkdir(mode=0o700,parents=True,exist_ok=False)
+    board=None;complete=False
+    def command(*args,timeout=600):
+        result=subprocess.run([str(tool),'--chip',('esp32'+board) if board else 'auto','--port',port,
+                               '--baud','460800','--after','no-reset',*map(str,args)],capture_output=True,text=True,timeout=timeout)
+        if result.returncode:raise RuntimeError('USB installation stopped. Keep the private flash backup. '+result.stderr[-700:])
+        return result.stdout+result.stderr
+    try:
+        emit('Identifying board and flash size...')
+        details=command('flash-id',timeout=35);board=parse_chip(details)
+        size=re.search(r'Detected flash size:\s*(\d+)\s*MB',details,re.I)
+        if not size or int(size[1]) not in (4,8,16):raise ValueError('Fresh installation supports verified 4, 8 or 16 MB flash only. Nothing was erased.')
+        length=int(size[1])*1024*1024
+        build=load_bundle(board=board,cache=cache or ROOT/'.tools/recovery-release')
+        validate_partitions((build/FILES[2]).read_bytes())
+        for name in FILES[:2]:validate_image_target((build/name).read_bytes(),board)
+        before=session/'flash-before.bin';check=session/'flash-verify.bin'
+        backup_available=False;blank=False
+        try:
+            emit('Saving a full private flash backup; this can take a few minutes...')
+            command('read-flash','0',hex(length),before)
+            if before.stat().st_size!=length:raise ValueError('Full flash backup is incomplete.')
+            emit('Verifying the flash backup...')
+            command('read-flash','0',hex(length),check)
+            if check.stat().st_size!=length or digest(before)!=digest(check):raise ValueError('Flash backup verification failed.')
+            backup_available=True;blank=before.read_bytes()==b'\xff'*length
+        except Exception as error:
+            message='A verified flash backup could not be made. Continuing will install Dragon Kingdom and replace the existing firmware and saved data without a recoverable backup. '+str(error)
+            if backup_decision is None or not backup_decision(message):raise ValueError('Backup unavailable. Installation aborted before erasing or writing.') from error
+            replace_existing=True
+            emit('User chose Continue without backup. Installing without a verified backup.')
+        if not blank and not replace_existing:
+            raise ValueError('This board has existing firmware or saved data. To replace it, choose Fresh install. Nothing was erased. Backup: '+str(before))
+        (session/'evidence.json').write_text(json.dumps({'board':board,'size':length,'sha256':digest(before) if backup_available else None,'empty':blank,'replacement_selected':replace_existing,'backup_available':backup_available,'firmware_tag':info['firmware_tag']},indent=2),encoding='utf-8')
+        if not blank:
+            emit('Fresh installation selected. Erasing the previous contents...')
+            command('erase-flash')
+        else:emit('Entire flash is verified empty. Installing Dragon Kingdom...')
+        ota=session/'otadata-reset.bin';ota.write_bytes(b'\xff'*0x2000)
+        command('write-flash','0x0',build/FILES[1],'0x8000',build/FILES[2],'0xe000',ota,'0x10000',build/FILES[0])
+        if backup_available:
+            nvs=session/'nvs-before-first-boot.bin';command('read-flash','0x9000','0x5000',nvs)
+            if nvs.read_bytes()!=b'\xff'*0x5000:raise ValueError('New saved-data area was not erased. Retain the backup and stop.')
+        emit('Signed firmware written. Checking first startup...')
+        subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=35,check=True)
+        check_startup(port,emit,timeout=90,expected_firmware=info['firmware_tag'],require_validation=True,
+                      expected_board=board,production=True,expected_image_sha256=release_image_digest(cache,board))
+        complete=True
+        return 'Updated '+('empty board' if blank else 'by fresh installation')+' to '+info['firmware_tag']+'. Startup verified. '+('Full backup: '+str(before) if backup_available else 'Continued without a verified backup.')
+    finally:
+        if not complete and board:
+            # A read-only rejection should not leave an existing lamp in ROM mode.
+            try:subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=35)
+            except Exception:pass
+
+def recover(cli,port,usb_only,emit=print,cache=None,tool=None,source_schema=None,backup_decision=None):
     if not usb_only:raise ValueError('Disconnect external/main power before internal laptop USB recovery.')
     info=prepared_release(cache) # Signed compatibility, hashes and layout before any device write.
     check_source_compatibility(port,info['saved_schema'],source_schema)
@@ -75,15 +138,25 @@ def recover(cli,port,usb_only,emit=print,cache=None,tool=None,source_schema=None
     live_table=session/'partitions-before.bin';run('read-flash','0x8000','0x1000',live_table);validate_current_nvs(live_table.read_bytes())
     before=session/'nvs-before.bin';after=session/'nvs-after.bin'
     emit('Backing up saved data locally. This file contains credentials; keep it private.')
-    run('read-flash','0x9000','0x5000',before)
-    if before.stat().st_size!=0x5000:raise RuntimeError('NVS backup is incomplete. Nothing was written.')
+    backup_available=False
+    try:
+        run('read-flash','0x9000','0x5000',before)
+        if before.stat().st_size!=0x5000:raise RuntimeError('NVS backup is incomplete.')
+        backup_available=True
+    except Exception as error:
+        message='The saved-data backup could not be made. Continuing updates the firmware without a verified backup; saved data cannot be checked afterward. '+str(error)
+        if backup_decision is None or not backup_decision(message):raise RuntimeError('Backup unavailable. Update aborted before writing firmware.') from error
+        (session/'backup-unavailable.json').write_text('{"verified_backup":false,"continued_by_user":true}',encoding='utf-8')
+        emit('User chose Continue without backup. Saved-data verification will be unavailable.')
     # These ranges exclude 0x9000..0xDFFF. No erase-flash, merged image or NVS write.
     ota=session/'otadata-reset.bin';ota.write_bytes(b'\xff'*0x2000)
     emit('Writing verified board image and two-slot layout. Keep USB connected.')
     run('write-flash','0x0',build/FILES[1],'0x8000',build/FILES[2],'0xe000',ota,'0x10000',build/FILES[0])
-    run('read-flash','0x9000','0x5000',after)
-    if digest(before)!=digest(after):raise RuntimeError('Saved-data verification FAILED. Keep the NVS backup; do not claim successful migration.')
-    emit('Saved NVS bytes verified unchanged. Resetting the verified board for startup checks.')
+    if backup_available:
+        run('read-flash','0x9000','0x5000',after)
+        if digest(before)!=digest(after):raise RuntimeError('Saved-data verification FAILED. Keep the NVS backup; do not claim successful migration.')
+        emit('Saved NVS bytes verified unchanged. Resetting for startup checks.')
+    else:emit('No verified backup available. Resetting for firmware startup checks.')
     subprocess.run([str(tool),'--chip','esp32'+board,'--port',port,'--no-stub','--after','hard-reset','chip-id'],capture_output=True,text=True,timeout=30,check=True)
     emit('Waiting for firmware startup validation. This can take about a minute.')
     check_startup(port,emit,timeout=75,expected_firmware=info.get('firmware_tag'),require_validation=True,expected_board=board,production=True,expected_image_sha256=release_image_digest(cache,board))
@@ -154,7 +227,7 @@ def read_running_version(port,timeout=18):
     finally:
         if connection:connection.close()
 
-def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
+def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None,backup_decision=None):
     if not usb_only:raise ValueError('Disconnect external/main power before enabling Auto.')
     info=prepared_release(cache);target=info.get('firmware_tag');wanted=firmware_version(target)
     tool=tool or installed_esptool() or esptool_path(cli)
@@ -170,8 +243,8 @@ def update_if_newer(cli,port,usb_only,emit=print,cache=None,tool=None):
             check_startup(port,emit,timeout=75,expected_firmware=current,require_validation=True,expected_board=board,production=True,expected_image_sha256=release_image_digest(cache,board))
             return 'Already current or newer; startup verified.'
     else:emit('Legacy or unreported firmware version: applying the prepared recovery firmware.')
-    recover(cli,port,usb_only,emit,cache=cache,tool=tool)
-    return 'Updated to '+target+'; startup verified.'
+    session=recover(cli,port,usb_only,emit,cache=cache,tool=tool,backup_decision=backup_decision)
+    return 'Updated to '+target+'; startup verified.'+(' Continued without a verified backup; saved data not verified.' if isinstance(session,Path) and (session/'backup-unavailable.json').exists() else '')
 
 
 def main():

@@ -1,4 +1,26 @@
-# Project checkpoint — 25 October 2026
+# Project checkpoint — 26 October 2026
+
+## Unreleased workshop redesign and fresh installation - 26 October
+
+At the owner's request, hold another public app version until redesigning the
+interface for Dragon Kingdom. The native Tk interface now uses a forest/parchment
+keeper-workshop theme, original 8x8 LED crest, connection cards and a readable
+activity log. USB keeps preservation as default and offers Fresh install/reuse
+with selection of that option sufficient to authorize replacement. A static USB
+power warning replaces the power checkbox; optional Auto mode remains available.
+
+The attached board responds with uptime and a 400mA USB cap but no firmware tag
+or schema. A read-only serial status check confirmed the reason for 1.5.0's error;
+no flash was erased or written. Default preservation still rejects unidentified
+non-empty firmware. Fresh install backs up the full 4/8/16MB flash twice and
+verifies it before a whole-flash erase. If the backup fails, the only prompt is
+Abort or Continue without backup; Abort prevents writes and Continue records the
+missing backup explicitly. A fully erased board can initialize
+without opting to replace existing data. ROM board, signed assets/layout and
+validated first startup remain required. Tests use simulated USB flash files.
+The design preview has physical operations disabled. Public download remains
+1.5.0; no new app/firmware release has been published for this work.
+See [design and implementation notes](WORKSHOP-PREVIEW-2026-10-26.md).
 
 ## Current updater: Easy Update 1.5.0, including USB Auto
 

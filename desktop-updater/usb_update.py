@@ -120,7 +120,7 @@ def helper():
     return path
 
 
-def update(port, release, folder, usb_only, emit=lambda text: None):
+def update(port, release, folder, usb_only, emit=lambda text: None, fresh=False, backup_decision=None):
     if not usb_only:
         raise core.UpdateError('Disconnect external/main power. Laptop USB must be the only power input.')
     validate(folder, release)
@@ -128,12 +128,19 @@ def update(port, release, folder, usb_only, emit=lambda text: None):
         raise core.UpdateError('USB port disappeared. Find USB dragons again.')
     recovery = service()
     tool = helper()
+    if fresh:
+        return recovery.install_fresh(port,True,replace_existing=True,emit=emit,cache=folder,tool=tool,backup_decision=backup_decision)
     # Existing service gate refuses unknown schemas and preserves/read-verifies NVS.
-    current = recovery.read_running_version(port)
+    try:current = recovery.read_running_version(port)
+    except RuntimeError:current = None
+    if current is None:
+        return recovery.install_fresh(port,True,replace_existing=False,emit=emit,cache=folder,tool=tool,backup_decision=backup_decision)
     if current is not None and recovery.firmware_version(current) > recovery.firmware_version(release.tag):
         return 'Newer firmware is installed; no downgrade or flash write performed.'
     try:
-        result = recovery.update_if_newer('', port, True, emit, cache=folder, tool=tool)
+        result = recovery.update_if_newer('', port, True, emit, cache=folder, tool=tool,backup_decision=backup_decision)
     except Exception as error:
+        if 'schema is unknown' in str(error) or 'Cannot establish source schema' in str(error):
+            raise core.UpdateError('Update mode could not confirm the saved-data format and left the board unchanged. Choose Fresh install if you want to replace its firmware and erase saved data; a full backup will be saved first.') from error
         raise core.UpdateError(str(error) + ' USB service files: ' + str(recovery.ROOT / '.tools/recovery')) from error
-    return result + (' USB NVS backups: ' + str(recovery.ROOT / '.tools/recovery') if result.startswith('Updated') else '')
+    return result + (' USB NVS backups: ' + str(recovery.ROOT / '.tools/recovery') if result.startswith('Updated') and 'without a verified backup' not in result else '')

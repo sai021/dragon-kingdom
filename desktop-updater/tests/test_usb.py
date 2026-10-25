@@ -113,3 +113,20 @@ class UsbTests(unittest.TestCase):
         self.assertIsNone(gate.choose(set(), now=8))
         self.assertFalse(gate.waiting)
         self.assertEqual(gate.choose({'COM19'}, now=9), 'COM19')
+
+    def test_fresh_selection_authorizes_replacement_and_propagates_backup_prompt(self):
+        folder=self.prepare();recovery=usb.service();decision=Mock(return_value=True)
+        with patch.object(usb,'ports',return_value=[SimpleNamespace(device='COM17')]), \
+             patch.object(usb,'helper',return_value=Path('helper')), patch.object(recovery,'install_fresh',return_value='Updated') as fresh:
+            usb.update('COM17',self.release,folder,True,fresh=True,backup_decision=decision)
+        self.assertTrue(fresh.call_args.kwargs['replace_existing'])
+        self.assertIs(fresh.call_args.kwargs['backup_decision'],decision)
+
+    def test_missing_runtime_checks_for_fully_blank_flash_without_authorizing_erasure(self):
+        folder=self.prepare();recovery=usb.service()
+        with patch.object(usb,'ports',return_value=[SimpleNamespace(device='COM17')]), \
+             patch.object(usb,'helper',return_value=Path('helper')), \
+             patch.object(recovery,'read_running_version',side_effect=RuntimeError('No runtime')), \
+             patch.object(recovery,'install_fresh',return_value='Updated empty board') as fresh:
+            usb.update('COM17',self.release,folder,True)
+        self.assertFalse(fresh.call_args.kwargs['replace_existing'])

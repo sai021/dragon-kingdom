@@ -1,5 +1,6 @@
 import sys
 import gc
+import threading
 from pathlib import Path
 import tkinter as tk
 import unittest
@@ -123,23 +124,22 @@ class EasyUpdateTests(unittest.TestCase):
         self.assertEqual(run.call_args.args[2], 'dragon123')
         info.assert_not_called()
 
-    def test_usb_auto_requires_batch_power_and_prepared_bundle(self):
+    def test_usb_auto_prepares_bundle_without_power_checkbox(self):
         self.app.mode.set('USB cable'); self.app.change_mode()
+        self.assertFalse(self.app.usb_auto.get())
+        self.assertFalse(hasattr(self.app, 'usb_power'))
+        self.assertIn('Disconnect', self.app.usb_notice.cget('text'))
         self.app.usb_auto.set(True)
-        with patch.object(self.app, 'prepare_usb') as prepare:
+        with patch.object(self.app, 'prepare_usb', side_effect=lambda after: after()) as prepare:
             self.app.toggle_usb_auto()
-        prepare.assert_not_called()
-        self.assertFalse(self.app.usb_gate.enabled)
-        self.app.usb_power.set(True); self.app.usb_auto.set(True)
-        with patch.object(self.app, 'prepare_usb', side_effect=lambda after: after()):
-            self.app.toggle_usb_auto()
+        prepare.assert_called_once()
         self.assertTrue(self.app.usb_gate.enabled)
         self.app.request_stop()
         self.assertFalse(self.app.usb_gate.enabled)
 
     def test_usb_auto_runs_once_then_waits_for_unplug(self):
         self.app.mode.set('USB cable'); self.app.change_mode()
-        self.app.usb_power.set(True); self.app.usb_auto.set(True); self.app.usb_gate.arm()
+        self.app.usb_auto.set(True); self.app.usb_gate.arm()
         port = SimpleNamespace(device='COM17', vid=0x303a)
         def installing(automatic):
             self.assertTrue(automatic)
@@ -147,3 +147,30 @@ class EasyUpdateTests(unittest.TestCase):
         with patch('main.usb.ports', return_value=[port]), patch.object(self.app, 'install_usb', side_effect=installing) as update:
             self.app.usb_tick(); self.app.usb_tick()
         update.assert_called_once()
+
+    def test_fresh_selection_is_enough_to_arm_auto(self):
+        self.app.mode.set('USB cable'); self.app.change_mode()
+        self.app.usb_fresh.set(True); self.app.fresh_changed()
+        self.assertFalse(hasattr(self.app, 'usb_replace'))
+        self.assertFalse(hasattr(self.app, 'fresh_ack'))
+        self.app.usb_auto.set(True)
+        with patch.object(self.app, 'prepare_usb', side_effect=lambda after: after()):
+            self.app.toggle_usb_auto()
+        self.assertTrue(self.app.usb_gate.enabled)
+
+    def test_backup_failure_offers_only_abort_or_continue(self):
+        def descendants(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from descendants(child)
+        for choice, expected in [('Abort', False), ('Continue without backup', True)]:
+            with self.subTest(choice=choice):
+                decision = {'continue': False}; answered = threading.Event()
+                self.app.show_backup_prompt('Backup read failed.', decision, answered)
+                dialog = next(w for w in self.root.winfo_children() if isinstance(w, tk.Toplevel))
+                buttons = [w for w in descendants(dialog) if w.winfo_class() == 'TButton']
+                self.assertEqual({w.cget('text') for w in buttons}, {'Abort', 'Continue without backup'})
+                self.assertFalse(answered.is_set())
+                next(w for w in buttons if w.cget('text') == choice).invoke()
+                self.assertTrue(answered.is_set())
+                self.assertEqual(decision['continue'], expected)
