@@ -16,18 +16,18 @@ class App:
         self.busy, self.installing, self.finalizing = False, False, False
         self.cancel = threading.Event()
         self.wifi_session = None
-        root.title('Dragon Kingdom Updater')
+        root.title('Dragon Kingdom Easy Update')
         root.geometry('860x790')
         root.minsize(800, 750)
         panel = ttk.Frame(root, padding=22)
         panel.pack(fill='both', expand=True)
-        ttk.Label(panel, text='Keep your dragon up to date', font=('TkDefaultFont', 21, 'bold')).pack(anchor='w')
+        ttk.Label(panel, text='Dragon Kingdom Easy Update', font=('TkDefaultFont', 21, 'bold')).pack(anchor='w')
         ttk.Label(panel, text='Keep the lamp on its normal bottom USB-C supply. No laptop USB connection is needed.', wraplength=750).pack(anchor='w', pady=(9, 10))
         modes = ttk.Frame(panel); modes.pack(fill='x')
         ttk.Label(modes, text='Connection:').pack(side='left')
-        self.mode = tk.StringVar(value='Home Wi-Fi')
+        self.mode = tk.StringVar(value='Dragon setup Wi-Fi (offline)')
         self.mode_picker = ttk.Combobox(modes, textvariable=self.mode, state='readonly', width=31,
-            values=('Home Wi-Fi', 'Dragon setup Wi-Fi (offline)'))
+            values=('Dragon setup Wi-Fi (offline)', 'Home Wi-Fi'))
         self.mode_picker.pack(side='left', padx=10)
         self.mode_picker.bind('<<ComboboxSelected>>', lambda event: self.change_mode())
         self.prepare = ttk.Button(modes, text='Download for offline use', command=self.prepare_offline)
@@ -46,8 +46,9 @@ class App:
         self.offered = tk.StringVar(value='Choose Check for updates while connected to internet.')
         ttk.Label(panel, textvariable=self.offered, wraplength=790).pack(anchor='w')
         auth = ttk.Frame(panel); auth.pack(fill='x', pady=12)
-        ttk.Label(auth, text='Parent password (normally dragon123)').pack(side='left')
+        ttk.Label(auth, text='Parent password (filled in; edit only if needed)').pack(side='left')
         self.password = ttk.Entry(auth, show='*', width=20); self.password.pack(side='left', padx=10)
+        self.password.insert(0, 'dragon123')
         actions = ttk.Frame(panel); actions.pack(fill='x')
         self.install = ttk.Button(actions, text='Update selected dragon', command=self.install_selected); self.install.pack(side='left')
         self.stop = ttk.Button(actions, text='Cancel', command=self.cancel.set, state='disabled'); self.stop.pack(side='left', padx=10)
@@ -56,7 +57,7 @@ class App:
         self.status = tk.StringVar(value='Ready. Choose Find dragons.')
         ttk.Label(panel, textvariable=self.status, wraplength=790).pack(anchor='w')
         ttk.Label(panel, text='Backups stay on this computer: ' + str(core.backup_folder()), wraplength=790).pack(anchor='w', pady=(12, 0))
-        ttk.Label(panel, text='Updater ' + core.APP_VERSION + ' · Signed firmware · No automatic installation').pack(anchor='w', pady=(8, 0))
+        ttk.Label(panel, text='Easy Update ' + core.APP_VERSION + ' Â· Signed firmware Â· No automatic installation').pack(anchor='w', pady=(8, 0))
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.drain)
         if online:
@@ -236,15 +237,13 @@ class App:
             messagebox.showinfo('Parent password needed', 'Enter the existing parent password (normally dragon123).', parent=self.root); return
         direct = self.is_direct()
         automatic=direct and self.wifi_session and self.wifi_session.changed
-        reconnect_note='\nThe app will try to reconnect after restart and return to the original Wi-Fi afterward. Use the computer Wi-Fi menu if OS policy blocks it.' if automatic else '\nAfter restart, rejoin dragon Wi-Fi if disconnected; if it disappears, rejoin home Wi-Fi.' if direct else ''
-        if not messagebox.askokcancel('Install firmware?', f'{device.hostname} ({device.board.upper()})\n{device.firmware} → {release.tag}\n\nA backup will be saved before installation. Keep power and Wi-Fi connected until the restart check finishes.' + reconnect_note, parent=self.root): return
+        self.status.set('Saving a backup and updating ' + device.hostname + '. Keep lamp power and Wi-Fi connected until verification finishes.')
         self.installing = True
         def progress(text, percent):
             if direct and percent == 88:
                 text += ' Reconnecting automatically; waiting up to five minutes.' if automatic else ' Rejoin dragon Wi-Fi after restart if needed; waiting up to five minutes.'
             self.events.put(('progress', text, percent))
         def done(result):
-            self.password.delete(0, 'end')
             self.status.set('Update verified: ' + result['firmware'] + '. Backup: ' + result['backup'])
             self.bar['value'] = 100
             updated = core.Device(result['address'], device.hostname, device.board, result['firmware'])
@@ -315,7 +314,8 @@ if __name__ == '__main__':
         import psutil, zeroconf
         wifi.native_self_test()
         root = tk.Tk(); root.withdraw(); app = App(root, online=False)
-        app.mode.set('Dragon setup Wi-Fi (offline)'); app.change_mode()
+        assert app.password.get() == 'dragon123'
+        assert root.title() == 'Dragon Kingdom Easy Update'
         assert app.is_direct() and str(app.address['state']) == 'disabled'
         app.mode.set('Home Wi-Fi'); app.change_mode()
         assert not app.is_direct() and str(app.check['state']) == 'normal'

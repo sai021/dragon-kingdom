@@ -1,6 +1,10 @@
-# Dragon Kingdom Updater
+# Dragon Kingdom Easy Update
 
-Version 1.2.0 adds native Wi-Fi discovery and automatic connection in direct mode.
+Version 1.3.0 names the app Easy Update and starts in offline/direct mode.
+The editable parent password is prefilled with dragon123 and stays in memory
+for subsequent lamps. Update selected dragon starts the existing backup and
+verified installation flow without an extra confirmation dialog. Connecting
+still does not install firmware. Native Wi-Fi discovery and connection remain.
 Find dragon Wi-Fi downloads the complete signed release first if needed, scans
 for WPA2 Dragon-Kingdom-XXXXXX networks, then lets the parent select one. The app
 connects using the shared dragon password, checks the lamp hostname matches that
@@ -59,7 +63,7 @@ Local HTTP is the existing lamp protocol; use a trusted home network.
 Before writing, the app verifies the signed release contract, board, size, image
 digest, compatibility contract and RSA signature against the installed firmware
 trust root. It refuses downgrade and pre-0.3 single-slot devices. Old 0.3.0 beta
-1–3 and 0.3.0 stable use the explicit format-1 bridge to the same calibration-aware
+1â€“3 and 0.3.0 stable use the explicit format-1 bridge to the same calibration-aware
 image; later firmware uses format 2. Backup must be saved before START. Uncertain
 chunk acknowledgements are checked by offset before retrying (beta 3 rejects
 duplicates). Cancellation aborts before finalization. After finalization the app

@@ -14,7 +14,7 @@ from updater_core import APP_VERSION
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / '.tools' / 'package'
-NAME = 'Dragon Kingdom Updater'
+NAME = 'Dragon Kingdom Easy Update'
 
 def build():
     notices = OUT / 'Third-party notices'
