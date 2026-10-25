@@ -22,7 +22,7 @@ import certifi
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-APP_VERSION = '1.1.0'
+APP_VERSION = '1.2.0'
 REPO = 'sai021/dragon-kingdom'
 GUIDE = 'https://sai021.github.io/dragon-kingdom/update/'
 MAX_IMAGE = 0x180000
@@ -395,7 +395,8 @@ def discover(cancel=None, mdns_seconds=2, scan=True):
 
 
 def update(device, release, password, progress=lambda text, percent: None, cancel=None,
-           backups=None, client_factory=Client, reboot_timeout=180, poll_interval=2):
+           backups=None, client_factory=Client, reboot_timeout=180, poll_interval=2,
+           direct=False, reconnect=None):
     cancel = cancel or threading.Event()
     if version(release.tag) <= version(device.firmware):
         raise UpdateError('This lamp is already on the offered version or newer. No downgrade was performed.')
@@ -411,6 +412,8 @@ def update(device, release, password, progress=lambda text, percent: None, cance
         state = client.call('/api/state')
         if (state.get('hostname'), state.get('board'), state.get('firmware')) != (device.hostname, device.board, device.firmware):
             raise UpdateError('Lamp identity/version changed. Find dragons again before updating.')
+        if direct and state.get('connected'):
+            raise UpdateError('This dragon is already connected to home Wi-Fi. Its setup AP closes 15 seconds after joining home Wi-Fi, even during an upload. Return to your original network and use Home Wi-Fi mode. No firmware was written.')
         resume_addresses = [client.address]
         if state.get('connected') and state.get('ip'):
             try:
@@ -491,6 +494,7 @@ def update(device, release, password, progress=lambda text, percent: None, cance
         client.token = None
         deadline, last_discovery = time.monotonic() + reboot_timeout, time.monotonic()
         resume_index = 0
+        last_reconnect = 0
         while time.monotonic() < deadline:
             try:
                 s = client.call('/api/state')
@@ -511,6 +515,10 @@ def update(device, release, password, progress=lambda text, percent: None, cance
                 if str(e).startswith('Firmware updated, but'):
                     raise
                 client.token = None
+            if reconnect and time.monotonic()-last_reconnect > 15:
+                try: reconnect()
+                except UpdateError: pass # OS may still be reassociating; keep validating rather than claiming success.
+                last_reconnect = time.monotonic()
             # An AP-started update can boot onto saved home Wi-Fi. Try the
             # previously reported station address too, including routed LANs
             # where multicast/subnet discovery cannot reach that address.

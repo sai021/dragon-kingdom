@@ -19,7 +19,9 @@ NAME = 'Dragon Kingdom Updater'
 def build():
     notices = OUT / 'Third-party notices'
     notices.mkdir(parents=True, exist_ok=True)
-    for name in ('cryptography', 'certifi', 'zeroconf', 'psutil', 'ifaddr', 'cffi', 'pycparser', 'pyinstaller'):
+    names=['cryptography', 'certifi', 'zeroconf', 'psutil', 'ifaddr', 'cffi', 'pycparser', 'pyinstaller']
+    if sys.platform=='darwin':names+=['pyobjc-core','pyobjc-framework-Cocoa','pyobjc-framework-CoreWLAN','pyobjc-framework-CoreLocation']
+    for name in names:
         dist = importlib.metadata.distribution(name)
         for entry in dist.files or ():
             if any(part.lower().startswith(('license', 'copying', 'notice')) for part in entry.parts):
@@ -42,7 +44,7 @@ def build():
         raise ValueError('Dependency source hash/size mismatch')
     (notices / sdist['filename']).write_bytes(source)
     source_dir = notices / 'updater-source'; source_dir.mkdir(exist_ok=True)
-    for name in ('main.py', 'updater_core.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
+    for name in ('main.py', 'updater_core.py', 'wifi_control.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
         shutil.copyfile(ROOT / name, source_dir / name)
     (notices / 'README.txt').write_text(
         'Third-party software retains its own licences. Zeroconf 0.151.5 is unmodified LGPL-2.1-or-later; '
@@ -65,6 +67,8 @@ def build():
         info = plistlib.loads(plist.read_bytes())
         info.update(CFBundleShortVersionString=APP_VERSION, CFBundleVersion=APP_VERSION,
                     NSLocalNetworkUsageDescription='Find and update your Dragon Kingdom lamp on home or dragon setup Wi-Fi.',
+                    NSLocationUsageDescription='Find nearby Dragon-Kingdom Wi-Fi networks so you can connect to your lamp.',
+                    NSLocationWhenInUseUsageDescription='Find nearby Dragon-Kingdom Wi-Fi networks so you can connect to your lamp.',
                     NSBonjourServices=['_http._tcp'])
         plist.write_bytes(plistlib.dumps(info))
         subprocess.run(['codesign', '--force', '--deep', '--sign', '-', str(app)], check=True)

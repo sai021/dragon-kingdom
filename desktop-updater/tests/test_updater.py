@@ -138,6 +138,17 @@ class Tests(unittest.TestCase):
     def test_direct_restart_follows_saved_home_address_if_ap_disappears(self):
         self.exercise(offline=True,fault='ap-moves-home')
         self.assertIn('http://192.168.0.99',self.addresses)
+    def test_direct_mode_refuses_home_connected_lamp_before_login_or_write(self):
+        device=c.Device('http://192.168.4.1','Dragon-Kingdom-aabbcc','s3','v0.3.0-beta.3')
+        class ConnectedClient:
+            address=device.address
+            def call(self,path,data=None):
+                if path!='/api/state':raise AssertionError('No login or writes allowed')
+                return dict(hostname=device.hostname,board=device.board,firmware=device.firmware,connected=True)
+            def logout(self):pass
+        with patch.object(c.Release,'package',return_value=fixtures()[1]):
+            with self.assertRaisesRegex(c.UpdateError,'15 seconds'):
+                c.update(device,c.Release('v0.3.1',{}),'correct',direct=True,client_factory=lambda address:ConnectedClient())
     def test_lost_ack_after_write_does_not_duplicate(self): self.exercise(fault='after-chunk')
     def test_lost_ack_before_write_retries(self): self.exercise(fault='before-chunk')
     def test_lost_start_reply_recovers(self): self.exercise(fault='start-reply')

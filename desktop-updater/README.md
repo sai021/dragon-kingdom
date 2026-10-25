@@ -1,12 +1,26 @@
 # Dragon Kingdom Updater
 
-Version 1.1.0 has two explicit modes: Home Wi-Fi retains discovery/download on
-the shared LAN; Dragon setup Wi-Fi downloads the complete signed release first,
-then guides the parent to join Dragon-Kingdom-XXXXXX in the OS Wi-Fi menu and
-connects directly to 192.168.4.1. No home-network setup is needed for direct mode.
-The app does not change the computer's Wi-Fi automatically. After the lamp
-restarts, the parent may need to rejoin its Wi-Fi (or home Wi-Fi if its setup
-network disappears). Verification waits up to five minutes in direct mode.
+Version 1.2.0 adds native Wi-Fi discovery and automatic connection in direct mode.
+Find dragon Wi-Fi downloads the complete signed release first if needed, scans
+for WPA2 Dragon-Kingdom-XXXXXX networks, then lets the parent select one. The app
+connects using the shared dragon password, checks the lamp hostname matches that
+SSID, and still requires a separate click to install. It tries to rejoin the same
+AP after reboot and restore the original computer Wi-Fi after success, failure,
+mode change or close. Manual connection remains available if OS policy blocks
+Wi-Fi control. Home Wi-Fi keeps the existing shared-network discovery workflow.
+
+Direct mode refuses to start a firmware write if the lamp reports home Wi-Fi
+connected: beta 3 and current firmware close their AP 15 seconds after joining
+home Wi-Fi regardless of attached clients. Use Home Wi-Fi mode for those lamps.
+Direct mode is for unconfigured lamps or those unable to join their saved network.
+
+Windows uses Native Wi-Fi and an in-memory temporary WPA2 profile; it does not
+save/replace connection profiles or read the home password. Mac uses CoreWLAN,
+with CoreLocation consent, and asks the OS to restore the saved original network.
+Wi-Fi/location access can be denied by OS or managed-computer policy. No privacy
+settings are changed by the app. Original network details remain in RAM only.
+Mac return is best effort without extracting keychain passwords; manual return
+may be necessary. Direct-mode restart validation allows up to five minutes.
 
 Download for offline use verifies and atomically stores both board types and
 both ordinary/legacy packages in the user's application-data Firmware folder.

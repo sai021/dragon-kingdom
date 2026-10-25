@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import webbrowser
 import updater_core as core
+import wifi_control as wifi
 
 
 class App:
@@ -14,6 +15,7 @@ class App:
         self.devices, self.release, self.live_release, self.prepared = [], None, None, None
         self.busy, self.installing, self.finalizing = False, False, False
         self.cancel = threading.Event()
+        self.wifi_session = None
         root.title('Dragon Kingdom Updater')
         root.geometry('860x790')
         root.minsize(800, 750)
@@ -66,14 +68,20 @@ class App:
         return self.mode.get() == 'Dragon setup Wi-Fi (offline)'
 
     def change_mode(self):
+        if not self.is_direct() and self.wifi_session and self.wifi_session.changed:
+            self.restore_wifi(after=self.change_mode); return
         self.release = self.prepared if self.is_direct() else self.live_release
         self.show_devices([])
         if self.is_direct():
-            self.find.configure(text='Connect to dragon')
-            self.instructions.set('1. While on internet Wi-Fi, choose Download for offline use.\n2. In your computer Wi-Fi menu, join Dragon-Kingdom-XXXXXX (password: dragon123). Stay connected without internet.\n3. Choose Connect to dragon, select it below, then update. No home-Wi-Fi setup is required.')
-            self.status.set('Offline files ready. Join the dragon Wi-Fi, then choose Connect to dragon.' if self.prepared else 'Download the signed files before leaving internet Wi-Fi.')
+            self.find.configure(text='Find dragon Wi-Fi')
+            self.add.configure(text='Manual connection')
+            self.check.configure(text='Return to original Wi-Fi')
+            self.instructions.set('Choose Find dragon Wi-Fi, select a Dragon-Kingdom network and Connect. The app downloads files first if needed, then switches Wi-Fi for you. Allow OS Wi-Fi/location permission if asked.\nDirect mode is for lamps NOT connected to home Wi-Fi. Their AP otherwise closes after 15 seconds; use Home Wi-Fi mode for those lamps.')
+            self.status.set('Ready to scan nearby dragon Wi-Fi networks. Automatic connection temporarily disconnects this computer from its current Wi-Fi.')
         else:
             self.find.configure(text='Find dragons')
+            self.add.configure(text='Add address')
+            self.check.configure(text='Check for updates')
             self.instructions.set('Connect the lamp and this computer to the same home network. Choose Check for updates, then Find dragons.\nFor a lamp without home Wi-Fi, choose Dragon setup Wi-Fi (offline) above.')
             self.status.set('Ready. Check for updates and find your dragon.')
         self.offered.set(('Prepared offline firmware: ' if self.is_direct() else 'Main firmware available: ') + self.release.tag if self.release else 'No verified offline download yet.' if self.is_direct() else 'Choose Check for updates while connected to internet.')
@@ -85,7 +93,7 @@ class App:
             widget.configure(state='disabled' if busy else 'normal')
         self.mode_picker.configure(state='disabled' if busy else 'readonly')
         if self.is_direct():
-            for widget in (self.add, self.address, self.check): widget.configure(state='disabled')
+            self.address.configure(state='disabled')
         self.stop.configure(state='normal' if busy and self.installing and not self.finalizing else 'disabled')
 
     def run(self, job, done):
@@ -122,19 +130,37 @@ class App:
 
     def find_devices(self):
         if self.is_direct():
-            if not self.prepared:
-                messagebox.showinfo('Download first', 'While connected to internet, choose Download for offline use before joining the dragon Wi-Fi.', parent=self.root); return
-            self.status.set('Looking for the dragon at 192.168.4.1...')
-            self.run(lambda: [core.Device.probe('192.168.4.1', timeout=4)], self.show_devices)
+            try:
+                if self.wifi_session is None:self.wifi_session = wifi.Session(wifi.controller())
+            except Exception as error:
+                messagebox.showerror('Automatic Wi-Fi unavailable', str(error) + '\nYou can still join the dragon Wi-Fi yourself and choose Manual connection.', parent=self.root); return
+            def job():
+                prepared = self.prepared or core.prepare_offline(progress=lambda text, percent: self.events.put(('progress', text, percent)))
+                return prepared, self.wifi_session.adapter.scan()
+            def done(result):
+                self.prepared, networks = result; self.release = self.prepared
+                self.offered.set('Prepared offline firmware: ' + self.prepared.tag)
+                if not networks:
+                    self.status.set('No dragon APs found. A lamp already on home Wi-Fi closes its AP 15 seconds after joining; use Home Wi-Fi mode. For an unconfigured lamp, power-cycle before an update and scan again.'); return
+                self.choose_wifi(networks)
+            self.status.set('Preparing signed files and scanning nearby dragon Wi-Fi. Your connection has not been changed.')
+            self.run(job,done)
             return
         self.status.set('Finding dragons on this computer\'s local network...')
         self.run(lambda: core.discover(self.cancel), self.show_devices)
 
     def add_address(self):
+        if self.is_direct():
+            if not self.prepared:
+                messagebox.showinfo('Download first', 'Prepare signed files while on internet, then join the dragon Wi-Fi and try Manual connection.', parent=self.root); return
+            self.run(lambda: [core.Device.probe('192.168.4.1',timeout=4)],self.show_devices)
+            return
         address = self.address.get().strip()
         self.run(lambda: core.Device.probe(address, timeout=4), lambda d: self.show_devices([x for x in self.devices if x.hostname != d.hostname] + [d]))
 
     def check_release(self):
+        if self.is_direct():
+            self.restore_wifi(); return
         def done(release):
             self.release = self.live_release = release
             self.offered.set('Main firmware available: ' + release.tag)
@@ -147,8 +173,52 @@ class App:
             self.prepared = release
             if self.is_direct(): self.release = release
             self.offered.set('Offline firmware ready: ' + release.tag + ' (both board types)')
-            self.status.set('Download verified and saved. Choose Dragon setup Wi-Fi (offline), join Dragon-Kingdom-XXXXXX in your computer Wi-Fi menu, then choose Connect to dragon. You can close and reopen this app offline.')
+            self.status.set('Download verified and saved. Choose Dragon setup Wi-Fi (offline), then Find dragon Wi-Fi to connect automatically. You can close and reopen this app offline.')
         self.run(lambda: core.prepare_offline(progress=progress), done)
+
+    def choose_wifi(self,networks):
+        dialog=tk.Toplevel(self.root);dialog.title('Choose a dragon Wi-Fi network');dialog.transient(self.root)
+        ttk.Label(dialog,text='Select your dragon. Connecting temporarily switches this computer\'s Wi-Fi.\nFirmware is installed only after you review it in the main window.',padding=14).pack()
+        choices=tk.Listbox(dialog,width=55,height=min(8,len(networks)),exportselection=False)
+        choices.pack(padx=14,pady=5)
+        for network in networks:choices.insert('end',f'{network.ssid}    Signal {network.signal}%')
+        choices.selection_set(0)
+        def join():
+            selected=choices.curselection()
+            if not selected:return
+            network=networks[selected[0]];dialog.destroy()
+            def job():
+                import time
+                try:
+                    self.wifi_session.join(network)
+                    deadline=time.monotonic()+25
+                    while True:
+                        try:device=core.Device.probe('192.168.4.1',timeout=3)
+                        except core.UpdateError:
+                            if time.monotonic()>=deadline:raise
+                            time.sleep(1);continue
+                        if device.hostname.casefold()!=network.ssid.casefold():
+                            raise core.UpdateError('The lamp identity does not match the selected Wi-Fi network. No firmware was installed.')
+                        return [device]
+                except Exception as error:
+                    try:self.wifi_session.restore()
+                    except Exception:raise core.UpdateError(str(error)+' Rejoin your original Wi-Fi through the computer menu.') from error
+                    raise
+            self.status.set('Connecting to '+network.ssid+' and checking the lamp...')
+            self.run(job,self.show_devices)
+        ttk.Button(dialog,text='Connect to selected dragon',command=join).pack(pady=12)
+        dialog.grab_set()
+
+    def restore_wifi(self,after=None):
+        if not self.wifi_session or not self.wifi_session.changed:
+            if after:after()
+            else:self.status.set('The app has not changed your Wi-Fi connection.')
+            return
+        self.status.set('Returning to the original Wi-Fi connection...')
+        def done(value):
+            self.status.set('Original Wi-Fi restored. You can scan another dragon or use Home Wi-Fi mode.')
+            if after:after()
+        self.run(self.wifi_session.restore,done)
 
     def install_selected(self):
         selected = self.tree.selection()
@@ -178,13 +248,28 @@ class App:
             updated = core.Device(result['address'], device.hostname, device.board, result['firmware'])
             self.devices[int(selected[0])] = updated
             self.tree.item(selected[0], values=(updated.hostname, updated.board.upper(), updated.firmware, updated.address))
-            messagebox.showinfo('Your dragon is updated', 'Startup was validated and saved settings match the backup. Reopen the lamp webpage and check normal lighting and touch controls.', parent=self.root)
-        self.run(lambda: core.update(device, release, password, progress, self.cancel, reboot_timeout=300 if direct else 180), done)
+            extra='\n'+result['wifiWarning'] if result.get('wifiWarning') else ''
+            messagebox.showinfo('Your dragon is updated', 'Startup was validated and saved settings match the backup. Reopen the lamp webpage and check normal lighting and touch controls.'+extra, parent=self.root)
+        def job():
+            try:
+                result=core.update(device, release, password, progress, self.cancel,
+                    reboot_timeout=300 if direct else 180,direct=direct,
+                    reconnect=self.wifi_session.reconnect if direct and self.wifi_session and self.wifi_session.changed else None)
+            except Exception as error:
+                if self.wifi_session and self.wifi_session.changed:
+                    try:self.wifi_session.restore()
+                    except Exception:raise core.UpdateError(str(error)+' Rejoin your original Wi-Fi through the computer menu.') from error
+                raise
+            if self.wifi_session and self.wifi_session.changed:
+                try:self.wifi_session.restore()
+                except Exception:result['wifiWarning']='Firmware is verified, but the original Wi-Fi could not be restored. Rejoin it through the computer Wi-Fi menu.'
+            return result
+        self.run(job, done)
 
     def close(self):
         if self.busy:
             messagebox.showinfo('Please wait', 'Let the current check finish. During upload, use Cancel and wait; after final verification, keep the app open until the restart check finishes.', parent=self.root); return
-        self.root.destroy()
+        self.restore_wifi(after=self.root.destroy)
 
 
 if __name__ == '__main__':
@@ -218,9 +303,10 @@ if __name__ == '__main__':
         core.trust_key()
         core.tls_context()
         import psutil, zeroconf
+        wifi.native_self_test()
         root = tk.Tk(); root.withdraw(); app = App(root, online=False)
         app.mode.set('Dragon setup Wi-Fi (offline)'); app.change_mode()
-        assert app.is_direct() and str(app.check['state']) == 'disabled'
+        assert app.is_direct() and str(app.address['state']) == 'disabled'
         app.mode.set('Home Wi-Fi'); app.change_mode()
         assert not app.is_direct() and str(app.check['state']) == 'normal'
         root.update(); root.destroy()
