@@ -17,6 +17,8 @@ class EasyUpdateTests(unittest.TestCase):
         self.root = tk.Tk()
         self.root.withdraw()
         self.app = App(self.root, online=False)
+        self.usb_prepare = patch("main.usb.prepare").start()
+        self.addCleanup(patch.stopall)
 
     def tearDown(self):
         for callback in self.root.tk.call('after', 'info'):
@@ -68,6 +70,7 @@ class EasyUpdateTests(unittest.TestCase):
         update.assert_not_called()
         controller.assert_not_called()
         self.assertIs(self.app.prepared, latest)
+        self.usb_prepare.assert_called_once_with(latest)
 
     def test_startup_offline_retains_verified_cache(self):
         cached = SimpleNamespace(tag='v0.3.1', info={})
@@ -148,15 +151,23 @@ class EasyUpdateTests(unittest.TestCase):
             self.app.usb_tick(); self.app.usb_tick()
         update.assert_called_once()
 
-    def test_fresh_selection_is_enough_to_arm_auto(self):
+    def test_usb_has_no_installation_policy_or_download_controls(self):
         self.app.mode.set('USB cable'); self.app.change_mode()
-        self.app.usb_fresh.set(True); self.app.fresh_changed()
-        self.assertFalse(hasattr(self.app, 'usb_replace'))
-        self.assertFalse(hasattr(self.app, 'fresh_ack'))
-        self.app.usb_auto.set(True)
-        with patch.object(self.app, 'prepare_usb', side_effect=lambda after: after()):
-            self.app.toggle_usb_auto()
-        self.assertTrue(self.app.usb_gate.enabled)
+        self.assertFalse(hasattr(self.app, 'usb_fresh'))
+        self.assertFalse(hasattr(self.app, 'fresh_choices'))
+        self.assertEqual(self.app.prepare.cget('text'), 'Choose firmware file…')
+        self.assertEqual(self.app.check.winfo_manager(), '')
+
+    def test_local_firmware_selection_never_downloads(self):
+        prepared=SimpleNamespace(tag='v0.3.1', info={})
+        with patch('main.filedialog.askopenfilename',return_value='firmware.zip'), \
+             patch('main.firmware_files.load',return_value=(prepared,prepared)) as load, \
+             patch('main.core.Release.latest',side_effect=AssertionError('No internet')), \
+             patch.object(self.app,'run',side_effect=lambda job,done:done(job())):
+            self.app.choose_firmware()
+        load.assert_called_once_with('firmware.zip')
+        self.assertIs(self.app.prepared,prepared)
+        self.assertIn('Wi-Fi and USB',self.app.status.get())
 
     def test_backup_failure_offers_only_abort_or_continue(self):
         def descendants(widget):

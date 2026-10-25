@@ -50,9 +50,25 @@ class FreshInstallTests(unittest.TestCase):
     def test_used_board_is_backed_up_but_never_erased_without_replacement(self):
         result, commands, startup, error = self.exercise(b'old firmware' + b'\0'*(4*1024*1024-12))
         self.assertIsInstance(error, ValueError)
-        self.assertIn('Fresh install', str(error))
+        self.assertIn('aborted before erasing', str(error))
         self.assertFalse(any('erase-flash' in c or 'write-flash' in c for c in commands))
         self.assertIsNone(startup)
+
+    def test_unidentified_existing_firmware_prompts_instead_of_requesting_installation_mode(self):
+        for proceed in (False,True):
+            prompts=[]
+            def decide(message):prompts.append(message);return proceed
+            with self.subTest(proceed=proceed):
+                result, commands, startup, error=self.exercise(b'\0'*(4*1024*1024),backup_decision=decide)
+                self.assertEqual(len(prompts),1)
+                self.assertIn('not recognized',prompts[0])
+                if proceed:
+                    self.assertIsNone(error)
+                    self.assertTrue(any('write-flash' in c for c in commands))
+                    self.assertIsNotNone(startup)
+                else:
+                    self.assertFalse(any('erase-flash' in c or 'write-flash' in c for c in commands))
+                    self.assertIsNotNone(error)
 
     def test_explicit_replacement_erases_only_after_two_complete_reads(self):
         result, commands, startup, error = self.exercise(b'\0'*(4*1024*1024),replacement=True)

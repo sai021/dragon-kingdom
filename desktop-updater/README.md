@@ -1,12 +1,19 @@
 # Dragon Kingdom Easy Update
 
-Version 1.6.0 (26 October): Dragon Kingdom workshop theme, a static
-USB-only power warning without a confirmation checkbox, and optional USB Auto.
-Update and keep saved dragons remains default; Fresh install / reuse this board
-selects replacement without a second acknowledgement. Backups run automatically.
-If a backup fails, the only choices are Abort or Continue without backup. The latter
-is recorded and results explicitly state that the backup/data check was unavailable.
-Empty boards can initialize after verified empty-flash detection. The version notes below describe earlier releases.
+Version 1.7.0 detects the USB installation path automatically. There are no
+Update/Fresh install radio buttons. Known compatible Dragon firmware is backed
+up and updated. Unidentified existing firmware or an unavailable backup presents
+only Abort or Continue without backup; Continue permits replacement when the
+saved-data format is unknown. A private raw flash snapshot may still be retained
+but is not represented as a compatible Dragon settings backup. Proven-empty boards
+initialize automatically. A static power warning and optional Auto mode remain.
+
+Startup prepares signed stable firmware for both Wi-Fi and USB automatically.
+The two download buttons are removed. Choose firmware file… imports a complete
+signed firmware ZIP from the PC without internet. Signed USB recovery ZIPs and
+complete offline Wi-Fi JSON files can also be imported for their own transport.
+Invalid files cannot replace a verified cache. The complete firmware ZIP is linked
+from the family guide. The version notes below describe earlier releases.
 
 Version 1.5.0 adds USB cable mode alongside AP batch updates and Home Wi-Fi.
 The default remains offline/AP mode. In USB mode disconnect product/external power

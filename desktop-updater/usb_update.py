@@ -56,7 +56,7 @@ def cached_release():
         except Exception:
             continue
     if not candidates:
-        raise core.UpdateError('No verified USB firmware is saved. Download USB files on internet first.')
+        raise core.UpdateError('No verified USB firmware is saved. Restart with internet or choose a firmware file from this computer.')
     return max(candidates, key=lambda r: core.version(r.tag))
 
 
@@ -75,6 +75,22 @@ def prepare(release, cache=None):
         raw = response.read(limit + 1)
     if len(raw) > limit:
         raise core.UpdateError('USB download is too large.')
+    return store_archive(raw, release, cache)
+
+
+def store_archive(raw, release=None, cache=None):
+    """Verify a local/downloaded USB archive before making it available offline."""
+    if len(raw) > 8 * 1024 * 1024:
+        raise core.UpdateError('USB firmware file is too large.')
+    with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+        entry=archive.getinfo('current-set.json')
+        if not 0 < entry.file_size <= 16384: raise core.UpdateError('Invalid firmware manifest size.')
+        info=core.verify_contract(json.loads(archive.read(entry)))
+    found=core.Release(info['firmware_tag'], info)
+    if not core.version(found.tag)[3]: raise core.UpdateError('Choose signed stable firmware.')
+    if release and release.info != found.info: raise core.UpdateError('USB bundle differs from the selected release.')
+    release=release or found
+    destination=(Path(cache) if cache else bundle_folder()) / release.tag
     expected = {'current-set.json'} | {board + '/' + name for board in ('s3', 'c3') for name in FILES}
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=destination.parent, prefix='.download-') as temporary:
@@ -93,6 +109,7 @@ def prepare(release, cache=None):
                 target.parent.mkdir(exist_ok=True)
                 target.write_bytes(archive.read(entry))
         validate(folder, release)
+        if destination.exists(): return validate(destination, release)
         # All files and both board images are verified before publication.
         folder.rename(destination)
     return destination
@@ -120,7 +137,7 @@ def helper():
     return path
 
 
-def update(port, release, folder, usb_only, emit=lambda text: None, fresh=False, backup_decision=None):
+def update(port, release, folder, usb_only, emit=lambda text: None, backup_decision=None):
     if not usb_only:
         raise core.UpdateError('Disconnect external/main power. Laptop USB must be the only power input.')
     validate(folder, release)
@@ -128,8 +145,6 @@ def update(port, release, folder, usb_only, emit=lambda text: None, fresh=False,
         raise core.UpdateError('USB port disappeared. Find USB dragons again.')
     recovery = service()
     tool = helper()
-    if fresh:
-        return recovery.install_fresh(port,True,replace_existing=True,emit=emit,cache=folder,tool=tool,backup_decision=backup_decision)
     # Existing service gate refuses unknown schemas and preserves/read-verifies NVS.
     try:current = recovery.read_running_version(port)
     except RuntimeError:current = None
@@ -140,7 +155,7 @@ def update(port, release, folder, usb_only, emit=lambda text: None, fresh=False,
     try:
         result = recovery.update_if_newer('', port, True, emit, cache=folder, tool=tool,backup_decision=backup_decision)
     except Exception as error:
-        if 'schema is unknown' in str(error) or 'Cannot establish source schema' in str(error):
-            raise core.UpdateError('Update mode could not confirm the saved-data format and left the board unchanged. Choose Fresh install if you want to replace its firmware and erase saved data; a full backup will be saved first.') from error
+        if any(text in str(error) for text in ('schema is unknown', 'Cannot establish source schema', 'schema is incompatible')):
+            return recovery.install_fresh(port,True,replace_existing=False,emit=emit,cache=folder,tool=tool,backup_decision=backup_decision)
         raise core.UpdateError(str(error) + ' USB service files: ' + str(recovery.ROOT / '.tools/recovery')) from error
     return result + (' USB NVS backups: ' + str(recovery.ROOT / '.tools/recovery') if result.startswith('Updated') and 'without a verified backup' not in result else '')

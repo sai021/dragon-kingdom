@@ -3,12 +3,13 @@ import queue
 import sys
 import threading
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import webbrowser
 import updater_core as core
 import wifi_control as wifi
 import batch_update as batch
 import usb_update as usb
+import firmware_files
 
 
 class App:
@@ -22,7 +23,6 @@ class App:
         self.usb_gate = usb.gate()
         self.usb_auto = tk.BooleanVar(value=False)
         self.usb_records = []
-        self.usb_fresh = tk.BooleanVar(value=False)
         from workshop_ui import build
         build(self, root)
         root.protocol('WM_DELETE_WINDOW', self.close)
@@ -33,24 +33,41 @@ class App:
             self.startup_refresh()
 
     def startup_refresh(self):
-        self.status.set('Checking for the latest stable firmware; saved files remain available offline...')
+        self.status.set('Preparing the latest signed firmware for Wi-Fi and USB. Saved files remain available offline...')
         def job():
             try: cached = core.PreparedRelease.load()
             except core.UpdateError: cached = None
+            warning = 'Could not refresh all firmware. Using verified saved files if available; they may not be the newest release. You can choose a firmware file from this computer.'
+            try: latest = core.Release.latest()
+            except Exception: return cached, warning
+            prepared, failed = cached, False
             try:
-                latest = core.Release.latest()
-                if cached and core.version(cached.tag) >= core.version(latest.tag) and (cached.tag != latest.tag or cached.info == latest.info):
-                    return cached, ''
-                return core.prepare_offline(latest, progress=lambda text, percent: self.events.put(('progress', text, percent))), ''
-            except Exception:
-                return cached, 'Could not refresh the stable release. ' + ('Using the verified saved copy; it may not be the newest release.' if cached else 'Connect to internet and choose Download for offline use before updating.')
+                if not (cached and core.version(cached.tag) >= core.version(latest.tag) and (cached.tag != latest.tag or cached.info == latest.info)):
+                    prepared = core.prepare_offline(latest, progress=lambda text, percent: self.events.put(('progress', text, percent)))
+            except Exception: failed = True
+            try: usb.prepare(latest)
+            except Exception: failed = True
+            return prepared, warning if failed else ''
         def done(result):
             self.prepared, warning = result
             self.release = self.prepared
             self.live_release = self.prepared
-            self.offered.set('Verified offline firmware: ' + self.prepared.tag if self.prepared else 'No verified firmware downloaded yet.')
-            self.status.set(warning or 'Latest stable firmware ready: ' + self.prepared.tag + '. Choose Find & update all dragons.')
+            available = self.usb_release() if self.is_usb() else self.prepared
+            self.offered.set('Verified firmware ready: ' + available.tag if available else 'No verified firmware ready. Choose a firmware file from this computer.')
+            self.status.set(warning or 'Latest stable firmware ready for Wi-Fi and USB: ' + self.prepared.tag + '. Choose your connection and update.')
         self.run(job, done)
+
+    def choose_firmware(self):
+        path = filedialog.askopenfilename(parent=self.root, title='Choose signed Dragon firmware', filetypes=[('Dragon firmware', '*.zip *.json'), ('All files', '*.*')])
+        if not path: return
+        def done(result):
+            prepared, usb_release = result
+            if prepared: self.prepared = self.live_release = prepared
+            self.release = usb_release if self.is_usb() and usb_release else self.prepared
+            available = usb_release or prepared
+            self.offered.set('Verified local firmware: ' + available.tag)
+            self.status.set('Firmware file verified and saved for ' + ('Wi-Fi and USB.' if prepared and usb_release else 'USB only.' if usb_release else 'Wi-Fi only. Choose the complete firmware ZIP for USB.'))
+        self.run(lambda: firmware_files.load(path), done)
 
     def is_direct(self):
         return self.mode.get() == 'Dragon setup Wi-Fi (offline)'
@@ -63,7 +80,6 @@ class App:
             self.restore_wifi(after=self.change_mode); return
         self.release = self.prepared if self.is_direct() or self.is_usb() else self.live_release
         self.show_devices([])
-        self.usb_fresh.set(False)
         self.usb_gate.stop(); self.usb_auto.set(False)
         from workshop_ui import TEAL, CARD, FOREST
         for value, button in self.mode_buttons:
@@ -78,8 +94,7 @@ class App:
         if self.is_usb():
             self.find.configure(text='Find USB dragons')
             self.add.configure(text='USB ports listed at left')
-            self.check.configure(text='Download USB files')
-            self.instructions.set('Disconnect external/product power before connecting laptop USB to the internal ESP32. Choose Update to keep saved dragons, or Fresh install for an empty/reused board. Enable Auto, then connect one board at a time. Keep USB Tools with the app.')
+            self.instructions.set('Disconnect external/product power before connecting laptop USB to the internal ESP32. Firmware is detected automatically. Enable Auto if wanted, then connect one board at a time. Keep USB Tools with the app.')
             self.status.set('USB discovery lists ports without opening or resetting the board. Use Auto or choose a port to update manually.')
         elif self.is_direct():
             self.find.configure(text='Find & update all dragons')
@@ -95,11 +110,13 @@ class App:
             self.status.set('Ready. Check for updates and find your dragon.')
         self.offered.set(('Prepared offline firmware: ' if self.is_direct() else 'Main firmware available: ') + self.release.tag if self.release else 'No verified offline download yet.' if self.is_direct() else 'Choose Check for updates while connected to internet.')
         if self.is_usb():
-            self.address.pack_forget(); self.add.pack_forget()
+            self.address.pack_forget(); self.add.pack_forget(); self.check.pack_forget()
         elif self.is_direct():
+            self.check.pack(side='right')
             self.address.pack_forget()
             self.add.pack(side='left', padx=8, before=self.check)
         else:
+            self.check.pack(side='right')
             self.address.pack(side='left', padx=(10,5), before=self.check)
             self.add.pack(side='left', before=self.check)
         self.controls(False)
@@ -108,7 +125,6 @@ class App:
         self.busy = busy
         for widget in (self.find, self.add, self.check, self.install, self.address, self.password, self.prepare):
             widget.configure(state='disabled' if busy else 'normal')
-        for choice in self.fresh_choices: choice.configure(state='disabled' if busy else 'normal')
         for value, button in self.mode_buttons: button.configure(state='disabled' if busy else 'normal')
         self.mode_picker.configure(state='disabled' if busy else 'readonly')
         if self.is_usb():
@@ -121,7 +137,6 @@ class App:
         if self.usb_gate.enabled:
             for widget in (self.find, self.add, self.check, self.prepare, self.install): widget.configure(state='disabled')
             self.mode_picker.configure(state='disabled')
-            for choice in self.fresh_choices: choice.configure(state='disabled')
             for value, button in self.mode_buttons: button.configure(state='disabled')
         self.stop.configure(text='Stop after this dragon' if self.finalizing or self.usb_writing else 'Stop', state='normal' if (busy and self.installing) or self.usb_gate.enabled else 'disabled')
 
@@ -173,7 +188,7 @@ class App:
         if self.is_usb():
             def done(ports):
                 self.show_devices([core.Device(p.device, p.description or p.device, 'usb', 'Read on update') for p in ports])
-                self.status.set('Select the USB port, confirm USB-only power and choose Update selected dragon.' if ports else 'No USB ports found. Check the data cable and ESP32 connector; try BOOT/RESET if needed.')
+                self.status.set('Select the USB port and choose Update selected dragon.' if ports else 'No USB ports found. Check the data cable and ESP32 connector; try BOOT/RESET if needed.')
             self.run(usb.ports, done)
             return
         if self.is_direct():
@@ -188,7 +203,7 @@ class App:
             self.installing = True
             def job():
                 if not self.prepared:
-                    raise core.UpdateError('No verified firmware is ready. Connect to internet and choose Download for offline use first.')
+                    raise core.UpdateError('No verified firmware is ready. Restart with internet or choose a firmware file from this computer.')
                 return batch.run(self.wifi_session, self.prepared, password, self.cancel,
                     progress=lambda text, percent: self.events.put(('progress', text, percent)),
                     on_result=lambda result: self.events.put(('batch_result', result)))
@@ -214,26 +229,9 @@ class App:
         self.run(lambda: core.Device.probe(address, timeout=4), lambda d: self.show_devices([x for x in self.devices if x.hostname != d.hostname] + [d]))
 
     def check_release(self):
-        if self.is_usb():
-            self.prepare_usb(); return
         if self.is_direct():
             self.restore_wifi(); return
-        def done(release):
-            self.release = self.live_release = release
-            self.offered.set('Main firmware available: ' + release.tag)
-            self.status.set('Choose Find dragons, or add the address from its webpage.')
-        self.run(core.Release.latest, done)
-
-    def prepare_offline(self):
-        if self.is_usb():
-            self.prepare_usb(); return
-        def progress(text, percent): self.events.put(('progress', text, percent))
-        def done(release):
-            self.prepared = release
-            if self.is_direct(): self.release = release
-            self.offered.set('Offline firmware ready: ' + release.tag + ' (both board types)')
-            self.status.set('Download verified and saved. Choose Dragon setup Wi-Fi (offline), then Find & update all dragons. You can close and reopen this app offline.')
-        self.run(lambda: core.prepare_offline(progress=progress), done)
+        self.startup_refresh()
 
     def request_stop(self):
         if self.is_usb():
@@ -266,10 +264,6 @@ class App:
         dialog.protocol('WM_DELETE_WINDOW', lambda: answer(False))
         dialog.bind('<Escape>', lambda event: answer(False)); dialog.bind('<Return>', lambda event: answer(False))
         abort.focus_set(); dialog.grab_set()
-
-    def fresh_changed(self):
-        self.controls(self.busy)
-        self.status.set('Fresh install replaces existing firmware and saved data. Backup runs automatically; you are only prompted if it cannot be made.' if self.usb_fresh.get() else 'Update mode preserves saved dragons. Empty boards are initialized only after verifying the entire flash is erased.')
 
     def toggle_usb_auto(self):
         if not self.usb_auto.get():
@@ -321,7 +315,6 @@ class App:
         selected = self.tree.selection()
         if not selected or not selected[0].isdigit():
             messagebox.showinfo('Choose a USB port', 'Choose Find USB dragons, then select the connected board.', parent=self.root); return
-        fresh = self.usb_fresh.get()
         port = self.devices[int(selected[0])].address
         release = self.usb_release()
         self.usb_port = port
@@ -330,7 +323,7 @@ class App:
         def job():
             target = release or core.Release.latest()
             folder = usb.prepare(target)
-            result = usb.update(port, target, folder, True, emit=lambda text: self.events.put(('progress', str(text), 0)), fresh=fresh, backup_decision=self.backup_decision)
+            result = usb.update(port, target, folder, True, emit=lambda text: self.events.put(('progress', str(text), 0)), backup_decision=self.backup_decision)
             return result
         def done(result):
             self.usb_writing = False
@@ -463,9 +456,20 @@ if __name__ == '__main__':
                         for firmware in ('v0.3.0-beta.3', 'v0.3.0-beta.9'):
                             saved.package(core.Device('http://192.168.4.1', 'Dragon-Kingdom-000000', board, firmware))
                 finally: core.download_json = downloader
+                usb_folder = usb.prepare(release, cache=Path(folder) / 'usb')
                 usb.prepare(release, cache=Path(folder) / 'usb')
-                usb.prepare(release, cache=Path(folder) / 'usb')
-            result = 'PASS: packaged HTTPS, signed main release ' + release.tag + ', persistent offline reload and all four packages without internet'
+                local_file = firmware_files.create_file(Path(folder)/'firmware.zip', folder, usb_folder)
+                old_cache, old_usb_cache = core.cache_folder, usb.bundle_folder
+                core.cache_folder = lambda: Path(folder)/'imported'
+                usb.bundle_folder = lambda: Path(folder)/'imported-usb'
+                core.download_json = blocked
+                try:
+                    imported, imported_usb = firmware_files.load(local_file)
+                    assert imported.tag == release.tag == imported_usb.tag
+                finally:
+                    core.cache_folder, usb.bundle_folder = old_cache, old_usb_cache
+                    core.download_json = downloader
+            result = 'PASS: packaged HTTPS, signed main release ' + release.tag + ', persistent offline reload, all four packages and local Wi-Fi/USB firmware import without internet'
             code = 0
         except Exception:
             result, code = traceback.format_exc(), 1

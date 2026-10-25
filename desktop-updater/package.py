@@ -47,7 +47,7 @@ def build():
         raise ValueError('Dependency source hash/size mismatch')
     (notices / sdist['filename']).write_bytes(source)
     source_dir = notices / 'updater-source'; source_dir.mkdir(exist_ok=True)
-    for name in ('main.py', 'updater_core.py', 'wifi_control.py', 'batch_update.py', 'usb_update.py', 'workshop_ui.py', 'usb_tool.py', 'prepare_usb_service.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
+    for name in ('main.py', 'updater_core.py', 'wifi_control.py', 'batch_update.py', 'usb_update.py', 'workshop_ui.py', 'firmware_files.py', 'usb_tool.py', 'prepare_usb_service.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
         shutil.copyfile(ROOT / name, source_dir / name)
     shutil.copytree(service_path / 'usb_service', source_dir / 'usb_service', dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__'))
     # Distribute the unmodified GPL CLI separately, with its exact source.

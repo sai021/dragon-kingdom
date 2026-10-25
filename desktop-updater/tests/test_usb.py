@@ -114,13 +114,16 @@ class UsbTests(unittest.TestCase):
         self.assertFalse(gate.waiting)
         self.assertEqual(gate.choose({'COM19'}, now=9), 'COM19')
 
-    def test_fresh_selection_authorizes_replacement_and_propagates_backup_prompt(self):
+    def test_unknown_schema_enters_detection_and_prompt_instead_of_fresh_install_error(self):
         folder=self.prepare();recovery=usb.service();decision=Mock(return_value=True)
         with patch.object(usb,'ports',return_value=[SimpleNamespace(device='COM17')]), \
-             patch.object(usb,'helper',return_value=Path('helper')), patch.object(recovery,'install_fresh',return_value='Updated') as fresh:
-            usb.update('COM17',self.release,folder,True,fresh=True,backup_decision=decision)
-        self.assertTrue(fresh.call_args.kwargs['replace_existing'])
-        self.assertIs(fresh.call_args.kwargs['backup_decision'],decision)
+             patch.object(usb,'helper',return_value=Path('helper')), \
+             patch.object(recovery,'read_running_version',return_value='v0.3.0'), \
+             patch.object(recovery,'update_if_newer',side_effect=ValueError('Source saved-data schema is unknown.')), \
+             patch.object(recovery,'install_fresh',return_value='Updated') as install:
+            usb.update('COM17',self.release,folder,True,backup_decision=decision)
+        self.assertFalse(install.call_args.kwargs['replace_existing'])
+        self.assertIs(install.call_args.kwargs['backup_decision'],decision)
 
     def test_missing_runtime_checks_for_fully_blank_flash_without_authorizing_erasure(self):
         folder=self.prepare();recovery=usb.service()
@@ -130,3 +133,32 @@ class UsbTests(unittest.TestCase):
              patch.object(recovery,'install_fresh',return_value='Updated empty board') as fresh:
             usb.update('COM17',self.release,folder,True)
         self.assertFalse(fresh.call_args.kwargs['replace_existing'])
+
+    def test_unrecognized_board_reaches_two_choice_prompt_through_actual_service(self):
+        folder=self.prepare(); recovery=usb.service()
+        for proceed in (False,True):
+            commands=[]; prompts=[]
+            def command(argv,**kwargs):
+                commands.append(argv)
+                if 'flash-id' in argv:
+                    return SimpleNamespace(returncode=0,stdout='Chip type: ESP32-S3\nDetected flash size: 4MB',stderr='')
+                if 'read-flash' in argv:
+                    offset=argv[argv.index('read-flash')+1]
+                    Path(argv[-1]).write_bytes(b'\0'*(4*1024*1024) if offset=='0' else b'\xff'*0x5000)
+                return SimpleNamespace(returncode=0,stdout='',stderr='')
+            def decide(message):
+                self.assertFalse(any('write-flash' in c or 'erase-flash' in c for c in commands))
+                prompts.append(message); return proceed
+            with self.subTest(proceed=proceed), patch.object(usb,'ports',return_value=[SimpleNamespace(device='COM17')]), \
+                 patch.object(usb,'helper',return_value=Path('helper')),patch.object(recovery,'ROOT',self.cache), \
+                 patch.object(recovery,'read_running_version',return_value=None),patch.object(recovery,'check_startup') as startup, \
+                 patch.object(recovery.subprocess,'run',side_effect=command):
+                if proceed:
+                    result=usb.update('COM17',self.release,folder,True,backup_decision=decide)
+                    self.assertTrue(result.startswith('Updated'))
+                    startup.assert_called_once()
+                else:
+                    with self.assertRaisesRegex(ValueError,'aborted before erasing'):
+                        usb.update('COM17',self.release,folder,True,backup_decision=decide)
+                    self.assertFalse(any('write-flash' in c or 'erase-flash' in c for c in commands))
+                self.assertEqual(len(prompts),1)

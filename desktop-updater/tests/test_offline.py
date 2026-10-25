@@ -47,6 +47,6 @@ class OfflineTests(unittest.TestCase):
         with self.assertRaises(c.UpdateError):c.PreparedRelease.load(self.folder)
     def test_missing_cache_requests_download_without_network(self):
         with patch.object(c,'download_json',side_effect=AssertionError('No automatic network fallback')):
-            with self.assertRaisesRegex(c.UpdateError,'Download for offline use'):c.PreparedRelease.load(self.folder)
+            with self.assertRaisesRegex(c.UpdateError,'choose a firmware file'):c.PreparedRelease.load(self.folder)
 
 if __name__=='__main__':unittest.main()

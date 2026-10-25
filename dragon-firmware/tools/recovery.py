@@ -96,7 +96,10 @@ def install_fresh(port,usb_only,replace_existing=False,emit=print,cache=None,too
             replace_existing=True
             emit('User chose Continue without backup. Installing without a verified backup.')
         if not blank and not replace_existing:
-            raise ValueError('This board has existing firmware or saved data. To replace it, choose Fresh install. Nothing was erased. Backup: '+str(before))
+            message='The existing firmware or saved-data format is not recognized, so a compatible Dragon backup is unavailable. Continuing will replace the existing firmware and saved data. A raw flash snapshot was saved privately, but it is not a compatible Dragon settings backup.'
+            if backup_decision is None or not backup_decision(message):raise ValueError('Installation aborted before erasing or writing.')
+            replace_existing=True
+            emit('User chose Continue without backup for unidentified firmware.')
         (session/'evidence.json').write_text(json.dumps({'board':board,'size':length,'sha256':digest(before) if backup_available else None,'empty':blank,'replacement_selected':replace_existing,'backup_available':backup_available,'firmware_tag':info['firmware_tag']},indent=2),encoding='utf-8')
         if not blank:
             emit('Fresh installation selected. Erasing the previous contents...')

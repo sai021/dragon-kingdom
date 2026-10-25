@@ -22,7 +22,7 @@ import certifi
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-APP_VERSION = '1.6.0'
+APP_VERSION = '1.7.0'
 REPO = 'sai021/dragon-kingdom'
 GUIDE = 'https://sai021.github.io/dragon-kingdom/update/'
 MAX_IMAGE = 0x180000
@@ -202,7 +202,7 @@ class PreparedRelease:
                     verify_package(data['packages'][f'{board}-{kind}'], info, board, old)
             return cls(info['firmware_tag'], info, data['packages'])
         except Exception as e:
-            raise UpdateError('No complete verified offline download is ready. Join internet Wi-Fi and choose Download for offline use first.') from e
+            raise UpdateError('No complete verified offline download is ready. Restart with internet or choose a firmware file from this computer.') from e
 
     def package(self, device):
         old = legacy(device.firmware)

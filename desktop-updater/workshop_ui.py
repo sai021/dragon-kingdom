@@ -74,12 +74,6 @@ def build(app, root):
     app.instructions = tk.StringVar()
     ttk.Label(panel, textvariable=app.instructions, wraplength=970, style='Muted.TLabel').pack(anchor='w', pady=(10, 12))
     app.usb_group = ttk.Frame(panel)
-    policy = ttk.Frame(app.usb_group); policy.pack(fill='x')
-    ttk.Label(policy, text='INSTALLATION', style='Section.TLabel').pack(side='left', padx=(0, 15))
-    app.fresh_choices = []
-    for title, value in [('Update & keep saved dragons', False), ('Fresh install / reuse this board', True)]:
-        button = ttk.Radiobutton(policy, text=title, value=value, variable=app.usb_fresh, command=app.fresh_changed)
-        button.pack(side='left', padx=(0, 16)); app.fresh_choices.append(button)
     app.usb_notice = ttk.Label(app.usb_group,
         text='Please connect USB only to the ESP32. Disconnect the bottom/external power first; never use both power inputs.',
         wraplength=970, style='Muted.TLabel')
@@ -89,7 +83,7 @@ def build(app, root):
     app.devices_frame = ttk.Frame(panel); app.devices_frame.pack(fill='both', expand=True)
     heading = ttk.Frame(app.devices_frame); heading.pack(fill='x', pady=(0, 8))
     ttk.Label(heading, text='02   YOUR DRAGONS', style='Section.TLabel').pack(side='left')
-    app.prepare = ttk.Button(heading, text='Download for offline use', command=app.prepare_offline); app.prepare.pack(side='right')
+    app.prepare = ttk.Button(heading, text='Choose firmware file…', command=app.choose_firmware); app.prepare.pack(side='right')
     toolbar = ttk.Frame(app.devices_frame); toolbar.pack(fill='x', pady=(0, 9))
     app.find = ttk.Button(toolbar, style='Primary.TButton', text='Find dragons', command=app.find_devices); app.find.pack(side='left')
     app.address = ttk.Entry(toolbar, width=19); app.address.pack(side='left', padx=(10, 5))
