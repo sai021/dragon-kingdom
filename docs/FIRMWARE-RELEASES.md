@@ -1,9 +1,10 @@
 # Firmware releases and local preparation
 
-**Shipping stable:** v0.3.0, promoted from beta 2. **Calibration-aware published beta:**
-v0.3.0-beta.3. **Local development:** v0.3.0-beta.4, unpublished and awaiting physical
-acceptance. The corrected C3 must retain calibration-aware firmware. The exact
-firmware mix already dispatched has not been inventoried.
+**Shipping stable:** [v0.3.1](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.1), preserving beta-9 application behavior and C3 calibration, with lower night glow, low-light colour rounding, parent dropdowns and the long-redirect HTTPS repair. See [release evidence](RELEASE-0.3.1-2026-10-25.md).
+
+The owner confirms shipped lamps run beta 3. Their old HTTPS downloader cannot be relied on; use the [Windows/Mac desktop updater or phone-only repair instructions](https://sai021.github.io/dragon-kingdom/update/) for a deliberate format-1 signed bridge once. Ordinary format-2 files are for beta 4+ and future updates. Both formats contain the same board-matched calibration-aware application. Older 0.2.x devices require signed USB migration. Do not install beta-2-based old stable 0.3.0 on corrected C3 units.
+
+GitHub latest points to firmware 0.3.1; normal new-format Release discovery follows it. Publish desktop updater releases with `--latest=false` so they cannot replace the firmware pointer. Historical firmware-beta assets remain unchanged; the desktop app offers main releases only.
 
 Release is the default update channel; Beta is an explicit parent choice. Both
 require a parent to check and install. Home Wi-Fi with internet and a synchronized

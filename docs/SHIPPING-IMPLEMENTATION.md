@@ -1,5 +1,17 @@
 # Shipping reliability implementation - 24 October 2026
 
+## Publication checkpoint - 25 October 2026
+
+At the owner's request, firmware 0.3.1 and Windows/Mac updater 1.0.0 are published.
+The revised manual was published first. The signed beta-3 Wi-Fi bridge passed a
+real S3 installation with preserved settings and validated startup. See
+[the current release record](RELEASE-0.3.1-2026-10-25.md) and the
+[family guide](https://sai021.github.io/dragon-kingdom/update/).
+Earlier unpublished/checklist statements below are historical checkpoints.
+
+
+The initial beta-4 implementation below is superseded by the [beta-6 parent-page and GitHub transport follow-up](PARENT-PAGE-FIXES-2026-10-25.md), including live corrected-C3 Wi-Fi acceptance and current build hashes. Earlier no-device statements describe the initial software-only checkpoint.
+
 ## Baseline and scope
 
 Branch `codex/shipping-reliability` starts from beta 3 development `7b0d9dc`.
@@ -22,7 +34,7 @@ locking, All protection, catalog IDs or saved-data layouts were changed.
 | Batch acceptance permits missing identity/validation and bare-board zero budget | Both launchers use signed production recovery. Expected board/tag/running-image digest, hashes/layout, preserved NVS, VALID app, increasing uptime and 400 mA USB estimate required. Developer checks explicitly cannot grant product acceptance. | Serial/GUI/ROM/USB operations simulated; wrong/missing identity and zero budget block checks. Physical batch verification pending. |
 | Clean Python tests rely on undeclared crypto; packaging in ignored scripts | Pinned test/service dependencies, explicit CI install, generated-header check, maintained immutable preparation with external key, source commit/fingerprint and toolchain. | Clean virtual-environment Python tests and ephemeral-key package preparation tests. No real release key used or release signed. |
 | Lost offline chunk reply forces restart | Three bounded browser retries; server acknowledges only the exact last duplicate without rehash/write. Changed duplicate or wrong offset rejected. Cancel aborts; retry starts anew. | Actual-handler duplicate/content/offset tests; physical complete/interrupt/retry uploads pending. 512-byte bound retained. |
-| Large page copy/poll overhead | Deterministic gzip page when supported, raw fallback; hidden-page polling paused, refresh on return, failure backoff capped at 30 s. | Embedded page 50,621 UTF-8 bytes versus 15,702 gzip bytes (69% smaller payload). Round-trip test and phone simulation pass. Heap/TLS/page latency on C3 still to measure. |
+| Large page copy/poll overhead | Deterministic gzip page when supported, raw fallback; hidden-page polling paused, refresh on return, failure backoff capped at 30 s. | Embedded page 50,785 UTF-8 bytes versus 15,711 gzip bytes (69% smaller payload). Round-trip test and phone simulation pass. Heap/TLS/page latency on C3 still to measure. |
 | Support needs private serial captures | Parent-only JSON export contains firmware/board, reset reason, uptime, OTA/startup state, estimated ceiling, calibration flag and connection/heap metrics. | Whitelisted response inspected; no password/token/SSID/child-name fields. Physical support capture remains pending. |
 | Repeated unchanged rotation saves write NVS | Read/compare existing valid record and skip unchanged writes. | Native assertion verifies no extra write; existing persistence/conflict behavior retained. |
 | Printed/current guides describe removed login/purple hold | Coordinated parent/manual/setup/rear-label update; historical guides explicitly archived. QR destination unchanged. | All eight manual pages plus card and labels rendered and visually inspected locally. Actual print/phone scan acceptance pending. |
@@ -57,7 +69,20 @@ pinned dependencies. All 17 native suites pass using Zig 0.13.0. The existing
 check pass. Real RSA tests use ephemeral test keys and do not alter the trust root.
 The initial fresh Arduino build exposed an auto-prototype namespace issue, fixed
 by qualifying signature types; both pinned target builds subsequently completed.
-Final source-build sizes/hashes are recorded below after the committed rebuild.
+Final fresh builds completed from committed source `6b69972` (ESP32 core 3.2.1,
+Adafruit NeoPixel 1.12.5). Actual downloadable application sizes and whole-file
+SHA-256 values:
+
+| Board | Application bytes | SHA-256 |
+| --- | ---: | --- |
+| S3 | 1,393,344 | `9a821eb4165e0f11bcd02bc2abfe695c450c56007765598c3c992008256e33e6` |
+| C3 | 1,437,584 | `f90288f48628b0d5f22fd772fb019b79a7c6d6b3b8db7e9839341538b694d450` |
+
+Both fit the 1,572,864-byte application slot. Compiler static RAM: S3 62,932 bytes;
+C3 53,888 bytes. Per-board ignored `build/<board>/provenance.json` records the full
+commit, source fingerprint, toolchain and application/bootloader/partition hashes.
+These are unsigned build outputs; signing and publication have not happened.
+
 No cached compile/link output is presented as a fresh build.
 
 No connected device was probed, flashed or power-cycled. No physical acceptance,
@@ -91,3 +116,10 @@ bundle application's validated appended digest. An equal tag alone cannot pass a
 changed image. This ESP image digest differs from the whole-file download SHA-256;
 both are checked for their respective purpose. Build provenance also binds image
 hashes and refuses source changes during compilation.
+
+Final browser regression also verifies identical retry payloads after a lost acknowledgement,
+explicit Return to Release intent, hidden-tab suppression and return refresh, support
+JSON download, and cancellation while the last chunk is in flight. The final-chunk
+cancellation test exposed and fixed an unintended finalize-after-cancel path. Production
+serial simulations reject wrong board, wrong/missing image digest and OTA state 20
+(which must not be mistaken for VALID state 2). All 59 Python tests pass after this fix.

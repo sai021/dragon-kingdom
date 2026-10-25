@@ -1,4 +1,85 @@
-# Project checkpoint — 19 October 2026
+# Project checkpoint — 25 October 2026
+
+## Current publication: firmware 0.3.1 and family updater
+
+The owner requested publication and now reports the S3 is working without restarts. [Main firmware 0.3.1](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.1) is published, with all five CI jobs passing at 2cb953a and all 11 uploaded assets matching the prepared signed files. It retains beta-9 behavior with only the version label changed. Shipped beta-3 lamps need the explicit format-1 bridge once. Both board packages preserve calibration and schema 1.
+
+The revised ten-page manual was published FIRST at the existing printed-QR URL. Stable /update/ and /setup/ help and the one-page class notice are published. The desktop application supports Windows x64, Apple Silicon Mac and Intel Mac, with deliberate installs, signed verification, private backups and post-boot settings checks. Simulator tests and packaged launch checks are separate from physical acceptance. The app is not Windows certificate-signed or Apple notarized; the guide includes the phone-only alternative.
+
+See [release record](RELEASE-0.3.1-2026-10-25.md), [family guide](https://sai021.github.io/dragon-kingdom/update/) and [desktop source](../desktop-updater/README.md). Older entries below describe earlier checkpoints and do not override this publication. No customer messages were sent and no broad field endurance result is claimed.
+
+
+## Shipped inventory and beta-3 HTTPS issue — 25 October 2026
+
+The owner confirms all units have shipped and all shipped units run v0.3.0-beta.3; the earlier unknown-firmware-mix statements are superseded. Board counts were not supplied. Beta 3 has the bounded-request HTTPS redirect issue fixed in beta 6+, so self-downloading a repair cannot be assumed. Its local Wi-Fi signed-file uploader remains a path that does not require opening the enclosure. It requires a format-1 legacy bridge, not the ordinary format-2 beta-9 package. Existing beta-9 bridges are cryptographically compatible, but beta 9 remains a prerelease with the unresolved S3 issue and old online discovery feeds. No bulk rollout, customer contact or channel change was performed. See [remediation options and draft parent workflow](SHIPPED-BETA-3-HTTPS-2026-10-25.md).
+
+## S3 previous-firmware comparison — 25 October 2026
+
+At the user's request, tested beta 9 → signed beta 8 → published beta 9 on the same laptop-USB-only S3, retaining the 400 mA ceiling. No captured reset in either five-minute beta-8 or return beta-9 observation; both had a failed support sample but continuously increasing retrieved uptime. Full-gain controlled phases were included. Both USB services preserved raw NVS exactly; final persistent settings matched. This does not reproduce a beta-9-specific fault or resolve the earlier intermittent resets. Left beta 9 VALID, automatic light restored and LEDs temporarily off; C3 untouched. See [conditions, limits and results](S3-FIRMWARE-COMPARISON-2026-10-25.md).
+
+## S3 restart recurrence — 25 October 2026
+
+The S3 restart problem recurred after the brief no-restart report. Live tests captured repeated uptime drops/power-on resets with USB detected and the 400 mA ceiling, including after temporary lights-off commands. The USB port also disappeared during a ROM-loader-only test; the board later returned to the normal application without an issued restart command. This points outside the Dragon application but does not isolate the USB/power/reset fault. Startup/lifecycle/current-limit native suites pass; no firmware or saved settings were written. The beta-9 release notes now flag the unresolved S3 issue. See [live tests and next physical isolation step](S3-RESTART-RECURRENCE-2026-10-25.md).
+
+## Published beta 9 — 25 October 2026
+
+[Beta 9 is published](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.0-beta.9) as an opt-in manual-download prerelease with ordinary format-2 packages, explicit legacy bridges and signed USB recovery. All five CI jobs pass at d207609; both application binaries are identical to those tested on the lamps. The user praised the colour accuracy and reported no restarts, with the latest power arrangement not separately confirmed. Stable latest, existing update feeds and hosted manual remain unchanged. See [publication verification and remaining acceptance](BETA-9-PUBLICATION-2026-10-25.md). Older candidate/local-only statements below are historical.
+
+## Current colour candidate: beta 9 — 25 October 2026
+
+Source `fc1b770` removes a low-light red bias by combining ambient/Glow scaling, rounding to nearest and retaining a symmetric RGB floor. 59 Python tests, 18 native suites, browser checks and both pinned builds pass; signed packages are local only. The corrected C3 runs beta 9 with VALID startup and preserved settings/calibration. Two S3 Wi-Fi uploads were interrupted before finalisation, followed by a user-confirmed uncommanded restart loop. The user then connected the main S3 to laptop USB with external power off. USB service installed beta 9 with all 20,480 NVS bytes unchanged, verified image/startup VALID, and increasing uptime through 70 seconds at the 400 mA USB ceiling. Both lamps now have beta 9. The cause of the external-power restart loop remains unproven; a known-good 5 V supply/cable test requires unplugging laptop USB first. Actual dark-room colour comparison remains pending. See [implementation, builds and live evidence](LOW-LIGHT-COLOUR-2026-10-25.md).
+
+## Current candidate: beta 8 — 25 October 2026
+
+The user's four-corner bench comparison led to a much lower automatic night-glow curve (about 1% to the existing 80% channel cap, before artwork/current/selected Glow reductions). Both lamps run beta 8 from `f524ddf`, with VALID startup, preserved settings/calibration and automatic light active. The separate USB bench board was not flashed. 59 Python tests, 18 native suites, browser checks and fresh both-board builds pass. See [exact scaling, bench observations and live evidence](NIGHT-GLOW-2026-10-25.md). The new dark-room/overnight result awaits user observation. Nothing was published.
+
+## Current candidate: beta 7 — 25 October 2026
+
+Both lamps run beta 7 from `89489b6`, with collapsed parent subsections, Connection & power, a support-download explanation and the user's backplate service instructions. Both Wi-Fi installs reached VALID startup and preserved settings and calibration presence. The live panels report product supply with an estimated 2,400 mA limit. 59 Python tests (clean rerun after a Tkinter teardown abort), 18 native suites, browser checks and fresh both-board builds pass. The nine-page manual edition 0.9 was rendered and inspected locally. See [implementation and live evidence](PARENT-DROPDOWNS-2026-10-25.md). Nothing was published; older candidate checkpoints below remain historical.
+
+## User-reported checks on both lamps — 25 October 2026
+
+Both beta-6 lamps (S3 and corrected C3) passed user-observed normal lighting, basic touch, room-light dimming/brightening, and normal-supply power-cycle with webpage reconnection. Detailed gestures, actual phone setup, router-outage recovery, rollback, restore interruption, USB acceptance, measured electrical/thermal behavior and overnight checks remain pending. These observations do not establish complete release acceptance.
+
+## S3 Wi-Fi acceptance — 25 October 2026
+
+The normal-supply-only S3 was identified on beta 2, backed up and updated over Wi-Fi using its signed beta-6 bridge. It reports VALID startup and preserved settings. Both update channels reach GitHub with no reported HTTPS errors; the live parent page selects the S3 package. See [S3 evidence and remaining physical gates](S3-WIFI-ACCEPTANCE-2026-10-25.md). Both the corrected C3 and this S3 now run beta 6. Nothing was published.
+
+## Current candidate: beta 6 — 25 October 2026
+
+Parent-page fixes and the GitHub long-redirect fix are committed at `69ba10a`. The corrected C3 runs beta 6 after a signed Wi-Fi update, with VALID startup, calibration present and saved settings preserved. Release checking now reaches GitHub and reports that compatible new-format online metadata is not published yet. 59 Python tests, 18 native suites, browser checks and fresh S3/C3 builds pass. See [changes, live evidence and hashes](PARENT-PAGE-FIXES-2026-10-25.md). Nothing was published; remaining physical acceptance is pending. Earlier candidate notes below are historical.
+
+## Corrected C3 Wi-Fi acceptance — 25 October 2026
+
+The corrected C3 was updated from beta 3 to beta 4 over Wi-Fi with laptop USB disconnected, using a locally signed legacy bridge. It rejoined Wi-Fi and reports VALID startup and calibration present. Saved user settings compared unchanged; only transient phone clock/timezone rules reset. Signed two-board assets are prepared locally; nothing was published. Physical LED/touch/LDR and remaining acceptance gates are pending. See [physical evidence and limitations](HARDWARE-TEST-2026-10-25.md). The implementation checkpoint below predates this live test.
+
+## Current local implementation
+
+Unpublished beta 4 is on `codex/shipping-reliability`, based on calibration-aware
+beta 3. Stable shipping v0.3.0 remains beta-2-based and must not replace the
+corrected C3 firmware. See [implementation, evidence and exact publication gates](SHIPPING-IMPLEMENTATION.md).
+59 clean-environment Python tests, 17 native suites, simulated phone checks and
+fresh pinned S3/C3 builds pass. The corrected eight-page manual, setup card and
+rear labels are prepared and visually checked locally; the printed QR destination
+is unchanged. Nothing was published or flashed. Physical acceptance is still
+required. The dated sections below are historical checkpoints.
+
+
+## Shipping review — 24 October 2026
+
+The owner confirms hardware is made, firmware is loaded and shipping has started.
+Hardware is fixed for further improvement work. See the
+[detailed shipping review](SHIPPING-REVIEW-2026-10-24.md) for findings across
+firmware, interface, updates, production tooling and customer instructions.
+Fresh checks passed: 51 Python tests, 16 native suites and the existing simulated
+phone-browser workflow. Additional handler probes reproduced an older signed-tag
+offer and rejection/retention of a corrupt restore journal. No device was probed
+or flashed, no fresh board build was performed, and no physical acceptance is
+inferred from shipping status. Firmware and published artifacts are unchanged.
+
+The review distinguishes stable 0.3.0 from beta 3; the exact mix already shipped
+is not recorded here. Older dated entries below are historical evidence, not a
+single description of current customer behavior.
 
 ## Beta 2 promoted to main Release — 24 October 2026
 

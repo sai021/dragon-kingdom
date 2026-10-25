@@ -6,13 +6,13 @@ matrix behind a dragon face.
 Families can pick dragons, play lighting effects, save personal collections,
 and make custom dragons without installing an app or writing code.
 
-**Main firmware release:** [0.3.0](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.0),
-promoted from beta 2 with only its version label changed. Existing beta 2 boards
-can stay installed. This checkout also contains the opt-in beta 3 development
-line below. Keep the voltage-corrected C3 on beta 3; 0.3.0 does not apply its
-unit calibration.
+**Main firmware release, 25 October 2026:** [0.3.1](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.1) is published with the GitHub HTTPS repair, lower night glow, balanced low-light colour and calibration-aware C3 support. The owner reports the S3 is working without further restarts; earlier intermittent resets were not conclusively isolated.
 
-**Beta firmware, 24 October 2026:** [0.3.0 beta 3](docs/NEXT-RELEASE.md)
+All shipped lamps were beta 3. Use the [family update guide](https://sai021.github.io/dragon-kingdom/update/) for the one-time signed bridge over Wi-Fi, Windows/Mac updater downloads, phone-only file upload and repeat setup. No enclosure opening or laptop USB is needed. [User manual](https://sai021.github.io/dragon-kingdom/manual.pdf) and [printable class notice](https://sai021.github.io/dragon-kingdom/update-notice.pdf) use stable public addresses. See [publication evidence and limits](docs/RELEASE-0.3.1-2026-10-25.md).
+
+Earlier release checkpoints below are historical. In particular, old stable 0.3.0 was beta-2-based and did not apply the corrected C3's voltage calibration; use calibration-aware 0.3.1 for its current update.
+
+**Published beta 3 checkpoint, 24 October 2026:** [0.3.0 beta 3](docs/history/beta-3-NEXT-RELEASE.md)
 adds contrasting Glitter, opt-in Beta/default Release update channels,
 login-free play, firmware-enforced parent settings, startup AP/home-network
 handover, rotation, signed offline updates, two slots and backup/restore. Parent
@@ -23,7 +23,7 @@ passes startup validation. Online installation, phones and C3 physical acceptanc
 remain pending. The beta is for experienced testers; the previous published
 prototype described below is 0.2.4. See [release channels](docs/FIRMWARE-RELEASES.md).
 
-**Current state: working development prototype, firmware 0.2.4, updated 19 October 2026.**
+**Historical checkpoint: prototype firmware 0.2.4, 19 October 2026.**
 The [Dragon Kingdom release](docs/KINGDOM-RELEASE-2026-10-19.md) consolidates the
 accumulated source, interface, asset, palette and documentation improvements.
 Separate S3/C3 firmware downloads, checksums and the manual are on
@@ -77,8 +77,8 @@ Their review and physical validation, along with build photos, remain pending.
 - Daylight lighting stays on; a saved daily sunrise alarm gradually brightens
   the wings toward a chosen wake-up time, with a phone preview and stop control.
 
-Weather animations, a parent PIN, firmware updates through the web interface,
-and export/import backups are not implemented yet.
+Shipping v0.3.0 supports parent settings, signed firmware updates and backup/restore.
+Weather animations are not implemented. The fixed parent password is `dragon123`.
 
 ## Start here
 
