@@ -1,6 +1,18 @@
 # Project checkpoint — 25 October 2026
 
-## Current updater: Easy Update 1.3.0
+## Current updater: Easy Update 1.4.0
+
+Startup checks the signed latest stable firmware and prepares the complete offline
+set automatically, preserving the prior verified cache on failure. Startup never
+installs firmware or changes Wi-Fi. Find & update all dragons explicitly scans
+Dragon setup networks, joins each in turn and updates only older versions. Current
+or newer lamps are skipped; results list each outcome and backup. Stop aborts
+before finalization, or finishes the current restart check and skips the rest.
+Wi-Fi restoration failure stops the batch. Home Wi-Fi mode remains necessary
+for already home-connected lamps. Firmware remains 0.3.1.
+See [implementation and publication evidence](UPDATER-1.4.0-2026-10-25.md).
+
+## Earlier updater: Easy Update 1.3.0
 
 The app is now named Dragon Kingdom Easy Update and opens in direct/offline mode.
 The parent password is prefilled, editable and memory-only; one Update selected

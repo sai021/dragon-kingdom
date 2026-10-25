@@ -215,7 +215,7 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 1.3, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 1.4, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
 
 
 <!-- page -->
@@ -252,28 +252,28 @@ Open Connection & power near the top of the webpage for your home-network addres
 
 Easy Update - the recommended Windows/Mac method
 
-Shipped beta-3 dragons can show an HTTPS update error. Touch and local controls still work. **Do not factory-reset.** Keep the dragon on its normal bottom USB-C supply; no laptop USB or opening the box.
+For the shipped beta-3 HTTPS error and later updates. **Do not factory-reset.** Keep each dragon on its normal bottom USB-C supply; no laptop USB or opening the box.
 
 **Download Easy Update:** https://sai021.github.io/dragon-kingdom/update/
 
 Extract the ZIP. Open **Dragon Kingdom Easy Update.exe** (Windows) or **Dragon Kingdom Easy Update.app** (Mac). Keep the extracted files together.
 
-## Start with offline mode
+## Open, wait, then update
 
-For lamps **not connected to home Wi-Fi**. Offline mode is already selected.
+For lamps **not on home Wi-Fi**. Offline mode is selected. Only use the batch button where all nearby dragons are yours.
 
-1. While the computer has internet, choose **Find dragon Wi-Fi**. The app downloads signed files first and scans. Allow OS Wi-Fi/location permission if asked.
-2. Select your **Dragon-Kingdom-XXXXXX**, then **Connect to selected dragon**. The app switches Wi-Fi and checks its identity.
-3. Review versions and choose **Update selected dragon**. Parent password **dragon123** is filled in and editable; no extra confirmation is needed. Transfer needs no internet.
+1. Open the app on internet. It automatically downloads verified latest stable firmware. Wait until ready; opening installs nothing.
+2. Choose **Find & update all dragons**. Allow OS Wi-Fi/location permission if asked. The app joins each setup network, checks identity and updates older firmware. Current/newer lamps are skipped.
+3. Wait for the results report. Parent password **dragon123** is filled in and editable. Each update saves a private backup and checks startup/settings; transfer needs no internet.
 
 ## Already on home Wi-Fi?
 
-Choose **Home Wi-Fi** instead: put computer and lamp on the same home network, then **Check for updates** and **Find dragons**. Select yours (or **Add address** from its webpage), review versions and update.
+Choose **Home Wi-Fi**: put computer and lamp on the same network, then **Check for updates** and **Find dragons**. Select yours (or **Add address**), then **Update selected dragon**.
 
-A lamp's setup AP closes 15 seconds after joining home Wi-Fi. Power-cycling does not keep it open; use Home Wi-Fi mode for these lamps.
+Setup AP closes 15 seconds after joining home Wi-Fi; these lamps need Home Wi-Fi mode.
 
 ## Let the checks finish
 
-The app saves a private backup, verifies signed firmware, then checks startup and saved settings. Keep power and the app connected. It tries to reconnect and restore the original Wi-Fi. Direct mode waits up to five minutes.
+Keep power and the app connected. It tries to reconnect and restore the original Wi-Fi after each lamp. Checks allow five minutes per lamp. **Stop** cancels safely; after finalization it finishes checking that lamp and skips the rest. If Wi-Fi restoration fails, the batch stops.
 
-If Wi-Fi control is blocked, the download page explains manual connection and phone-only alternatives. Check saved dragons, touch and lighting afterward. If verification times out, check the installed version before retrying. Download fresh files for later offline updates.
+Offline startup uses the verified saved release, which may be older. Reopen on internet for fresh files. Check lighting/touch afterward; inspect the installed version before retrying failures. The guide includes manual and phone-only alternatives.

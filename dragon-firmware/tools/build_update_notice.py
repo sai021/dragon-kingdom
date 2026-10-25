@@ -23,13 +23,14 @@ def build():
     top = paragraph(c, 'If your dragon shows an <b>HTTPS error</b> when checking for updates, there is a repair. Touch play and local phone controls still work. <b>Do not factory-reset it.</b>', 42, top-17, w-84, 11)
     top = paragraph(c, '<b>Easy Update - recommended</b>', 42, top-19, w-84, 16)
     steps = [
-        '<b>1.</b> Keep the dragon on its normal bottom USB-C supply. Scan UPDATE below and download Dragon Kingdom Easy Update for Windows or Mac.',
-        '<b>2. Offline mode is already selected.</b> For lamps <b>not on home Wi-Fi</b>, choose <b>Find dragon Wi-Fi</b> while the computer still has internet. The app downloads first and scans. Select yours and <b>Connect to selected dragon</b>; it switches Wi-Fi for you. Allow OS Wi-Fi/location permission if asked.',
+        '<b>1.</b> Keep each dragon on its normal bottom USB-C supply. Scan UPDATE and download Easy Update for Windows or Mac.',
+        '<b>2.</b> Open the app while the computer has internet. It downloads latest stable firmware automatically. Wait until ready; offline mode is selected.',
+        '<b>3.</b> For lamps <b>not on home Wi-Fi</b>, choose <b>Find &amp; update all dragons</b>. Allow OS Wi-Fi/location permission if asked. It joins each dragon, updates older firmware and skips current/newer lamps. Only use this where all nearby dragons are yours.',
         '<b>Already on home Wi-Fi?</b> Choose <b>Home Wi-Fi</b> instead, then <b>Check for updates</b> and <b>Find dragons</b>, with computer and lamp on the same home network.',
-        '<b>3.</b> Review versions and choose <b>Update selected dragon</b>. Parent password <b>dragon123</b> is filled in and editable; there is no extra confirmation. Keep power and the app connected while it verifies settings and tries to restore your original Wi-Fi.',
+        '<b>4.</b> Wait for the results report. Parent password <b>dragon123</b> is filled in and editable. Each update backs up and checks the lamp, then tries to restore Wi-Fi. <b>Stop</b> finishes safely.',
     ]
     for text in steps: top = paragraph(c, text, 42, top-9, w-84, 10)
-    top = paragraph(c, '<b>No laptop USB or opening the box.</b> If a lamp joins home Wi-Fi, its AP closes after 15 seconds; use Home Wi-Fi mode. The guide includes manual-connection and phone-only alternatives.', 42, top-11, w-84, 10)
+    top = paragraph(c, '<b>No laptop USB or opening the box.</b> Setup AP closes 15 seconds after joining home Wi-Fi. The guide includes manual and phone-only alternatives.', 42, top-11, w-84, 10)
     # Three independent, high contrast QR codes with their quiet zones intact.
     y = 241; size = 33*mm
     for x, title, url, short in [(42, 'UPDATE / DOWNLOADS', BASE+'update/', 'sai021.github.io/<br/>dragon-kingdom/update/'),
