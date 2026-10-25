@@ -1,5 +1,20 @@
 # Dragon Kingdom Updater
 
+Version 1.1.0 has two explicit modes: Home Wi-Fi retains discovery/download on
+the shared LAN; Dragon setup Wi-Fi downloads the complete signed release first,
+then guides the parent to join Dragon-Kingdom-XXXXXX in the OS Wi-Fi menu and
+connects directly to 192.168.4.1. No home-network setup is needed for direct mode.
+The app does not change the computer's Wi-Fi automatically. After the lamp
+restarts, the parent may need to rejoin its Wi-Fi (or home Wi-Fi if its setup
+network disappears). Verification waits up to five minutes in direct mode.
+
+Download for offline use verifies and atomically stores both board types and
+both ordinary/legacy packages in the user's application-data Firmware folder.
+The signed cache survives app restart; every offline load revalidates all files,
+and offline package selection never falls back to internet. Partial downloads
+leave the previous complete cache intact. Re-run the download step on internet
+to prepare a later release. No firmware is installed by downloading/preparing.
+
 Windows and Mac application for deliberate, signed firmware updates over the
 local home network. No USB, firmware bundled into the app, Wi-Fi password input,
 automatic install, factory reset or cloud backup. The same application fetches

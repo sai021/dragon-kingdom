@@ -11,16 +11,27 @@ import updater_core as core
 class App:
     def __init__(self, root, online=True):
         self.root, self.events = root, queue.Queue()
-        self.devices, self.release = [], None
+        self.devices, self.release, self.live_release, self.prepared = [], None, None, None
         self.busy, self.installing, self.finalizing = False, False, False
         self.cancel = threading.Event()
         root.title('Dragon Kingdom Updater')
-        root.geometry('860x660')
-        root.minsize(730, 610)
+        root.geometry('860x790')
+        root.minsize(800, 750)
         panel = ttk.Frame(root, padding=22)
         panel.pack(fill='both', expand=True)
         ttk.Label(panel, text='Keep your dragon up to date', font=('TkDefaultFont', 21, 'bold')).pack(anchor='w')
-        ttk.Label(panel, text='Keep the lamp on its normal supply. Join the same home network on this computer.\nNo USB connection to the lamp is needed.', wraplength=790).pack(anchor='w', pady=(9, 15))
+        ttk.Label(panel, text='Keep the lamp on its normal bottom USB-C supply. No laptop USB connection is needed.', wraplength=750).pack(anchor='w', pady=(9, 10))
+        modes = ttk.Frame(panel); modes.pack(fill='x')
+        ttk.Label(modes, text='Connection:').pack(side='left')
+        self.mode = tk.StringVar(value='Home Wi-Fi')
+        self.mode_picker = ttk.Combobox(modes, textvariable=self.mode, state='readonly', width=31,
+            values=('Home Wi-Fi', 'Dragon setup Wi-Fi (offline)'))
+        self.mode_picker.pack(side='left', padx=10)
+        self.mode_picker.bind('<<ComboboxSelected>>', lambda event: self.change_mode())
+        self.prepare = ttk.Button(modes, text='Download for offline use', command=self.prepare_offline)
+        self.prepare.pack(side='right')
+        self.instructions = tk.StringVar()
+        ttk.Label(panel, textvariable=self.instructions, wraplength=750).pack(anchor='w', pady=(10, 12))
         toolbar = ttk.Frame(panel); toolbar.pack(fill='x')
         self.find = ttk.Button(toolbar, text='Find dragons', command=self.find_devices); self.find.pack(side='left')
         self.address = ttk.Entry(toolbar, width=24); self.address.pack(side='left', padx=(15, 6))
@@ -30,7 +41,7 @@ class App:
         for name, label, width in [('name', 'Dragon', 235), ('board', 'Board', 55), ('firmware', 'Installed firmware', 150), ('address', 'Address', 170)]:
             self.tree.heading(name, text=label); self.tree.column(name, width=width)
         self.tree.pack(fill='both', expand=True, pady=16)
-        self.offered = tk.StringVar(value='Checking the main firmware release...')
+        self.offered = tk.StringVar(value='Choose Check for updates while connected to internet.')
         ttk.Label(panel, textvariable=self.offered, wraplength=790).pack(anchor='w')
         auth = ttk.Frame(panel); auth.pack(fill='x', pady=12)
         ttk.Label(auth, text='Parent password (normally dragon123)').pack(side='left')
@@ -46,12 +57,35 @@ class App:
         ttk.Label(panel, text='Updater ' + core.APP_VERSION + ' · Signed firmware · No automatic installation').pack(anchor='w', pady=(8, 0))
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.drain)
-        if online: self.check_release()
+        if online:
+            try: self.prepared = core.PreparedRelease.load()
+            except core.UpdateError: pass
+        self.change_mode()
+
+    def is_direct(self):
+        return self.mode.get() == 'Dragon setup Wi-Fi (offline)'
+
+    def change_mode(self):
+        self.release = self.prepared if self.is_direct() else self.live_release
+        self.show_devices([])
+        if self.is_direct():
+            self.find.configure(text='Connect to dragon')
+            self.instructions.set('1. While on internet Wi-Fi, choose Download for offline use.\n2. In your computer Wi-Fi menu, join Dragon-Kingdom-XXXXXX (password: dragon123). Stay connected without internet.\n3. Choose Connect to dragon, select it below, then update. No home-Wi-Fi setup is required.')
+            self.status.set('Offline files ready. Join the dragon Wi-Fi, then choose Connect to dragon.' if self.prepared else 'Download the signed files before leaving internet Wi-Fi.')
+        else:
+            self.find.configure(text='Find dragons')
+            self.instructions.set('Connect the lamp and this computer to the same home network. Choose Check for updates, then Find dragons.\nFor a lamp without home Wi-Fi, choose Dragon setup Wi-Fi (offline) above.')
+            self.status.set('Ready. Check for updates and find your dragon.')
+        self.offered.set(('Prepared offline firmware: ' if self.is_direct() else 'Main firmware available: ') + self.release.tag if self.release else 'No verified offline download yet.' if self.is_direct() else 'Choose Check for updates while connected to internet.')
+        self.controls(False)
 
     def controls(self, busy):
         self.busy = busy
-        for widget in (self.find, self.add, self.check, self.install, self.address, self.password):
+        for widget in (self.find, self.add, self.check, self.install, self.address, self.password, self.prepare):
             widget.configure(state='disabled' if busy else 'normal')
+        self.mode_picker.configure(state='disabled' if busy else 'readonly')
+        if self.is_direct():
+            for widget in (self.add, self.address, self.check): widget.configure(state='disabled')
         self.stop.configure(state='normal' if busy and self.installing and not self.finalizing else 'disabled')
 
     def run(self, job, done):
@@ -87,6 +121,12 @@ class App:
         self.status.set(f'Found {len(devices)} dragon(s). Select yours.' if devices else 'No dragons found. Check home Wi-Fi, or enter the lamp address and choose Add address.')
 
     def find_devices(self):
+        if self.is_direct():
+            if not self.prepared:
+                messagebox.showinfo('Download first', 'While connected to internet, choose Download for offline use before joining the dragon Wi-Fi.', parent=self.root); return
+            self.status.set('Looking for the dragon at 192.168.4.1...')
+            self.run(lambda: [core.Device.probe('192.168.4.1', timeout=4)], self.show_devices)
+            return
         self.status.set('Finding dragons on this computer\'s local network...')
         self.run(lambda: core.discover(self.cancel), self.show_devices)
 
@@ -96,10 +136,19 @@ class App:
 
     def check_release(self):
         def done(release):
-            self.release = release
+            self.release = self.live_release = release
             self.offered.set('Main firmware available: ' + release.tag)
             self.status.set('Choose Find dragons, or add the address from its webpage.')
         self.run(core.Release.latest, done)
+
+    def prepare_offline(self):
+        def progress(text, percent): self.events.put(('progress', text, percent))
+        def done(release):
+            self.prepared = release
+            if self.is_direct(): self.release = release
+            self.offered.set('Offline firmware ready: ' + release.tag + ' (both board types)')
+            self.status.set('Download verified and saved. Choose Dragon setup Wi-Fi (offline), join Dragon-Kingdom-XXXXXX in your computer Wi-Fi menu, then choose Connect to dragon. You can close and reopen this app offline.')
+        self.run(lambda: core.prepare_offline(progress=progress), done)
 
     def install_selected(self):
         selected = self.tree.selection()
@@ -115,9 +164,13 @@ class App:
         password = self.password.get()
         if not password:
             messagebox.showinfo('Parent password needed', 'Enter the existing parent password (normally dragon123).', parent=self.root); return
-        if not messagebox.askokcancel('Install firmware?', f'{device.hostname} ({device.board.upper()})\n{device.firmware} → {release.tag}\n\nA backup will be saved before installation. Keep power and Wi-Fi connected until the restart check finishes.', parent=self.root): return
+        direct = self.is_direct()
+        if not messagebox.askokcancel('Install firmware?', f'{device.hostname} ({device.board.upper()})\n{device.firmware} → {release.tag}\n\nA backup will be saved before installation. Keep power and Wi-Fi connected until the restart check finishes.' + ('\nAfter restart, rejoin the dragon Wi-Fi if disconnected. If it disappears, rejoin home Wi-Fi; the app will look for the same dragon.' if direct else ''), parent=self.root): return
         self.installing = True
-        def progress(text, percent): self.events.put(('progress', text, percent))
+        def progress(text, percent):
+            if direct and percent == 88:
+                text += ' Rejoin dragon Wi-Fi after restart if needed; if it disappears, rejoin home Wi-Fi. Waiting up to five minutes.'
+            self.events.put(('progress', text, percent))
         def done(result):
             self.password.delete(0, 'end')
             self.status.set('Update verified: ' + result['firmware'] + '. Backup: ' + result['backup'])
@@ -126,7 +179,7 @@ class App:
             self.devices[int(selected[0])] = updated
             self.tree.item(selected[0], values=(updated.hostname, updated.board.upper(), updated.firmware, updated.address))
             messagebox.showinfo('Your dragon is updated', 'Startup was validated and saved settings match the backup. Reopen the lamp webpage and check normal lighting and touch controls.', parent=self.root)
-        self.run(lambda: core.update(device, release, password, progress, self.cancel), done)
+        self.run(lambda: core.update(device, release, password, progress, self.cancel, reboot_timeout=300 if direct else 180), done)
 
     def close(self):
         if self.busy:
@@ -141,7 +194,19 @@ if __name__ == '__main__':
         import traceback
         try:
             release = core.Release.latest()
-            result = 'PASS: packaged HTTPS and signed main release ' + release.tag
+            import tempfile
+            with tempfile.TemporaryDirectory() as folder:
+                core.prepare_offline(release, folder)
+                downloader = core.download_json
+                def blocked(*args, **kwargs): raise AssertionError('Offline mode attempted an internet download')
+                core.download_json = blocked
+                try:
+                    saved = core.PreparedRelease.load(folder)
+                    for board in ('s3', 'c3'):
+                        for firmware in ('v0.3.0-beta.3', 'v0.3.0-beta.9'):
+                            saved.package(core.Device('http://192.168.4.1', 'Dragon-Kingdom-000000', board, firmware))
+                finally: core.download_json = downloader
+            result = 'PASS: packaged HTTPS, signed main release ' + release.tag + ', persistent offline reload and all four packages without internet'
             code = 0
         except Exception:
             result, code = traceback.format_exc(), 1
@@ -153,7 +218,12 @@ if __name__ == '__main__':
         core.trust_key()
         core.tls_context()
         import psutil, zeroconf
-        root = tk.Tk(); root.withdraw(); App(root, online=False); root.update(); root.destroy()
+        root = tk.Tk(); root.withdraw(); app = App(root, online=False)
+        app.mode.set('Dragon setup Wi-Fi (offline)'); app.change_mode()
+        assert app.is_direct() and str(app.check['state']) == 'disabled'
+        app.mode.set('Home Wi-Fi'); app.change_mode()
+        assert not app.is_direct() and str(app.check['state']) == 'normal'
+        root.update(); root.destroy()
         if sys.stdout: print('PASS: updater public trust root, network dependencies and Tk interface')
     else:
         root = tk.Tk(); App(root); root.mainloop()

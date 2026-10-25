@@ -12,6 +12,7 @@ import socket
 import ssl
 import sys
 import threading
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -21,7 +22,7 @@ import certifi
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-APP_VERSION = '1.0.0'
+APP_VERSION = '1.1.0'
 REPO = 'sai021/dragon-kingdom'
 GUIDE = 'https://sai021.github.io/dragon-kingdom/update/'
 MAX_IMAGE = 0x180000
@@ -168,6 +169,73 @@ class Release:
         suffix = '-legacy-bridge' if old else ''
         pkg = download_json(f'https://github.com/{REPO}/releases/download/{self.tag}/dragon-{device.board}{suffix}.dragon.json')
         return verify_package(pkg, self.info, device.board, old)
+
+
+def cache_folder():
+    return backup_folder().parent / 'Firmware'
+
+
+@dataclasses.dataclass
+class PreparedRelease:
+    """A complete signed release: package() never accesses the network."""
+    tag: str
+    info: dict
+    packages: dict
+
+    @classmethod
+    def load(cls, folder=None):
+        path = (Path(folder) if folder else cache_folder()) / 'offline-release.json'
+        try:
+            with path.open('rb') as f:
+                raw = f.read(MAX_PACKAGE * 4 + 65537)
+            if len(raw) > MAX_PACKAGE * 4 + 65536:
+                raise ValueError('Oversized cache')
+            data = json.loads(raw)
+            info = verify_contract(data['release'])
+            if not version(info['firmware_tag'])[3]:
+                raise ValueError('Main releases only')
+            expected = {f'{board}-{kind}' for board in ('s3', 'c3') for kind in ('bridge', 'normal')}
+            if set(data['packages']) != expected:
+                raise ValueError('Incomplete release')
+            for board in ('s3', 'c3'):
+                for old, kind in ((True, 'bridge'), (False, 'normal')):
+                    verify_package(data['packages'][f'{board}-{kind}'], info, board, old)
+            return cls(info['firmware_tag'], info, data['packages'])
+        except Exception as e:
+            raise UpdateError('No complete verified offline download is ready. Join internet Wi-Fi and choose Download for offline use first.') from e
+
+    def package(self, device):
+        old = legacy(device.firmware)
+        kind = 'bridge' if old else 'normal'
+        return verify_package(self.packages[f'{device.board}-{kind}'], self.info, device.board, old)
+
+
+def prepare_offline(release=None, folder=None, progress=lambda text, percent: None):
+    release = release or Release.latest()
+    verify_contract(release.info)
+    if release.tag != release.info['firmware_tag'] or not version(release.tag)[3]:
+        raise UpdateError('Only a signed main release can be prepared.')
+    packages = {}
+    for board in ('s3', 'c3'):
+        for old, kind in ((True, 'bridge'), (False, 'normal')):
+            device = Device('http://192.168.4.1', 'Dragon-Kingdom-000000', board,
+                            'v0.3.0-beta.3' if old else 'v0.3.0-beta.9')
+            packages[f'{board}-{kind}'] = verify_package(release.package(device), release.info, board, old)
+            progress('Downloading signed firmware for offline use...', len(packages) * 25)
+    folder = Path(folder) if folder else cache_folder()
+    folder.mkdir(parents=True, exist_ok=True)
+    # One replacement publishes all four verified files together. An interrupted
+    # download cannot replace a previously usable offline set with a partial one.
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=folder, prefix='.download-', delete=False) as f:
+            temporary = Path(f.name)
+            json.dump({'release': release.info, 'packages': packages}, f, separators=(',', ':'))
+            f.flush(); os.fsync(f.fileno())
+        os.replace(temporary, folder / 'offline-release.json')
+    finally:
+        if temporary and temporary.exists(): temporary.unlink()
+    return PreparedRelease.load(folder)
 
 
 class NoLocalRedirect(urllib.request.HTTPRedirectHandler):
@@ -332,7 +400,7 @@ def update(device, release, password, progress=lambda text, percent: None, cance
     if version(release.tag) <= version(device.firmware):
         raise UpdateError('This lamp is already on the offered version or newer. No downgrade was performed.')
     old = legacy(device.firmware)
-    progress('Downloading and verifying signed firmware...', 0)
+    progress('Verifying prepared firmware (no internet needed)...' if isinstance(release, PreparedRelease) else 'Downloading and verifying signed firmware...', 0)
     pkg = release.package(device)  # Verify completely before login, backup or erase.
     if cancel.is_set():
         raise Cancelled('Cancelled before installation.')

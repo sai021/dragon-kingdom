@@ -89,7 +89,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status); self.send_header('Content-Length', str(len(result))); self.end_headers(); self.wfile.write(result)
 
 class Tests(unittest.TestCase):
-    def exercise(self, board='s3', old=True, fault=None, cancel_at=None, wrong_password=False):
+    def exercise(self, board='s3', old=True, fault=None, cancel_at=None, wrong_password=False, offline=False):
         lamp = Lamp(board, old, fault)
         server = ThreadingHTTPServer(('127.0.0.1', 0), Handler); server.lamp = lamp
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
@@ -98,10 +98,13 @@ class Tests(unittest.TestCase):
         try:
             info, pkg = fixtures(board, old)
             release = c.Release('v0.3.1', info)
+            if offline:
+                packages = {f'{b}-{kind}': fixtures(b, old_format)[1] for b in ('s3','c3') for old_format,kind in ((True,'bridge'),(False,'normal'))}
+                release = c.PreparedRelease('v0.3.1', info, packages)
             cancel = threading.Event()
             def progress(text, percent):
                 if cancel_at is not None and percent >= cancel_at: cancel.set()
-            with tempfile.TemporaryDirectory() as tmp, patch.object(c.Release, 'package', lambda self, d: c.verify_package(pkg, info, d.board, c.legacy(d.firmware), KEY.public_key())):
+            with tempfile.TemporaryDirectory() as tmp, patch.object(c, 'trust_key', return_value=KEY.public_key()), patch.object(c, 'download_json', side_effect=AssertionError('No public network during offline transfer')), patch.object(c.Release, 'package', lambda self, d: c.verify_package(pkg, info, d.board, c.legacy(d.firmware), KEY.public_key())):
                 result = c.update(c.Device.probe(address, allow_loopback=True), release,
                     'wrong' if wrong_password else 'correct', progress, cancel, backups=tmp,
                     client_factory=lambda addr: c.Client(addr, timeout=1, allow_loopback=True), reboot_timeout=.08, poll_interval=.01)
@@ -118,6 +121,10 @@ class Tests(unittest.TestCase):
     def test_current_format_both_boards(self):
         for board in ('s3', 'c3'):
             with self.subTest(board=board): self.exercise(board, old=False)
+    def test_offline_transfer_without_public_network_both_boards_formats(self):
+        for board in ('s3','c3'):
+            for old in (True,False):
+                with self.subTest(board=board,old=old): self.exercise(board,old=old,offline=True)
     def test_lost_ack_after_write_does_not_duplicate(self): self.exercise(fault='after-chunk')
     def test_lost_ack_before_write_retries(self): self.exercise(fault='before-chunk')
     def test_lost_start_reply_recovers(self): self.exercise(fault='start-reply')

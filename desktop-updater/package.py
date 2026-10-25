@@ -10,6 +10,7 @@ import subprocess
 import sys
 import urllib.request
 import zipfile
+from updater_core import APP_VERSION
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / '.tools' / 'package'
@@ -62,8 +63,8 @@ def build():
         app = OUT / 'dist' / (NAME + '.app')
         plist = app / 'Contents/Info.plist'
         info = plistlib.loads(plist.read_bytes())
-        info.update(CFBundleShortVersionString='1.0.0', CFBundleVersion='1.0.0',
-                    NSLocalNetworkUsageDescription='Find and update your Dragon Kingdom lamp on your home network.',
+        info.update(CFBundleShortVersionString=APP_VERSION, CFBundleVersion=APP_VERSION,
+                    NSLocalNetworkUsageDescription='Find and update your Dragon Kingdom lamp on home or dragon setup Wi-Fi.',
                     NSBonjourServices=['_http._tcp'])
         plist.write_bytes(plistlib.dumps(info))
         subprocess.run(['codesign', '--force', '--deep', '--sign', '-', str(app)], check=True)
