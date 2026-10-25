@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -17,7 +18,7 @@ NAME = 'Dragon Kingdom Updater'
 def build():
     notices = OUT / 'Third-party notices'
     notices.mkdir(parents=True, exist_ok=True)
-    for name in ('cryptography', 'zeroconf', 'psutil', 'ifaddr', 'cffi', 'pycparser', 'pyinstaller'):
+    for name in ('cryptography', 'certifi', 'zeroconf', 'psutil', 'ifaddr', 'cffi', 'pycparser', 'pyinstaller'):
         dist = importlib.metadata.distribution(name)
         for entry in dist.files or ():
             if any(part.lower().startswith(('license', 'copying', 'notice')) for part in entry.parts):
@@ -67,16 +68,22 @@ def build():
         plist.write_bytes(plistlib.dumps(info))
         subprocess.run(['codesign', '--force', '--deep', '--sign', '-', str(app)], check=True)
         subprocess.run([str(app / 'Contents/MacOS' / NAME), '--self-test'], check=True)
+        binary = app / 'Contents/MacOS' / NAME
         target = OUT / f'Dragon-Kingdom-Updater-Mac-{platform.machine()}.zip'
         subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', str(app), str(target)], check=True)
     elif sys.platform == 'win32':
         folder = OUT / 'dist' / NAME
         subprocess.run([str(folder / (NAME + '.exe')), '--self-test'], check=True)
+        binary = folder / (NAME + '.exe')
         target = OUT / 'Dragon-Kingdom-Updater-Windows-x64.zip'
         with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as archive:
             for p in folder.rglob('*'):
                 if p.is_file(): archive.write(p, p.relative_to(folder.parent))
     else: raise SystemExit('Package on Windows or Mac.')
+    # Prove HTTPS works with the bundled CA file, not a developer's Python CA
+    # path that will be absent on a family computer without Python installed.
+    env = dict(os.environ, SSL_CERT_FILE=str(OUT / 'absent-ca.pem'), SSL_CERT_DIR=str(OUT / 'absent-ca-dir'))
+    subprocess.run([str(binary), '--release-test'], check=True, env=env, timeout=90)
     print(target)
 
 if __name__ == '__main__': build()

@@ -135,8 +135,12 @@ class App:
 
 
 if __name__ == '__main__':
-    if '--self-test' in sys.argv:
+    if '--release-test' in sys.argv:
+        release = core.Release.latest()
+        if sys.stdout: print('PASS: packaged HTTPS and signed main release ' + release.tag)
+    elif '--self-test' in sys.argv:
         core.trust_key()
+        core.tls_context()
         import psutil, zeroconf
         root = tk.Tk(); root.withdraw(); App(root, online=False); root.update(); root.destroy()
         if sys.stdout: print('PASS: updater public trust root, network dependencies and Tk interface')

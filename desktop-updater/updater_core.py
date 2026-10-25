@@ -9,12 +9,14 @@ import os
 from pathlib import Path
 import re
 import socket
+import ssl
 import sys
 import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import certifi
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -122,12 +124,18 @@ class PublicRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
+def tls_context():
+    context = ssl.create_default_context()
+    context.load_verify_locations(cafile=certifi.where())
+    return context
+
+
 def download_json(url, limit=MAX_PACKAGE):
     if not public_url(url):
         raise UpdateError('Untrusted release address.')
     request = urllib.request.Request(url, headers={'User-Agent': 'Dragon-Kingdom-Updater/' + APP_VERSION})
     try:
-        with urllib.request.build_opener(PublicRedirect()).open(request, timeout=25) as r:
+        with urllib.request.build_opener(urllib.request.HTTPSHandler(context=tls_context()), PublicRedirect()).open(request, timeout=25) as r:
             if int(r.headers.get('Content-Length', '0')) > limit:
                 raise UpdateError('Download exceeded its size limit.')
             raw = r.read(limit + 1)

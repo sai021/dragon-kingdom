@@ -156,5 +156,11 @@ class Tests(unittest.TestCase):
         self.assertFalse(c.public_url('https://github.com/other/repo/releases/a'))
         self.assertTrue(c.public_url('https://github.com/sai021/dragon-kingdom/releases/download/v0.3.1/a'))
     def test_installed_trust_root(self): self.assertEqual(c.trust_key().key_size, 2048)
+    def test_tls_keeps_certificate_and_hostname_validation(self):
+        import ssl
+        context = c.tls_context()
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(context.check_hostname)
+        self.assertGreater(len(context.get_ca_certs()), 50)
 
 if __name__ == '__main__': unittest.main()

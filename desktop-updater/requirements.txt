@@ -1,4 +1,5 @@
 cryptography==50.0.2
+certifi==2026.10.23
 zeroconf==0.151.5
 psutil==7.2.2
 pyinstaller==6.22.3
