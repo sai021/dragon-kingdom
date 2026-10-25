@@ -215,14 +215,12 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 1.5, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 1.6, 26 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
 
 
 <!-- page -->
 
 # Grown-up service notes
-
-USB recovery and refitting the backplate
 
 ## Open for recovery
 
@@ -235,7 +233,9 @@ The bottom USB-C port is power-only. Never connect laptop USB and external/main 
 
 ## Easy Update: automatic USB updates
 
-Choose **USB cable** in Easy Update on internet. Keep **USB Tools** with the app. Confirm USB-only power for all boards and enable **Auto update USB dragons**; signed files are prepared first. Connect one board, wait for the result, unplug and wait for **USB Auto ready** before the next. Older firmware updates; equal/newer versions are not rewritten. **Stop** finishes the current operation; errors stop Auto. Backups stay private. Unresponsive boards need maker-assisted recovery.
+Choose **USB cable** on internet; keep **USB Tools** with the app. Optional **Auto update USB dragons** prepares signed files first. Connect one ESP32, wait for the result, unplug, then wait for **USB Auto ready**. Manual: **Find USB dragons**, select a port, then **Update selected dragon**. **Stop** finishes the current operation; errors stop Auto.
+
+**Update & keep saved dragons** preserves a supported lamp; current/newer firmware is not rewritten. Empty boards can initialize. **Fresh install / reuse this board** replaces existing firmware and saved data, including unidentified firmware. Backups run automatically. If one fails, choose **Abort** or **Continue without backup**; continuing accepts that previous contents have no verified recovery backup.
 
 ## Close after recovery
 

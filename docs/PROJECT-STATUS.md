@@ -1,28 +1,28 @@
 # Project checkpoint — 26 October 2026
 
-## Unreleased workshop redesign and fresh installation - 26 October
+## Current updater: Easy Update 1.6.0 - 26 October
 
-At the owner's request, hold another public app version until redesigning the
-interface for Dragon Kingdom. The native Tk interface now uses a forest/parchment
-keeper-workshop theme, original 8x8 LED crest, connection cards and a readable
-activity log. USB keeps preservation as default and offers Fresh install/reuse
-with selection of that option sufficient to authorize replacement. A static USB
-power warning replaces the power checkbox; optional Auto mode remains available.
+The Dragon Kingdom workshop design now offers three connection cards. USB has
+only a static power warning, optional Auto mode and Update/Fresh install choices;
+there are no power or replacement acknowledgement checkboxes. Backups run
+automatically. Backup failure offers exactly Abort or Continue without backup.
+Abort prevents writes. Continue records the unavailable backup and does not
+claim saved-data verification. Empty boards can initialize; Fresh install replaces
+existing firmware and saved data, including other projects or unidentified builds.
+Source-schema/layout gates remain in preservation mode; signed images and
+validated startup remain mandatory. Firmware stays v0.3.1.
 
-The attached board responds with uptime and a 400mA USB cap but no firmware tag
-or schema. A read-only serial status check confirmed the reason for 1.5.0's error;
-no flash was erased or written. Default preservation still rejects unidentified
-non-empty firmware. Fresh install backs up the full 4/8/16MB flash twice and
-verifies it before a whole-flash erase. If the backup fails, the only prompt is
-Abort or Continue without backup; Abort prevents writes and Continue records the
-missing backup explicitly. A fully erased board can initialize
-without opting to replace existing data. ROM board, signed assets/layout and
-validated first startup remain required. Tests use simulated USB flash files.
-The design preview has physical operations disabled. Public download remains
-1.5.0; no new app/firmware release has been published for this work.
-See [design and implementation notes](WORKSHOP-PREVIEW-2026-10-26.md).
+All three CI packages pass, including 58 desktop tests and 8 simulated USB tests.
+Local release-service and batch regression checks also pass (24 tests). The
+downloaded Windows build passes GUI/TLS/service and signed release/offline reload
+checks. The simplified preview and changed manual page were visually inspected.
+Fresh flashing and backup-failure continuation remain physically untested; no
+firmware was written to the attached unidentified board. Manual edition 1.6 stays
+ten pages; class-sheet QR links are unchanged.
+See [release evidence](UPDATER-1.6.0-2026-10-26.md) and
+[design notes](WORKSHOP-PREVIEW-2026-10-26.md).
 
-## Current updater: Easy Update 1.5.0, including USB Auto
+## Earlier updater: Easy Update 1.5.0, including USB Auto
 
 The owner requested USB updates inside Easy Update and clarified that Auto mode
 must remain the primary workflow. USB cable mode confirms USB-only power once

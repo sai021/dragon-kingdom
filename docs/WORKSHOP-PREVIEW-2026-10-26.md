@@ -1,4 +1,4 @@
-# Unreleased Easy Update workshop preview - 26 October 2026
+# Easy Update workshop design notes - 26 October 2026
 
 The owner reported USB schema rejection, requested support for empty boards,
 asked for a Dragon Kingdom redesign before another version, and explicitly asked
@@ -51,5 +51,7 @@ classification without implicit erase, Auto opt-in and unplug latching. Eight
 service tests use real temporary backup files and a simulated flasher, covering
 empty initialization, used-board rejection, two-read verification before erase,
 backup-failure Abort/Continue, bad flash size/NVS refusal and the power gate. Existing recovery tests
-remain separate. The owner then asked to complete the task. Version 1.6.0 is being packaged for
-Windows and both Mac architectures; publication evidence will be recorded below.
+remain separate. The owner then asked to complete the task. Version 1.6.0 was packaged for
+Windows and both Mac architectures and published after all checks passed.
+
+The completed 1.6.0 release is recorded in [publication evidence](UPDATER-1.6.0-2026-10-26.md).
