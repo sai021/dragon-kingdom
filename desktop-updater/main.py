@@ -136,8 +136,19 @@ class App:
 
 if __name__ == '__main__':
     if '--release-test' in sys.argv:
-        release = core.Release.latest()
-        if sys.stdout: print('PASS: packaged HTTPS and signed main release ' + release.tag)
+        # Catch failures: a windowed PyInstaller exception dialog would hang CI.
+        from pathlib import Path
+        import traceback
+        try:
+            release = core.Release.latest()
+            result = 'PASS: packaged HTTPS and signed main release ' + release.tag
+            code = 0
+        except Exception:
+            result, code = traceback.format_exc(), 1
+        at = sys.argv.index('--release-test')
+        if len(sys.argv) > at + 1: Path(sys.argv[at + 1]).write_text(result, encoding='utf-8')
+        if sys.stdout: print(result)
+        sys.exit(code)
     elif '--self-test' in sys.argv:
         core.trust_key()
         core.tls_context()

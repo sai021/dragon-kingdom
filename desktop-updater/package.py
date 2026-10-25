@@ -83,7 +83,10 @@ def build():
     # Prove HTTPS works with the bundled CA file, not a developer's Python CA
     # path that will be absent on a family computer without Python installed.
     env = dict(os.environ, SSL_CERT_FILE=str(OUT / 'absent-ca.pem'), SSL_CERT_DIR=str(OUT / 'absent-ca-dir'))
-    subprocess.run([str(binary), '--release-test'], check=True, env=env, timeout=90)
+    result_path = OUT / 'release-test-result.txt'
+    result = subprocess.run([str(binary), '--release-test', str(result_path)], env=env, timeout=120)
+    if result_path.exists(): print(result_path.read_text(encoding='utf-8'))
+    if result.returncode: raise RuntimeError('Packaged release-download check failed; see result above.')
     print(target)
 
 if __name__ == '__main__': build()

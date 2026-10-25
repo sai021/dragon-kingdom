@@ -155,14 +155,12 @@ class Release:
 
     @classmethod
     def latest(cls):
-        metadata = download_json(f'https://api.github.com/repos/{REPO}/releases/latest', 1000000)
-        tag = metadata.get('tag_name', '')
-        version(tag)
-        if metadata.get('draft') or metadata.get('prerelease'):
+        # Use the same public latest-download pointer as the lamp. No GitHub
+        # API account/token or shared anonymous API rate allowance is needed.
+        info = verify_contract(download_json(f'https://github.com/{REPO}/releases/latest/download/current-set.json', 16384))
+        tag = info['firmware_tag']
+        if not version(tag)[3]:
             raise UpdateError('No main release was offered.')
-        info = verify_contract(download_json(f'https://github.com/{REPO}/releases/download/{tag}/current-set.json', 16384))
-        if info['firmware_tag'] != tag:
-            raise UpdateError('Release identity differs from its signed contract.')
         return cls(tag, info)
 
     def package(self, device):
