@@ -44,7 +44,7 @@ def build():
         raise ValueError('Dependency source hash/size mismatch')
     (notices / sdist['filename']).write_bytes(source)
     source_dir = notices / 'updater-source'; source_dir.mkdir(exist_ok=True)
-    for name in ('main.py', 'updater_core.py', 'wifi_control.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
+    for name in ('main.py', 'updater_core.py', 'wifi_control.py', 'batch_update.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
         shutil.copyfile(ROOT / name, source_dir / name)
     (notices / 'README.txt').write_text(
         'Third-party software retains its own licences. Zeroconf 0.151.5 is unmodified LGPL-2.1-or-later; '

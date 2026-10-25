@@ -1,4 +1,5 @@
 import sys
+import gc
 from pathlib import Path
 import tkinter as tk
 import unittest
@@ -18,6 +19,10 @@ class EasyUpdateTests(unittest.TestCase):
 
     def tearDown(self):
         self.root.destroy()
+        del self.app
+        del self.root
+        # Tk objects must be collected here, never by later HTTP server threads.
+        gc.collect()
 
     def test_launch_defaults_and_editable_password(self):
         self.assertTrue(self.app.is_direct())
@@ -47,3 +52,71 @@ class EasyUpdateTests(unittest.TestCase):
                 self.assertTrue(update.call_args.kwargs['direct'])
                 self.assertEqual(self.app.password.get(), password)
                 self.assertEqual(self.app.devices[0].firmware, 'v0.3.1')
+
+    def test_startup_refresh_downloads_without_installing(self):
+        latest = SimpleNamespace(tag='v0.3.1', info={})
+        with patch.object(self.app, 'run', side_effect=lambda job, done: done(job())), \
+             patch('main.core.PreparedRelease.load', side_effect=core.UpdateError('No cache')), \
+             patch('main.core.Release.latest', return_value=latest), \
+             patch('main.core.prepare_offline', return_value=latest) as prepare, \
+             patch('main.core.update') as update, patch('main.wifi.controller') as controller:
+            self.app.startup_refresh()
+        prepare.assert_called_once()
+        update.assert_not_called()
+        controller.assert_not_called()
+        self.assertIs(self.app.prepared, latest)
+
+    def test_startup_offline_retains_verified_cache(self):
+        cached = SimpleNamespace(tag='v0.3.1', info={})
+        with patch.object(self.app, 'run', side_effect=lambda job, done: done(job())), \
+             patch('main.core.PreparedRelease.load', return_value=cached), \
+             patch('main.core.Release.latest', side_effect=core.UpdateError('Offline')), \
+             patch('main.core.prepare_offline') as prepare:
+            self.app.startup_refresh()
+        prepare.assert_not_called()
+        self.assertIs(self.app.prepared, cached)
+        self.assertIn('may not be the newest', self.app.status.get())
+
+    def test_startup_does_not_redownload_complete_current_release(self):
+        cached = SimpleNamespace(tag='v0.3.1', info={})
+        with patch.object(self.app, 'run', side_effect=lambda job, done: done(job())), \
+             patch('main.core.PreparedRelease.load', return_value=cached), \
+             patch('main.core.Release.latest', return_value=cached), \
+             patch('main.core.prepare_offline') as prepare:
+            self.app.startup_refresh()
+        prepare.assert_not_called()
+
+    def test_failed_startup_download_preserves_previous_complete_release(self):
+        cached = SimpleNamespace(tag='v0.3.1', info={})
+        latest = SimpleNamespace(tag='v0.3.2', info={})
+        with patch.object(self.app, 'run', side_effect=lambda job, done: done(job())), \
+             patch('main.core.PreparedRelease.load', return_value=cached), \
+             patch('main.core.Release.latest', return_value=latest), \
+             patch('main.core.prepare_offline', side_effect=core.UpdateError('Download interrupted')):
+            self.app.startup_refresh()
+        self.assertIs(self.app.prepared, cached)
+        self.assertIn('may not be the newest', self.app.status.get())
+
+    def test_result_rows_remain_safe_for_manual_update_selection(self):
+        import batch_update
+        device = core.Device('http://192.168.4.1', 'Dragon-Kingdom-aabbcc', 's3', 'v0.3.1')
+        self.app.release = SimpleNamespace(tag='v0.3.1')
+        self.app.show_batch_result(batch_update.Result('Dragon-Kingdom-000000', 'Needs attention', 'Unavailable'))
+        unknown = self.app.tree.get_children()[0]
+        self.app.tree.selection_set(unknown)
+        with patch('main.messagebox.showinfo'):
+            self.app.install_selected()
+        self.app.show_batch_result(batch_update.Result(device.hostname, 'Already current', 'Skipped', device))
+        self.assertEqual(self.app.devices[0], device)
+        self.assertEqual(self.app.tree.item('0')['values'][0], device.hostname)
+
+    def test_batch_button_runs_all_without_selection_dialog(self):
+        self.app.prepared = core.PreparedRelease('v0.3.1', {}, {})
+        self.app.wifi_session = SimpleNamespace(changed=False)
+        with patch.object(self.app, 'run', side_effect=lambda job, done: done(job())), \
+             patch('main.batch.run', return_value=[]) as run, \
+             patch('main.messagebox.showinfo') as info:
+            self.app.find_devices()
+        run.assert_called_once()
+        self.assertEqual(run.call_args.args[2], 'dragon123')
+        info.assert_not_called()

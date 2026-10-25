@@ -1,17 +1,24 @@
 # Dragon Kingdom Easy Update
 
-Version 1.3.0 names the app Easy Update and starts in offline/direct mode.
-The editable parent password is prefilled with dragon123 and stays in memory
-for subsequent lamps. Update selected dragon starts the existing backup and
-verified installation flow without an extra confirmation dialog. Connecting
-still does not install firmware. Native Wi-Fi discovery and connection remain.
-Find dragon Wi-Fi downloads the complete signed release first if needed, scans
-for WPA2 Dragon-Kingdom-XXXXXX networks, then lets the parent select one. The app
-connects using the shared dragon password, checks the lamp hostname matches that
-SSID, and still requires a separate click to install. It tries to rejoin the same
-AP after reboot and restore the original computer Wi-Fi after success, failure,
-mode change or close. Manual connection remains available if OS policy blocks
-Wi-Fi control. Home Wi-Fi keeps the existing shared-network discovery workflow.
+Version 1.4.0 checks the signed latest stable release at startup and automatically
+prepares all four board/bridge packages if they are not already cached. A failed
+refresh preserves the complete verified saved release and clearly labels it as
+potentially stale. Startup never scans, switches Wi-Fi or installs firmware.
+
+Find & update all dragons is the explicit direct-mode installation action. It
+scans Dragon setup networks once, deduplicates SSIDs, then joins each sequentially,
+checks HTTP identity against the SSID and updates only older firmware. Current
+and newer firmware are skipped without login or flash. Each update retains the
+signed package/backup/startup/settings checks. Per-lamp failures are reported and
+the next lamp is attempted only after returning to original Wi-Fi. A restoration
+failure stops the batch. Stop aborts safely before finalization; after finalization
+it lets verification finish and skips remaining lamps. A scrollable results report
+includes each outcome and backup path. No automatic retries of uncertain finishes.
+Use the bulk action only where all nearby dragon APs are yours to update.
+
+Parent password dragon123 remains prefilled, editable and memory-only. Home Wi-Fi
+and manual direct connection retain individual Update selected dragon. Neither
+opening the app nor merely connecting manually installs firmware.
 
 Direct mode refuses to start a firmware write if the lamp reports home Wi-Fi
 connected: beta 3 and current firmware close their AP 15 seconds after joining
@@ -34,8 +41,8 @@ leave the previous complete cache intact. Re-run the download step on internet
 to prepare a later release. No firmware is installed by downloading/preparing.
 
 Windows and Mac application for deliberate, signed firmware updates over the
-local home network. No USB, firmware bundled into the app, Wi-Fi password input,
-automatic install, factory reset or cloud backup. The same application fetches
+local home network. No USB, firmware bundled into the app, home Wi-Fi password input,
+startup installation, factory reset or cloud backup. The same application fetches
 later main firmware releases. The firmware release must remain GitHub's latest;
 publish application releases with `--latest=false`.
 
