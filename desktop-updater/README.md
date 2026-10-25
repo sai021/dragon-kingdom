@@ -15,6 +15,11 @@ network discovery or writes. `python package.py` builds and self-tests on Window
 or Mac; the workflow produces separate Windows x64, Mac arm64 and Mac x86_64 ZIPs.
 The app is not Windows certificate-signed or Apple Developer ID notarized. Mac
 bundles have ad-hoc signing. Do not describe them as OS-trusted signed apps.
+Packages include dependency licence notices, unmodified Zeroconf LGPL source,
+and this updater's source/build recipe. You may rebuild the updater with modified
+LGPL libraries. Install pinned requirements in a fresh Python 3.12 environment,
+replace the desired library there, and run package.py on the target OS. On Intel
+Mac build cryptography with OPENSSL_STATIC=1 to avoid bundled libssl collisions.
 
 Discovery uses mDNS and at most two active local IPv4 /24 ranges (512 addresses,
 24 workers); Add address handles other subnet layouts. Guest isolation and VPNs

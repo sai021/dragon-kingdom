@@ -1,8 +1,13 @@
 """Build on the target OS; never bundle signing keys, backups or firmware."""
 from pathlib import Path
+import hashlib
+import importlib.metadata
+import json
 import platform
+import shutil
 import subprocess
 import sys
+import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
@@ -10,9 +15,43 @@ OUT = ROOT / '.tools' / 'package'
 NAME = 'Dragon Kingdom Updater'
 
 def build():
+    notices = OUT / 'Third-party notices'
+    notices.mkdir(parents=True, exist_ok=True)
+    for name in ('cryptography', 'zeroconf', 'psutil', 'ifaddr', 'cffi', 'pycparser', 'pyinstaller'):
+        dist = importlib.metadata.distribution(name)
+        for entry in dist.files or ():
+            if any(part.lower().startswith(('license', 'copying', 'notice')) for part in entry.parts):
+                source = Path(dist.locate_file(entry))
+                if source.is_file():
+                    target = notices / name / entry.name
+                    target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(source, target)
+    for source in (Path(sys.base_prefix) / 'LICENSE.txt', Path(sys.base_prefix) / 'lib/python3.12/LICENSE.txt'):
+        if source.is_file(): shutil.copyfile(source, notices / 'Python-LICENSE.txt')
+    # Supply unmodified LGPL source alongside the bundled library, and the
+    # updater sources/build recipe so families can rebuild with a modified copy.
+    with urllib.request.urlopen('https://pypi.org/pypi/zeroconf/0.151.5/json', timeout=30) as response:
+        release = json.load(response)
+    sdist = next(item for item in release['urls'] if item['packagetype'] == 'sdist')
+    if not sdist['url'].startswith('https://files.pythonhosted.org/'):
+        raise ValueError('Unexpected dependency source host')
+    with urllib.request.urlopen(sdist['url'], timeout=30) as response:
+        source = response.read(5000001)
+    if len(source) > 5000000 or hashlib.sha256(source).hexdigest() != sdist['digests']['sha256']:
+        raise ValueError('Dependency source hash/size mismatch')
+    (notices / sdist['filename']).write_bytes(source)
+    source_dir = notices / 'updater-source'; source_dir.mkdir(exist_ok=True)
+    for name in ('main.py', 'updater_core.py', 'package.py', 'requirements.txt', 'README.md', 'release-public-key.pem'):
+        shutil.copyfile(ROOT / name, source_dir / name)
+    (notices / 'README.txt').write_text(
+        'Third-party software retains its own licences. Zeroconf 0.151.5 is unmodified LGPL-2.1-or-later; '
+        'its complete upstream source and licence are included. You may rebuild this updater with a modified '
+        'LGPL library; see updater-source/README.md and package.py. Python: https://www.python.org/psf/license/; '
+        'Tcl/Tk: https://www.tcl-lang.org/software/tcltk/license.html; OpenSSL: https://www.openssl.org/source/license.html. '
+        'The updater source and pinned build recipe are also at https://github.com/sai021/dragon-kingdom/tree/codex/shipping-reliability/desktop-updater.\n', encoding='utf-8')
     args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed', '--name', NAME,
             '--distpath', str(OUT / 'dist'), '--workpath', str(OUT / 'work'), '--specpath', str(OUT),
-            '--add-data', str(ROOT / 'release-public-key.pem') + ':.' ]
+            '--add-data', str(ROOT / 'release-public-key.pem') + ':.',
+            '--add-data', str(notices) + ':Third-party notices' ]
     if sys.platform == 'darwin':
         args += ['--osx-bundle-identifier', 'io.github.sai021.dragonkingdom.updater']
     subprocess.run(args + [str(ROOT / 'main.py')], check=True, cwd=ROOT)
