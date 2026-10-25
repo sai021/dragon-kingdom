@@ -1,5 +1,24 @@
 # Project checkpoint — 25 October 2026
 
+## Current updater: 1.2.0 automatic AP discovery/connection
+
+At the owner's request, direct mode now scans encrypted Dragon-Kingdom networks,
+connects to the selected AP, checks the lamp identity, attempts reboot reconnection
+and returns to the original computer Wi-Fi. Installation still needs a separate
+click. Manual connection remains available if OS Wi-Fi/location access is denied.
+Thirty-one tests and all three platform package jobs pass. A real Windows native
+scan/join/read/return test succeeded against a beta-3 S3 without writing firmware;
+physical Mac association and reboot-radio handover remain untested.
+
+Corrected restriction: beta 3 and current firmware close AP 15 seconds after joining
+saved home Wi-Fi, regardless of attached clients. Use Home Wi-Fi mode for those
+lamps. Direct writes now refuse a home-connected lamp before login or flash START.
+The guide, manual edition 1.2 and class sheet state this restriction and explain
+automatic connection. Firmware remains 0.3.1 and GitHub latest still points to it.
+See [current implementation and publication evidence](UPDATER-1.2.0-2026-10-25.md).
+Earlier updater checkpoints below are historical.
+
+
 ## Updater 1.1.0: home and direct setup Wi-Fi
 
 Published at the owner's request with two explicit modes. Home Wi-Fi keeps the

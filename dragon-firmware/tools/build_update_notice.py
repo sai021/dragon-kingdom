@@ -25,11 +25,11 @@ def build():
     steps = [
         '<b>1.</b> Keep the dragon on its normal bottom USB-C supply. Scan UPDATE below and download Dragon Kingdom Updater for Windows or Mac.',
         '<b>2. Home Wi-Fi:</b> Put computer and dragon on the same home network. Choose <b>Home Wi-Fi</b>, then <b>Check for updates</b> and <b>Find dragons</b>.',
-        '<b>Or direct to dragon:</b> While still on internet, choose <b>Download for offline use</b> and wait for confirmation. Choose <b>Dragon setup Wi-Fi (offline)</b>, join <b>Dragon-Kingdom-XXXXXX</b> in the computer Wi-Fi menu (password <b>dragon123</b>), then choose <b>Connect to dragon</b>. No home setup needed.',
-        '<b>3.</b> Select your dragon, enter parent password <b>dragon123</b> and choose <b>Update selected dragon</b>. Keep power and the app connected until verified. After restart, rejoin dragon Wi-Fi if needed; if it disappears, rejoin home Wi-Fi.',
+        '<b>Or direct to dragon:</b> For lamps <b>not on home Wi-Fi</b>, choose <b>Dragon setup Wi-Fi (offline)</b>, then <b>Find dragon Wi-Fi</b> while still on internet. The app downloads first and scans. Select yours and <b>Connect to selected dragon</b>; it switches Wi-Fi for you. Allow OS Wi-Fi/location permission if asked.',
+        '<b>3.</b> Select the lamp, enter parent password <b>dragon123</b> and choose <b>Update selected dragon</b>. Keep power and the app connected. It tries to reconnect, verify settings and return to your original Wi-Fi.',
     ]
     for text in steps: top = paragraph(c, text, 42, top-9, w-84, 10)
-    top = paragraph(c, '<b>No laptop USB cable or opening the box is needed.</b> The same app works for later compatible releases. The guide also has a phone-only option.', 42, top-11, w-84, 10)
+    top = paragraph(c, '<b>No laptop USB or opening the box.</b> If a lamp joins home Wi-Fi, its AP closes after 15 seconds; use Home Wi-Fi mode. The guide includes manual-connection and phone-only alternatives.', 42, top-11, w-84, 10)
     # Three independent, high contrast QR codes with their quiet zones intact.
     y = 241; size = 33*mm
     for x, title, url, short in [(42, 'UPDATE / DOWNLOADS', BASE+'update/', 'sai021.github.io/<br/>dragon-kingdom/update/'),
