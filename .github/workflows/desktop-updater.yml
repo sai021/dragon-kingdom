@@ -9,6 +9,11 @@ permissions:
   contents: read
 jobs:
   package:
+    timeout-minutes: 15
+    env:
+      # Intel Mac has no current crypto wheel. Its source build must not
+      # collide with Python's differently-versioned libssl in the app bundle.
+      OPENSSL_STATIC: '1'
     strategy:
       fail-fast: false
       matrix:
