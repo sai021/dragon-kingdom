@@ -30,7 +30,7 @@ def build():
         '<b>4.</b> Wait for the results report. Parent password <b>dragon123</b> is filled in and editable. Each update backs up and checks the lamp, then tries to restore Wi-Fi. <b>Stop</b> finishes safely.',
     ]
     for text in steps: top = paragraph(c, text, 42, top-9, w-84, 10)
-    top = paragraph(c, '<b>No laptop USB or opening the box.</b> Setup AP closes 15 seconds after joining home Wi-Fi. The guide includes manual and phone-only alternatives.', 42, top-11, w-84, 10)
+    top = paragraph(c, '<b>Wi-Fi updates need no laptop USB or opening the box.</b> Easy Update also offers USB Auto for grown-up servicing; follow the manual first.', 42, top-11, w-84, 10)
     # Three independent, high contrast QR codes with their quiet zones intact.
     y = 241; size = 33*mm
     for x, title, url, short in [(42, 'UPDATE / DOWNLOADS', BASE+'update/', 'sai021.github.io/<br/>dragon-kingdom/update/'),

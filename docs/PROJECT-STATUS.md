@@ -1,5 +1,20 @@
 # Project checkpoint — 25 October 2026
 
+## Current updater: Easy Update 1.5.0, including USB Auto
+
+The owner requested USB updates inside Easy Update and clarified that Auto mode
+must remain the primary workflow. USB cable mode confirms USB-only power once
+for the whole batch, prepares signed USB files, then handles one native Espressif
+USB board at a time. Older supported firmware updates; equal versions are checked
+without rewriting and newer versions are skipped. The existing BatchGate requires
+unplugging before the next board and prevents re-enumeration triggering a second
+update. Stop finishes the current write/checks; errors stop Auto. Manual selection
+remains available for other bridges. AP batch and Home Wi-Fi modes are retained.
+See [implementation and publication evidence](UPDATER-1.5.0-2026-10-25.md).
+Firmware remains 0.3.1. USB firmware writes have not been physically tested for
+this desktop integration; signed download/cache and simulated service checks are
+separate from actual port enumeration and packaged launch tests.
+
 ## USB recovery port discovery repaired
 
 Flash Dragons.cmd launches recovery_gui.py. Its port scan previously ran only
@@ -13,7 +28,7 @@ A read-only test with the actual launcher Python/runtime found COM17 in the hidd
 recovery window with no selected bundle. No serial port was opened and no firmware
 was written; simulated hotplug evidence is separate from actual enumeration.
 
-## Current updater: Easy Update 1.4.0
+## Earlier updater: Easy Update 1.4.0
 
 Startup checks the signed latest stable firmware and prepares the complete offline
 set automatically, preserving the prior verified cache on failure. Startup never

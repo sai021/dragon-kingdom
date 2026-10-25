@@ -12,6 +12,17 @@ port is power-only. Confirm the current identity and port on every board.
 3. Using a screwdriver through the rear keyhole, push the release tab until the backplate pops open.
 4. Connect the laptop USB-C cable to the ESP32 on the main board in the centre of the backplate.
 
+## Easy Update USB Auto
+
+Easy Update 1.5.0 also offers **USB cable** mode for the signed recovery workflow.
+Open it on internet, choose USB cable, confirm USB-only power for all boards and
+enable Auto update USB dragons. It prepares the signed bundle before arming.
+Connect one ESP32 at a time, wait for the result, unplug and wait for Auto ready
+before the next. Equal firmware is checked without writing; newer firmware is
+skipped. Stop finishes any current operation. Errors stop Auto for review. USB
+re-enumeration cannot trigger a second update. Keep the whole ZIP extraction,
+including USB Tools. Manual port selection and the original service tools remain.
+
 ## Restore firmware
 
 

@@ -215,7 +215,7 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 1.4, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 1.5, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
 
 
 <!-- page -->
@@ -226,24 +226,26 @@ USB recovery and refitting the backplate
 
 ## Open for recovery
 
-The bottom USB-C port is power-only. Never connect laptop USB and external/main power simultaneously. Use the maker's signed firmware and recovery instructions; normal wireless updates do not require opening the box.
+The bottom USB-C port is power-only. Never connect laptop USB and external/main power together. Wi-Fi updates need no opening.
 
 1. Disconnect the bottom product USB-C power cable before connecting laptop USB.
 2. Remove the screw at the top rear of the box.
 3. Using a screwdriver through the rear keyhole, push the release tab until the backplate pops open.
 4. Connect the laptop USB-C cable to the ESP32 on the main board in the centre of the backplate.
 
+## Easy Update: automatic USB updates
+
+Choose **USB cable** in Easy Update on internet. Keep **USB Tools** with the app. Confirm USB-only power for all boards and enable **Auto update USB dragons**; signed files are prepared first. Connect one board, wait for the result, unplug and wait for **USB Auto ready** before the next. Older firmware updates; equal/newer versions are not rewritten. **Stop** finishes the current operation; errors stop Auto. Backups stay private. Unresponsive boards need maker-assisted recovery.
+
 ## Close after recovery
 
-After restoring firmware, disconnect laptop USB. Fit the backplate's bottom USB-C port and LDR (room-light sensor) into their respective slots in the box. Press the top of the backplate until it pops into place, then replace the screw. Reconnect normal product power only after laptop USB is disconnected.
+Disconnect laptop USB. Fit the backplate's bottom USB-C port and LDR (room-light sensor) into their box slots. Press the backplate top into place and replace the screw. Reconnect product power only after laptop USB is disconnected.
 
-## What is Download support details?
+## Support details and power
 
-Parent settings has a Support details dropdown. Its download button saves a small troubleshooting file for the maker, including firmware/board, uptime, startup result, estimated power limit, calibration presence and connection/memory diagnostics. It excludes passwords, tokens, Wi-Fi network names and custom dragon names.
+**Support details** downloads firmware/board, uptime, startup, estimated power, calibration and connection/memory diagnostics for the maker. It excludes passwords, tokens, Wi-Fi network names and custom dragon names.
 
-## Connection and power information
-
-Open Connection & power near the top of the webpage for your home-network addresses, detected power mode and estimated startup current limit. Computer USB is capped at 400 mA. Product-supply mode means no computer USB was detected; the startup limit is an estimate, not a measured supply rating.
+**Connection & power** shows home addresses, detected power mode and estimated startup limit. Computer USB is capped at **400 mA**. Product-supply mode means no computer USB was detected; its limit is an estimate, not a measured supply rating.
 
 
 <!-- page -->
