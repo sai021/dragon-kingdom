@@ -1,5 +1,19 @@
 # Project checkpoint — 25 October 2026
 
+## Updater 1.1.0: home and direct setup Wi-Fi
+
+Published at the owner's request with two explicit modes. Home Wi-Fi keeps the
+shared-network workflow; direct mode downloads the signed release first, then
+asks the parent to join the dragon's setup Wi-Fi and connects to 192.168.4.1 with
+no home setup or internet during transfer. Offline files survive app restart and
+are fully reverified; partial downloads retain the previous complete set. Parents
+switch Wi-Fi themselves. Twenty-one tests and packaged Windows/Apple Silicon/Intel
+Mac checks pass, including real signed downloads and offline reload. Physical AP
+association/reboot handover remains untested; firmware itself remains 0.3.1.
+The manual and class notice now explain both modes at unchanged QR addresses.
+See [implementation and publication evidence](UPDATER-1.1.0-2026-10-25.md).
+
+
 ## Current publication: firmware 0.3.1 and family updater
 
 The owner requested publication and now reports the S3 is working without restarts. [Main firmware 0.3.1](https://github.com/sai021/dragon-kingdom/releases/tag/v0.3.1) is published, with all five CI jobs passing at 2cb953a and all 11 uploaded assets matching the prepared signed files. It retains beta-9 behavior with only the version label changed. Shipped beta-3 lamps need the explicit format-1 bridge once. Both board packages preserve calibration and schema 1.

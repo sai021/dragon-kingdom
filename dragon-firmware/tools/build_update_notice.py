@@ -21,14 +21,15 @@ def build():
     top = paragraph(c, '<b>A small update for<br/>your Wall Dragon</b>', 42, h-65, w-84, 27)
     top = paragraph(c, '26 October 2026 - please keep this sheet with your setup card.', 42, top-13, w-84, 10, TEAL)
     top = paragraph(c, 'If your dragon shows an <b>HTTPS error</b> when checking for updates, there is a repair. Touch play and local phone controls still work. <b>Do not factory-reset it.</b>', 42, top-17, w-84, 11)
-    top = paragraph(c, '<b>Update over home Wi-Fi</b>', 42, top-19, w-84, 16)
+    top = paragraph(c, '<b>Two ways to update over Wi-Fi</b>', 42, top-19, w-84, 16)
     steps = [
-        '<b>1.</b> Keep the dragon on its normal bottom USB-C power supply. Connect your Windows computer or Mac to the same home network.',
-        '<b>2.</b> Scan UPDATE below. Download and open Dragon Kingdom Updater. Choose <b>Find dragons</b>, select yours and enter the parent password: <b>dragon123</b>.',
-        '<b>3.</b> Review the offered version and choose <b>Update selected dragon</b>. Keep power, Wi-Fi and the app connected until it confirms the restart and saved settings.',
+        '<b>1.</b> Keep the dragon on its normal bottom USB-C supply. Scan UPDATE below and download Dragon Kingdom Updater for Windows or Mac.',
+        '<b>2. Home Wi-Fi:</b> Put computer and dragon on the same home network. Choose <b>Home Wi-Fi</b>, then <b>Check for updates</b> and <b>Find dragons</b>.',
+        '<b>Or direct to dragon:</b> While still on internet, choose <b>Download for offline use</b> and wait for confirmation. Choose <b>Dragon setup Wi-Fi (offline)</b>, join <b>Dragon-Kingdom-XXXXXX</b> in the computer Wi-Fi menu (password <b>dragon123</b>), then choose <b>Connect to dragon</b>. No home setup needed.',
+        '<b>3.</b> Select your dragon, enter parent password <b>dragon123</b> and choose <b>Update selected dragon</b>. Keep power and the app connected until verified. After restart, rejoin dragon Wi-Fi if needed; if it disappears, rejoin home Wi-Fi.',
     ]
-    for text in steps: top = paragraph(c, text, 42, top-11, w-84, 11)
-    top = paragraph(c, '<b>No laptop USB cable or opening the box is needed.</b> The same app works for later compatible releases. The update page also explains the phone-only file-upload option.', 42, top-13, w-84, 10)
+    for text in steps: top = paragraph(c, text, 42, top-9, w-84, 10)
+    top = paragraph(c, '<b>No laptop USB cable or opening the box is needed.</b> The same app works for later compatible releases. The guide also has a phone-only option.', 42, top-11, w-84, 10)
     # Three independent, high contrast QR codes with their quiet zones intact.
     y = 241; size = 33*mm
     for x, title, url, short in [(42, 'UPDATE / DOWNLOADS', BASE+'update/', 'sai021.github.io/<br/>dragon-kingdom/update/'),
