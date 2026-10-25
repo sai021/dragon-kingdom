@@ -1,5 +1,37 @@
 # Dragon Kingdom Easy Update
 
+Version 1.5.0 adds USB cable mode alongside AP batch updates and Home Wi-Fi.
+The default remains offline/AP mode. In USB mode disconnect product/external power
+BEFORE connecting laptop USB to the internal ESP32. Confirm USB-only power for
+all boards, then enable Auto update USB dragons. Signed USB files are downloaded
+and verified before arming; no serial port is opened by discovery alone.
+
+USB Auto handles one Espressif USB port at a time. It reads the running version,
+updates older supported firmware through the existing signed recovery checks,
+checks equal versions without rewriting, and skips newer versions without reset
+or downgrade. Wait for the result, unplug, then wait for Auto ready before the next
+board. The reviewed BatchGate prevents ROM/firmware re-enumeration triggering a
+second update and refuses ambiguous multiple ports. Stop lets the current write
+and verification finish; failures stop Auto for review. Manual selection supports
+other serial bridges; Auto deliberately filters native Espressif VID 303A.
+
+USB has no factory reset or erase-all. Recovery checks source schema, ROM board,
+signed files/layout, backs up and byte-verifies unchanged NVS, then requires the
+expected image digest/version/board, VALID application and 400mA USB report.
+Unknown/unresponsive runtime requires the maker's separate evidence-preserving
+service procedure. USB backups remain private under application-data USB Service.
+The shared service source is generated from dragon-firmware/tools at build time;
+only package imports, public-key lookup, local data root and hidden process flags
+are adapted. The checks and flash ranges are unchanged.
+
+The separately executable USB Tools folder contains unmodified esptool 5.6.0,
+its licences/source and rebuild recipe; the GUI invokes it as a CLI process.
+No Arduino CLI, Python installation or local compiler is required for families.
+Keep USB Tools next to the Windows executable or next to the Mac app. A helper
+--help smoke and signed USB download/reload are checked during packaging; no
+hardware is opened or flashed by those checks. Mac USB writes remain physically
+unverified until recorded separately.
+
 Version 1.4.0 checks the signed latest stable release at startup and automatically
 prepares all four board/bridge packages if they are not already cached. A failed
 refresh preserves the complete verified saved release and clearly labels it as

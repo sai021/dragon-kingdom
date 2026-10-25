@@ -22,7 +22,7 @@ import certifi
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-APP_VERSION = '1.4.0'
+APP_VERSION = '1.5.0'
 REPO = 'sai021/dragon-kingdom'
 GUIDE = 'https://sai021.github.io/dragon-kingdom/update/'
 MAX_IMAGE = 0x180000

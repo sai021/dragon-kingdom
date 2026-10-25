@@ -18,6 +18,8 @@ class EasyUpdateTests(unittest.TestCase):
         self.app = App(self.root, online=False)
 
     def tearDown(self):
+        for callback in self.root.tk.call('after', 'info'):
+            self.root.after_cancel(callback)
         self.root.destroy()
         del self.app
         del self.root
@@ -120,3 +122,28 @@ class EasyUpdateTests(unittest.TestCase):
         run.assert_called_once()
         self.assertEqual(run.call_args.args[2], 'dragon123')
         info.assert_not_called()
+
+    def test_usb_auto_requires_batch_power_and_prepared_bundle(self):
+        self.app.mode.set('USB cable'); self.app.change_mode()
+        self.app.usb_auto.set(True)
+        with patch.object(self.app, 'prepare_usb') as prepare:
+            self.app.toggle_usb_auto()
+        prepare.assert_not_called()
+        self.assertFalse(self.app.usb_gate.enabled)
+        self.app.usb_power.set(True); self.app.usb_auto.set(True)
+        with patch.object(self.app, 'prepare_usb', side_effect=lambda after: after()):
+            self.app.toggle_usb_auto()
+        self.assertTrue(self.app.usb_gate.enabled)
+        self.app.request_stop()
+        self.assertFalse(self.app.usb_gate.enabled)
+
+    def test_usb_auto_runs_once_then_waits_for_unplug(self):
+        self.app.mode.set('USB cable'); self.app.change_mode()
+        self.app.usb_power.set(True); self.app.usb_auto.set(True); self.app.usb_gate.arm()
+        port = SimpleNamespace(device='COM17', vid=0x303a)
+        def installing(automatic):
+            self.assertTrue(automatic)
+            self.app.usb_gate.finished(now=0)
+        with patch('main.usb.ports', return_value=[port]), patch.object(self.app, 'install_usb', side_effect=installing) as update:
+            self.app.usb_tick(); self.app.usb_tick()
+        update.assert_called_once()

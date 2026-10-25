@@ -8,6 +8,7 @@ import webbrowser
 import updater_core as core
 import wifi_control as wifi
 import batch_update as batch
+import usb_update as usb
 
 
 class App:
@@ -17,18 +18,23 @@ class App:
         self.busy, self.installing, self.finalizing = False, False, False
         self.cancel = threading.Event()
         self.wifi_session = None
+        self.usb_writing = False
+        self.usb_gate = usb.gate()
+        self.usb_auto = tk.BooleanVar(value=False)
+        self.usb_records = []
+        self.usb_power = tk.BooleanVar(value=False)
         root.title('Dragon Kingdom Easy Update')
-        root.geometry('860x790')
-        root.minsize(800, 750)
+        root.geometry('900x840')
+        root.minsize(850, 800)
         panel = ttk.Frame(root, padding=22)
         panel.pack(fill='both', expand=True)
         ttk.Label(panel, text='Dragon Kingdom Easy Update', font=('TkDefaultFont', 21, 'bold')).pack(anchor='w')
-        ttk.Label(panel, text='Keep the lamp on its normal bottom USB-C supply. No laptop USB connection is needed.', wraplength=750).pack(anchor='w', pady=(9, 10))
+        ttk.Label(panel, text='Wi-Fi: normal bottom supply. USB: external power disconnected; internal ESP32 laptop USB only.', wraplength=790).pack(anchor='w', pady=(9, 10))
         modes = ttk.Frame(panel); modes.pack(fill='x')
         ttk.Label(modes, text='Connection:').pack(side='left')
         self.mode = tk.StringVar(value='Dragon setup Wi-Fi (offline)')
         self.mode_picker = ttk.Combobox(modes, textvariable=self.mode, state='readonly', width=31,
-            values=('Dragon setup Wi-Fi (offline)', 'Home Wi-Fi'))
+            values=('Dragon setup Wi-Fi (offline)', 'Home Wi-Fi', 'USB cable'))
         self.mode_picker.pack(side='left', padx=10)
         self.mode_picker.bind('<<ComboboxSelected>>', lambda event: self.change_mode())
         self.prepare = ttk.Button(modes, text='Download for offline use', command=self.prepare_offline)
@@ -50,9 +56,13 @@ class App:
         ttk.Label(auth, text='Parent password (filled in; edit only if needed)').pack(side='left')
         self.password = ttk.Entry(auth, show='*', width=20); self.password.pack(side='left', padx=10)
         self.password.insert(0, 'dragon123')
+        self.usb_safety = ttk.Checkbutton(panel, text='Every board in this batch has external/main power disconnected; internal laptop USB is its only power.', variable=self.usb_power)
+        self.usb_safety.pack(anchor='w', pady=(0, 8))
+        self.usb_auto_button = ttk.Checkbutton(panel, text='Auto update USB dragons as they are connected (one at a time)', variable=self.usb_auto, command=self.toggle_usb_auto)
+        self.usb_auto_button.pack(anchor='w', pady=(0, 8))
         actions = ttk.Frame(panel); actions.pack(fill='x')
         self.install = ttk.Button(actions, text='Update selected dragon', command=self.install_selected); self.install.pack(side='left')
-        self.stop = ttk.Button(actions, text='Stop', command=self.cancel.set, state='disabled'); self.stop.pack(side='left', padx=10)
+        self.stop = ttk.Button(actions, text='Stop', command=self.request_stop, state='disabled'); self.stop.pack(side='left', padx=10)
         ttk.Button(actions, text='Setup and update guide', command=lambda: webbrowser.open(core.GUIDE)).pack(side='right')
         self.bar = ttk.Progressbar(panel, maximum=100); self.bar.pack(fill='x', pady=(16, 7))
         self.status = tk.StringVar(value='Ready. Choose Find dragons.')
@@ -62,6 +72,7 @@ class App:
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.drain)
         self.change_mode()
+        root.after(1000, self.usb_tick)
         if online:
             self.startup_refresh()
 
@@ -88,12 +99,29 @@ class App:
     def is_direct(self):
         return self.mode.get() == 'Dragon setup Wi-Fi (offline)'
 
+    def is_usb(self):
+        return self.mode.get() == 'USB cable'
+
     def change_mode(self):
         if not self.is_direct() and self.wifi_session and self.wifi_session.changed:
             self.restore_wifi(after=self.change_mode); return
-        self.release = self.prepared if self.is_direct() else self.live_release
+        self.release = self.prepared if self.is_direct() or self.is_usb() else self.live_release
         self.show_devices([])
-        if self.is_direct():
+        self.usb_power.set(False)
+        self.usb_gate.stop(); self.usb_auto.set(False)
+        if self.is_usb():
+            self.usb_safety.pack(anchor='w', pady=(0, 8), before=self.install.master)
+            self.usb_auto_button.pack(anchor='w', pady=(0, 8), before=self.install.master)
+        else:
+            self.usb_safety.pack_forget()
+            self.usb_auto_button.pack_forget()
+        if self.is_usb():
+            self.find.configure(text='Find USB dragons')
+            self.add.configure(text='USB ports listed at left')
+            self.check.configure(text='Download USB files')
+            self.instructions.set('Disconnect the bottom product power cable BEFORE connecting laptop USB to the ESP32 inside the backplate. Never use both power inputs. Confirm USB-only power for all boards and enable Auto update USB dragons. Connect one board, wait for the result, unplug and wait for Auto ready before connecting the next. Manual port selection is also available. Signed USB files download if needed; Wi-Fi is not required. Keep the full extracted folder, including USB Tools, together.')
+            self.status.set('USB discovery lists ports without opening or resetting the board. Confirm power separately for each update.')
+        elif self.is_direct():
             self.find.configure(text='Find & update all dragons')
             self.add.configure(text='Manual connection')
             self.check.configure(text='Return to original Wi-Fi')
@@ -112,10 +140,19 @@ class App:
         self.busy = busy
         for widget in (self.find, self.add, self.check, self.install, self.address, self.password, self.prepare):
             widget.configure(state='disabled' if busy else 'normal')
+        self.usb_safety.configure(state='disabled' if busy else 'normal')
         self.mode_picker.configure(state='disabled' if busy else 'readonly')
+        if self.is_usb():
+            self.add.configure(state='disabled')
+            self.address.configure(state='disabled')
+            self.password.configure(state='disabled')
         if self.is_direct():
             self.address.configure(state='disabled')
-        self.stop.configure(text='Stop after this dragon' if self.finalizing else 'Stop', state='normal' if busy and self.installing else 'disabled')
+        self.usb_auto_button.configure(state='disabled' if busy else 'normal')
+        if self.usb_gate.enabled:
+            for widget in (self.find, self.add, self.check, self.prepare, self.install, self.usb_safety): widget.configure(state='disabled')
+            self.mode_picker.configure(state='disabled')
+        self.stop.configure(text='Stop after this dragon' if self.finalizing or self.usb_writing else 'Stop', state='normal' if (busy and self.installing) or self.usb_gate.enabled else 'disabled')
 
     def run(self, job, done):
         if self.busy: return
@@ -140,7 +177,10 @@ class App:
                 elif event[0] == 'done':
                     self.installing = False; self.controls(False); event[1](event[2])
                 else:
-                    self.installing = False; self.controls(False); self.status.set(event[1])
+                    self.installing = False
+                    if self.usb_writing:
+                        self.usb_records.append(batch.Result(self.usb_port, 'Needs attention', event[1]))
+                    self.usb_writing = False; self.usb_gate.stop(); self.usb_auto.set(False); self.usb_power.set(False); self.controls(False); self.status.set(event[1])
                     messagebox.showerror('Update not completed', event[1], parent=self.root)
         except queue.Empty: pass
         self.root.after(100, self.drain)
@@ -153,6 +193,12 @@ class App:
         self.status.set(f'Found {len(devices)} dragon(s). Select yours.' if devices else 'No dragons found. Check home Wi-Fi, or enter the lamp address and choose Add address.')
 
     def find_devices(self):
+        if self.is_usb():
+            def done(ports):
+                self.show_devices([core.Device(p.device, p.description or p.device, 'usb', 'Read on update') for p in ports])
+                self.status.set('Select the USB port, confirm USB-only power and choose Update selected dragon.' if ports else 'No USB ports found. Check the data cable and ESP32 connector; try BOOT/RESET if needed.')
+            self.run(usb.ports, done)
+            return
         if self.is_direct():
             try:
                 if self.wifi_session is None:self.wifi_session = wifi.Session(wifi.controller())
@@ -191,6 +237,8 @@ class App:
         self.run(lambda: core.Device.probe(address, timeout=4), lambda d: self.show_devices([x for x in self.devices if x.hostname != d.hostname] + [d]))
 
     def check_release(self):
+        if self.is_usb():
+            self.prepare_usb(); return
         if self.is_direct():
             self.restore_wifi(); return
         def done(release):
@@ -200,6 +248,8 @@ class App:
         self.run(core.Release.latest, done)
 
     def prepare_offline(self):
+        if self.is_usb():
+            self.prepare_usb(); return
         def progress(text, percent): self.events.put(('progress', text, percent))
         def done(release):
             self.prepared = release
@@ -207,6 +257,96 @@ class App:
             self.offered.set('Offline firmware ready: ' + release.tag + ' (both board types)')
             self.status.set('Download verified and saved. Choose Dragon setup Wi-Fi (offline), then Find & update all dragons. You can close and reopen this app offline.')
         self.run(lambda: core.prepare_offline(progress=progress), done)
+
+    def request_stop(self):
+        if self.is_usb():
+            self.usb_gate.stop(); self.usb_auto.set(False)
+            if not self.usb_writing: self.usb_power.set(False)
+            self.controls(self.busy)
+            self.status.set('USB Auto stopped. Any current USB update will finish verification; keep its cable connected.')
+            if not self.busy and self.usb_records: self.show_batch_report(self.usb_records)
+        else:
+            self.cancel.set()
+
+    def toggle_usb_auto(self):
+        if not self.usb_auto.get():
+            self.request_stop(); return
+        if self.busy or not self.usb_power.get():
+            self.usb_auto.set(False)
+            self.status.set('Confirm external power is disconnected for every board in this USB-only batch, then enable Auto.'); return
+        def arm():
+            self.usb_records = []
+            self.usb_gate.arm()
+            self.controls(False)
+            self.status.set('USB Auto ready. Connect one ESP32 at a time; keep external power disconnected.')
+        self.prepare_usb(after=arm)
+
+    def usb_tick(self):
+        if self.is_usb() and self.usb_gate.enabled and not self.busy:
+            try:
+                current = {p.device for p in usb.ports() if p.vid == 0x303a}
+                waiting = self.usb_gate.waiting
+                chosen = self.usb_gate.choose(current)
+                if chosen:
+                    self.show_devices([core.Device(chosen, 'USB dragon', 'usb', 'Read on update')])
+                    self.install_usb(automatic=True)
+                elif waiting and not self.usb_gate.waiting:
+                    self.status.set('USB Auto ready. Connect the next board. Completed: ' + str(len(self.usb_records)))
+            except Exception as error:
+                self.usb_gate.stop(); self.usb_auto.set(False); self.usb_power.set(False); self.controls(False)
+                self.status.set('USB Auto stopped: ' + str(error))
+        self.root.after(1000, self.usb_tick)
+
+    def usb_release(self):
+        candidates = [r for r in (self.prepared, self.live_release, self.release) if r]
+        if candidates:
+            return max(candidates, key=lambda r: core.version(r.tag))
+        try: return usb.cached_release()
+        except core.UpdateError: return None
+
+    def prepare_usb(self, after=None):
+        def job():
+            release = self.usb_release() or core.Release.latest()
+            return release, usb.prepare(release)
+        def done(result):
+            self.release, folder = result
+            self.offered.set('Verified USB firmware ready: ' + self.release.tag)
+            self.status.set('USB files saved for offline use. Confirm USB-only power and enable USB Auto.')
+            if after: after()
+        self.run(job, done)
+
+    def install_usb(self, automatic=False):
+        selected = self.tree.selection()
+        if not selected or not selected[0].isdigit():
+            messagebox.showinfo('Choose a USB port', 'Choose Find USB dragons, then select the connected board.', parent=self.root); return
+        if not self.usb_power.get():
+            messagebox.showinfo('Confirm USB-only power', 'Disconnect bottom/external power before laptop USB. Confirm the USB-only checkbox for this board/batch.', parent=self.root); return
+        port = self.devices[int(selected[0])].address
+        release = self.usb_release()
+        self.usb_port = port
+        self.usb_writing = True
+        self.status.set('Preparing signed USB firmware. Keep laptop USB connected throughout recovery and verification.')
+        def job():
+            target = release or core.Release.latest()
+            folder = usb.prepare(target)
+            result = usb.update(port, target, folder, True, emit=lambda text: self.events.put(('progress', str(text), 0)))
+            return result
+        def done(result):
+            self.usb_writing = False
+            self.usb_records.append(batch.Result(port, 'Updated' if result.startswith('Updated') else 'Skipped', result))
+            self.bar['value'] = 100
+            if automatic:
+                self.usb_gate.finished()
+                if self.usb_gate.enabled:
+                    self.status.set(result + ' Unplug this board and wait for USB Auto ready before the next.')
+                else:
+                    self.usb_power.set(False); self.status.set(result + ' USB Auto stopped.')
+                    self.show_batch_report(self.usb_records)
+            else:
+                self.usb_power.set(False); self.status.set(result)
+                messagebox.showinfo('USB update result', result + '\nDisconnect laptop USB before restoring normal product power. Check normal lighting and touch afterward.', parent=self.root)
+            self.controls(False)
+        self.run(job, done)
 
     def show_batch_result(self, result):
         device = result.device
@@ -241,6 +381,8 @@ class App:
         self.run(self.wifi_session.restore,done)
 
     def install_selected(self):
+        if self.is_usb():
+            self.install_usb(); return
         selected = self.tree.selection()
         if not selected or not selected[0].isdigit() or not self.release:
             messagebox.showinfo('Choose a dragon and release', 'Find and select your lamp, then check for updates.', parent=self.root); return
@@ -319,6 +461,8 @@ if __name__ == '__main__':
                         for firmware in ('v0.3.0-beta.3', 'v0.3.0-beta.9'):
                             saved.package(core.Device('http://192.168.4.1', 'Dragon-Kingdom-000000', board, firmware))
                 finally: core.download_json = downloader
+                usb.prepare(release, cache=Path(folder) / 'usb')
+                usb.prepare(release, cache=Path(folder) / 'usb')
             result = 'PASS: packaged HTTPS, signed main release ' + release.tag + ', persistent offline reload and all four packages without internet'
             code = 0
         except Exception:
@@ -328,17 +472,31 @@ if __name__ == '__main__':
         if sys.stdout: print(result)
         sys.exit(code)
     elif '--self-test' in sys.argv:
-        core.trust_key()
-        core.tls_context()
-        import psutil, zeroconf
-        wifi.native_self_test()
-        root = tk.Tk(); root.withdraw(); app = App(root, online=False)
-        assert app.password.get() == 'dragon123'
-        assert root.title() == 'Dragon Kingdom Easy Update'
-        assert app.is_direct() and str(app.address['state']) == 'disabled'
-        app.mode.set('Home Wi-Fi'); app.change_mode()
-        assert not app.is_direct() and str(app.check['state']) == 'normal'
-        root.update(); root.destroy()
-        if sys.stdout: print('PASS: updater public trust root, network dependencies and Tk interface')
+        from pathlib import Path
+        import traceback
+        try:
+            core.trust_key()
+            core.tls_context()
+            import psutil, zeroconf
+            wifi.native_self_test()
+            root = tk.Tk(); root.withdraw(); app = App(root, online=False)
+            assert app.password.get() == 'dragon123'
+            assert root.title() == 'Dragon Kingdom Easy Update'
+            assert app.is_direct() and str(app.address['state']) == 'disabled'
+            app.mode.set('Home Wi-Fi'); app.change_mode()
+            assert not app.is_direct() and str(app.check['state']) == 'normal'
+            app.mode.set('USB cable'); app.change_mode()
+            assert app.is_usb() and not app.usb_power.get()
+            assert str(app.password['state']) == 'disabled'
+            usb.service() # Packaged shared recovery imports, no device I/O.
+            root.update(); root.destroy()
+            usb.ports() # Enumerate only; never opens a serial port.
+            result, code = 'PASS: GUI modes, public key, TLS, USB service and port bindings', 0
+        except Exception:
+            result, code = traceback.format_exc(), 1
+        at = sys.argv.index('--self-test')
+        if len(sys.argv) > at + 1: Path(sys.argv[at + 1]).write_text(result, encoding='utf-8')
+        if sys.stdout: print(result)
+        sys.exit(code)
     else:
         root = tk.Tk(); App(root); root.mainloop()
