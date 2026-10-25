@@ -35,19 +35,31 @@ def create_window(visible=True,bundle_path=None):
         startup.configure(state='disabled' if busy or batch.enabled or not info else 'normal')
         refresh_button.configure(state='disabled' if busy or batch.enabled else 'normal')
         ports.configure(state='disabled' if busy or batch.enabled else 'readonly');safety.configure(state='disabled' if busy or batch.enabled else 'normal')
+    def scan_ports():
+        # Discovery must work before selecting/validating a firmware bundle.
+        _,listing=serial_modules();detected=list(listing.comports())
+        values=sorted({p.device for p in detected});previous=ports.get()
+        old=set(ports['values']);added=set(values)-old
+        ports['values']=values
+        selected=(values[0] if len(values)==1 else next(iter(added)) if len(added)==1 else previous if previous in values else '')
+        if selected!=previous:
+            safe.set(False);ports.set(selected)
+        return detected
+    ports.bind('<<ComboboxSelected>>',lambda event:safe.set(False))
     def refresh():
         nonlocal info,tool
         if busy:return
         safe.set(False);info=None
+        try:scan_ports()
+        except Exception as e:
+            ports['values']=();ports.set('');status.set('Port scan failed: '+str(e));controls();return
         try:
             if selected_cache is None:raise ValueError('Select an immutable signed release bundle first.')
             candidate=prepared_release(selected_cache);tool=installed_esptool() or esptool_path(cli)
             if not tool.is_file():raise RuntimeError('ESP32 tool not found.')
-            _,listing=serial_modules();values=[p.device for p in listing.comports()];ports['values']=values
-            if ports.get() not in values:ports.set('')
             info=candidate;bundle.set('Prepared firmware: '+info.get('firmware_tag','version not recorded')+' | S3 and C3 checksums/layouts verified.\nESP32 tool: '+str(tool))
             status.set('Select the current board port and confirm USB-only power.')
-        except Exception as e:bundle.set('Recovery is not ready: '+str(e));status.set('Check the recovery bundle and installed Espressif tool. Nothing was written.')
+        except Exception as e:bundle.set('Recovery is not ready: '+str(e));status.set('Ports are listed independently. Select a signed release bundle before recovery. Nothing was written.')
         controls()
     def stop_auto(message):
         auto.set(False);batch.stop();auto_status.set('Auto off. '+message)
@@ -83,14 +95,19 @@ def create_window(visible=True,bundle_path=None):
     ttk.Label(frame,textvariable=auto_status,wraplength=720).pack(anchor='w')
     ttk.Label(frame,text='STARTUP PASS checks firmware/storage/power reporting, not physical LEDs, sensors or Wi-Fi range.',wraplength=720).pack(anchor='w',pady=6)
     def auto_tick():
-        if batch.enabled and not busy:
+        if not busy:
             try:
-                _,listing=serial_modules();current={p.device for p in listing.comports() if p.vid==0x303a}
-                waiting=batch.waiting;chosen=batch.choose(current)
-                if chosen:
-                    ports['values']=sorted(current);ports.set(chosen);auto_status.set('Processing '+chosen+'. Keep USB connected until STARTUP PASS.');start(automatic=True)
-                elif waiting and not batch.waiting:auto_status.set('Auto ready - connect the next ESP32. Startup passes: '+str(passes))
-            except Exception as e:stop_auto(str(e));safe.set(False);controls()
+                if batch.enabled:
+                    # Batch power confirmation covers successive boards; do not
+                    # reset it through manual selection/discovery while armed.
+                    _,listing=serial_modules();current={p.device for p in listing.comports() if p.vid==0x303a}
+                    waiting=batch.waiting;chosen=batch.choose(current)
+                    if chosen:
+                        ports['values']=sorted(current);ports.set(chosen);auto_status.set('Processing '+chosen+'. Keep USB connected until STARTUP PASS.');start(automatic=True)
+                    elif waiting and not batch.waiting:auto_status.set('Auto ready - connect the next ESP32. Startup passes: '+str(passes))
+                else:scan_ports()
+            except Exception as e:
+                stop_auto(str(e));safe.set(False);ports['values']=();ports.set('');status.set('Port scan failed: '+str(e));controls()
         timers['auto']=window.after(1000,auto_tick)
     def poll():
         nonlocal busy,passes

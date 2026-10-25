@@ -1,5 +1,18 @@
 # Project checkpoint — 25 October 2026
 
+## USB recovery port discovery repaired
+
+Flash Dragons.cmd launches recovery_gui.py. Its port scan previously ran only
+following signed-bundle validation, so opening without a selected bundle showed
+no ports. Discovery now runs independently before bundle checks and every second
+while idle; single/newly connected ports are selected automatically. Changing
+selection clears the USB-only confirmation. Batch opt-in, per-batch power checks
+and signed firmware gates remain intact. Regression checks cover missing/invalid
+bundles, hotplug/removal, retry after scan error and no implicit firmware writes.
+A read-only test with the actual launcher Python/runtime found COM17 in the hidden
+recovery window with no selected bundle. No serial port was opened and no firmware
+was written; simulated hotplug evidence is separate from actual enumeration.
+
 ## Current updater: Easy Update 1.4.0
 
 Startup checks the signed latest stable firmware and prepares the complete offline

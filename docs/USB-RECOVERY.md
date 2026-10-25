@@ -21,7 +21,11 @@ port is power-only. Confirm the current identity and port on every board.
    format-2 release directory prepared by `tools/prepare_release.py`. Old unsigned
    recovery sets are rejected. Check the displayed expected tag and both-board
    hash/layout verification. No source rebuild is performed by the production GUI.
-4. Refresh ports, select the current board and confirm USB-only power.
+4. Ports are discovered at launch and refreshed automatically while idle, even
+   before selecting a release bundle. A single/newly connected port is selected
+   automatically; **Refresh ports** also retries discovery. Select the current
+   board and confirm USB-only power. Changing the selected port clears that
+   confirmation; discovery alone never starts recovery.
 5. Choose **Update / recover firmware**. ROM identification chooses the correct
    board. Signed compatibility, hashes and partition layout are checked before any
    write. NVS is privately backed up; only bootloader, partition table, OTA metadata
