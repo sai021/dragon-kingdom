@@ -7,6 +7,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.pdfgen.canvas import Canvas
+from reportlab.graphics.barcode.qr import QrCodeWidget
+from reportlab.graphics.shapes import Drawing
 
 ROOT=Path(__file__).resolve().parents[2]
 OUTPUT=ROOT/'output/pdf/dragon-kingdom-user-manual.pdf'
@@ -15,7 +17,8 @@ TEAL=colors.HexColor('#236a70')
 
 def inline(text):
     text=re.sub('[\u2010-\u2015\u2212]','-',text)
-    return re.sub(r'\*\*(.+?)\*\*',r'<b>\1</b>',escape(text))
+    text=re.sub(r'\*\*(.+?)\*\*',r'<b>\1</b>',escape(text))
+    return re.sub(r'https?://[^\s<>]+',lambda m: '<link href="'+m[0]+'" color="#236a70">'+m[0]+'</link>',text)
 
 class NumberedCanvas(Canvas):
     """Add the actual total after layout, including any overflow pages."""
@@ -60,6 +63,10 @@ def build():
         while i<len(lines):
             line=lines[i].strip()
             if not line:i+=1;continue
+            if line.startswith('[QR: ') and line.endswith(']'):
+                widget=QrCodeWidget(line[5:-1]);x0,y0,x1,y1=widget.getBounds();size=76
+                drawing=Drawing(size,size,transform=[size/(x1-x0),0,0,size/(y1-y0),0,0]);drawing.add(widget)
+                story.extend([drawing,Spacer(1,6)]);i+=1;continue
             if line.startswith('# '):story.append(Paragraph(inline(line[2:]),styles['title']));i+=1;continue
             if line.startswith('## '):story.append(Paragraph(inline(line[3:]),styles['heading']));subtitle=False;i+=1;continue
             match=re.match(r'^(\d+)\.\s+(.+)|^-\s+(.+)',line)

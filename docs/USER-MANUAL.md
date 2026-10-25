@@ -215,7 +215,7 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 0.9, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 1.0, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
 
 
 <!-- page -->
@@ -244,3 +244,30 @@ Parent settings has a Support details dropdown. Its download button saves a smal
 ## Connection and power information
 
 Open Connection & power near the top of the webpage for your home-network addresses, detected power mode and estimated startup current limit. Computer USB is capped at 400 mA. Product-supply mode means no computer USB was detected; the startup limit is an estimate, not a measured supply rating.
+
+
+<!-- page -->
+
+# Keep your dragon up to date
+
+For grown-ups - a repair today, and an easier route for future updates
+
+## If Check for updates shows an HTTPS error
+
+Some shipped dragons use firmware 0.3.0 beta 3, whose internet downloader can fail. Normal touch play and local phone controls still work. Do not factory-reset your dragon to fix this message. The computer updater below delivers the repair over your home Wi-Fi instead.
+
+## Update from a Windows computer or Mac
+
+1. Open **https://sai021.github.io/dragon-kingdom/update/** while your computer has internet. That page lists the current downloads and any release notes; check which downloads are ready.
+2. Keep your dragon connected to its normal bottom USB-C power supply. Put the computer and dragon on the same home network. **No USB cable to the computer and no opening the enclosure are needed.**
+3. Open Dragon Kingdom Updater, choose **Find dragons**, then select your dragon. If it is missing, check its home-Wi-Fi setup or use **Add address** with the address from its webpage.
+4. Enter the existing parent password, review the installed and offered versions, and choose **Update selected dragon**. The updater saves a backup, checks the signed board-matched firmware and transfers it locally. Keep power, Wi-Fi and the updater connected until the restart check finishes.
+5. Reopen your dragon's webpage and check the displayed firmware, saved dragons and normal controls. The same updater can be used for later compatible releases; it does not install without your click.
+
+The computer handles the internet download. Your home-Wi-Fi password is not entered into the updater. Backups stay on your computer; keep them private.
+
+## Phone-only alternative and setup help
+
+The same update guide explains how to download a signed repair file onto a phone and select it in Parent settings. Follow its instructions for your installed firmware and board. If you need to teach the dragon your home Wi-Fi again, follow Section Two of this manual. Guest networks and network isolation can prevent the computer finding your dragon.
+
+**Update guide and current downloads:** https://sai021.github.io/dragon-kingdom/update/
