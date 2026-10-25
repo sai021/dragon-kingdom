@@ -23,6 +23,7 @@ class App:
         self.usb_gate = usb.gate()
         self.usb_auto = tk.BooleanVar(value=False)
         self.usb_records = []
+        self.local_usb_release = None
         from workshop_ui import build
         build(self, root)
         root.protocol('WM_DELETE_WINDOW', self.close)
@@ -50,6 +51,7 @@ class App:
             return prepared, warning if failed else ''
         def done(result):
             self.prepared, warning = result
+            if not warning: self.local_usb_release = None
             self.release = self.prepared
             self.live_release = self.prepared
             available = self.usb_release() if self.is_usb() else self.prepared
@@ -62,6 +64,7 @@ class App:
         if not path: return
         def done(result):
             prepared, usb_release = result
+            self.local_usb_release = usb_release
             if prepared: self.prepared = self.live_release = prepared
             self.release = usb_release if self.is_usb() and usb_release else self.prepared
             available = usb_release or prepared
@@ -108,7 +111,8 @@ class App:
             self.check.configure(text='Check for updates')
             self.instructions.set('Connect the lamp and this computer to the same home network. Choose Check for updates, then Find dragons.\nFor a lamp without home Wi-Fi, choose Dragon setup Wi-Fi (offline) above.')
             self.status.set('Ready. Check for updates and find your dragon.')
-        self.offered.set(('Prepared offline firmware: ' if self.is_direct() else 'Main firmware available: ') + self.release.tag if self.release else 'No verified offline download yet.' if self.is_direct() else 'Choose Check for updates while connected to internet.')
+        available = self.usb_release() if self.is_usb() else self.release
+        self.offered.set('Verified firmware ready: ' + available.tag if available else 'No verified firmware ready. Choose a firmware file from this computer.')
         if self.is_usb():
             self.address.pack_forget(); self.add.pack_forget(); self.check.pack_forget()
         elif self.is_direct():
@@ -294,11 +298,11 @@ class App:
         self.root.after(1000, self.usb_tick)
 
     def usb_release(self):
+        if self.local_usb_release: return self.local_usb_release
         candidates = [r for r in (self.prepared, self.live_release, self.release) if r]
-        if candidates:
-            return max(candidates, key=lambda r: core.version(r.tag))
-        try: return usb.cached_release()
-        except core.UpdateError: return None
+        try: candidates.append(usb.cached_release())
+        except core.UpdateError: pass
+        return max(candidates, key=lambda r: core.version(r.tag)) if candidates else None
 
     def prepare_usb(self, after=None):
         def job():

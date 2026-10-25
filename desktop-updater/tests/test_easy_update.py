@@ -169,6 +169,18 @@ class EasyUpdateTests(unittest.TestCase):
         self.assertIs(self.app.prepared,prepared)
         self.assertIn('Wi-Fi and USB',self.app.status.get())
 
+    def test_selected_usb_file_takes_precedence_without_requesting_network_refresh(self):
+        older=SimpleNamespace(tag='v0.3.1', info={})
+        self.app.prepared=SimpleNamespace(tag='v0.3.2', info={})
+        with patch('main.filedialog.askopenfilename',return_value='usb.zip'), \
+             patch('main.firmware_files.load',return_value=(None,older)), \
+             patch.object(self.app,'run',side_effect=lambda job,done:done(job())):
+            self.app.choose_firmware()
+        self.app.mode.set('USB cable');self.app.change_mode()
+        self.assertIs(self.app.usb_release(),older)
+        self.assertIn('v0.3.1',self.app.offered.get())
+        self.assertNotIn('Check for updates',self.app.offered.get())
+
     def test_backup_failure_offers_only_abort_or_continue(self):
         def descendants(widget):
             for child in widget.winfo_children():
