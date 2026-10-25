@@ -235,11 +235,13 @@ class App:
         if not password:
             messagebox.showinfo('Parent password needed', 'Enter the existing parent password (normally dragon123).', parent=self.root); return
         direct = self.is_direct()
-        if not messagebox.askokcancel('Install firmware?', f'{device.hostname} ({device.board.upper()})\n{device.firmware} → {release.tag}\n\nA backup will be saved before installation. Keep power and Wi-Fi connected until the restart check finishes.' + ('\nAfter restart, rejoin the dragon Wi-Fi if disconnected. If it disappears, rejoin home Wi-Fi; the app will look for the same dragon.' if direct else ''), parent=self.root): return
+        automatic=direct and self.wifi_session and self.wifi_session.changed
+        reconnect_note='\nThe app will try to reconnect after restart and return to the original Wi-Fi afterward. Use the computer Wi-Fi menu if OS policy blocks it.' if automatic else '\nAfter restart, rejoin dragon Wi-Fi if disconnected; if it disappears, rejoin home Wi-Fi.' if direct else ''
+        if not messagebox.askokcancel('Install firmware?', f'{device.hostname} ({device.board.upper()})\n{device.firmware} → {release.tag}\n\nA backup will be saved before installation. Keep power and Wi-Fi connected until the restart check finishes.' + reconnect_note, parent=self.root): return
         self.installing = True
         def progress(text, percent):
             if direct and percent == 88:
-                text += ' Rejoin dragon Wi-Fi after restart if needed; if it disappears, rejoin home Wi-Fi. Waiting up to five minutes.'
+                text += ' Reconnecting automatically; waiting up to five minutes.' if automatic else ' Rejoin dragon Wi-Fi after restart if needed; waiting up to five minutes.'
             self.events.put(('progress', text, percent))
         def done(result):
             self.password.delete(0, 'end')
@@ -269,7 +271,15 @@ class App:
     def close(self):
         if self.busy:
             messagebox.showinfo('Please wait', 'Let the current check finish. During upload, use Cancel and wait; after final verification, keep the app open until the restart check finishes.', parent=self.root); return
-        self.restore_wifi(after=self.root.destroy)
+        if not self.wifi_session or not self.wifi_session.changed:
+            self.root.destroy();return
+        def job():
+            try:self.wifi_session.restore();return True
+            except Exception:return False
+        def done(restored):
+            if restored or messagebox.askyesno('Close updater?', 'The original Wi-Fi could not be restored. You can reconnect through the computer Wi-Fi menu. Close the app anyway?', parent=self.root):
+                self.root.destroy()
+        self.run(job,done)
 
 
 if __name__ == '__main__':
