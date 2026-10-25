@@ -63,7 +63,7 @@ Local HTTP is the existing lamp protocol; use a trusted home network.
 Before writing, the app verifies the signed release contract, board, size, image
 digest, compatibility contract and RSA signature against the installed firmware
 trust root. It refuses downgrade and pre-0.3 single-slot devices. Old 0.3.0 beta
-1â€“3 and 0.3.0 stable use the explicit format-1 bridge to the same calibration-aware
+1–3 and 0.3.0 stable use the explicit format-1 bridge to the same calibration-aware
 image; later firmware uses format 2. Backup must be saved before START. Uncertain
 chunk acknowledgements are checked by offset before retrying (beta 3 rejects
 duplicates). Cancellation aborts before finalization. After finalization the app

@@ -57,7 +57,7 @@ class App:
         self.status = tk.StringVar(value='Ready. Choose Find dragons.')
         ttk.Label(panel, textvariable=self.status, wraplength=790).pack(anchor='w')
         ttk.Label(panel, text='Backups stay on this computer: ' + str(core.backup_folder()), wraplength=790).pack(anchor='w', pady=(12, 0))
-        ttk.Label(panel, text='Easy Update ' + core.APP_VERSION + ' Â· Signed firmware Â· No automatic installation').pack(anchor='w', pady=(8, 0))
+        ttk.Label(panel, text='Easy Update ' + core.APP_VERSION + ' · Signed firmware · No automatic installation').pack(anchor='w', pady=(8, 0))
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.drain)
         if online:
