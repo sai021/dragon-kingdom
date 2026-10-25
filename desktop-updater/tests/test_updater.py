@@ -43,7 +43,8 @@ class Lamp:
 
     def handle(self, path, data, token):
         self.paths.append(path)
-        if path == '/api/state': return 200, dict(hostname=self.hostname, board=self.board, firmware=self.firmware)
+        if path == '/api/state': return 200, dict(hostname=self.hostname, board=self.board, firmware=self.firmware,
+            connected=self.fault=='ap-moves-home', ip='192.168.0.99' if self.fault=='ap-moves-home' else '')
         if path == '/api/parent/login':
             return (200, {'token': self.token}) if data.get('password') == 'correct' else (401, {})
         if token != self.token: return 401, {}
@@ -95,6 +96,15 @@ class Tests(unittest.TestCase):
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
         address = f'http://127.0.0.1:{server.server_port}'
         self.lamp = lamp
+        self.addresses = []
+        def client_factory(addr):
+            self.addresses.append(addr)
+            class SimulatedAPClient(c.Client):
+                def call(inner, path, data=None):
+                    if fault=='ap-moves-home' and lamp.finished and addr==address:
+                        raise c.UpdateError('Setup AP disappeared after restart')
+                    return super().call(path,data)
+            return SimulatedAPClient(address, timeout=1, allow_loopback=True)
         try:
             info, pkg = fixtures(board, old)
             release = c.Release('v0.3.1', info)
@@ -107,7 +117,7 @@ class Tests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmp, patch.object(c, 'trust_key', return_value=KEY.public_key()), patch.object(c, 'download_json', side_effect=AssertionError('No public network during offline transfer')), patch.object(c.Release, 'package', lambda self, d: c.verify_package(pkg, info, d.board, c.legacy(d.firmware), KEY.public_key())):
                 result = c.update(c.Device.probe(address, allow_loopback=True), release,
                     'wrong' if wrong_password else 'correct', progress, cancel, backups=tmp,
-                    client_factory=lambda addr: c.Client(addr, timeout=1, allow_loopback=True), reboot_timeout=.08, poll_interval=.01)
+                    client_factory=client_factory, reboot_timeout=.2, poll_interval=.01)
                 self.assertTrue(Path(result['backup']).exists())
                 self.assertEqual(json.loads(Path(result['backup']).read_text()), lamp.backup)
                 self.assertEqual(bytes(lamp.written), IMAGE)
@@ -125,6 +135,9 @@ class Tests(unittest.TestCase):
         for board in ('s3','c3'):
             for old in (True,False):
                 with self.subTest(board=board,old=old): self.exercise(board,old=old,offline=True)
+    def test_direct_restart_follows_saved_home_address_if_ap_disappears(self):
+        self.exercise(offline=True,fault='ap-moves-home')
+        self.assertIn('http://192.168.0.99',self.addresses)
     def test_lost_ack_after_write_does_not_duplicate(self): self.exercise(fault='after-chunk')
     def test_lost_ack_before_write_retries(self): self.exercise(fault='before-chunk')
     def test_lost_start_reply_recovers(self): self.exercise(fault='start-reply')

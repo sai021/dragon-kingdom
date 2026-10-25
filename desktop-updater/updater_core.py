@@ -411,6 +411,15 @@ def update(device, release, password, progress=lambda text, percent: None, cance
         state = client.call('/api/state')
         if (state.get('hostname'), state.get('board'), state.get('firmware')) != (device.hostname, device.board, device.firmware):
             raise UpdateError('Lamp identity/version changed. Find dragons again before updating.')
+        resume_addresses = [client.address]
+        if state.get('connected') and state.get('ip'):
+            try:
+                ip = ipaddress.IPv4Address(state['ip'])
+                home = local_address(str(ip))
+                if not ip.is_unspecified and home not in resume_addresses:
+                    resume_addresses.append(home)
+            except (ValueError, UpdateError):
+                pass
         client.login(password)
         backup = client.call('/api/backup')
         backup_bytes(backup)
@@ -481,6 +490,7 @@ def update(device, release, password, progress=lambda text, percent: None, cance
         finalized = True
         client.token = None
         deadline, last_discovery = time.monotonic() + reboot_timeout, time.monotonic()
+        resume_index = 0
         while time.monotonic() < deadline:
             try:
                 s = client.call('/api/state')
@@ -501,6 +511,12 @@ def update(device, release, password, progress=lambda text, percent: None, cance
                 if str(e).startswith('Firmware updated, but'):
                     raise
                 client.token = None
+            # An AP-started update can boot onto saved home Wi-Fi. Try the
+            # previously reported station address too, including routed LANs
+            # where multicast/subnet discovery cannot reach that address.
+            if len(resume_addresses) > 1:
+                resume_index = (resume_index + 1) % len(resume_addresses)
+                client = client_factory(resume_addresses[resume_index])
             if time.monotonic() - last_discovery > 25:
                 for candidate in discover(scan=True):
                     if candidate.hostname == device.hostname and candidate.board == device.board:
