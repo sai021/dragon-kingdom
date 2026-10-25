@@ -86,7 +86,7 @@ int main(){
  DragonBackup::Snapshot backup{};DragonLibrary::Library defaults;backup.library=defaults.data;backup.library.checksum=DragonLibrary::checksum(backup.library);backup.check=DragonBackup::checksum(backup);assert(DragonBackup::valid(backup));backup.library.profiles[0].used=0;backup.library.checksum=DragonLibrary::checksum(backup.library);backup.check=DragonBackup::checksum(backup);assert(!DragonBackup::valid(backup));
  // Exercise the real device update and backup handlers with deterministic flash/crypto adapters.
  firmwareValidated=true;registerUpdateRoutes();registerBackupRoutes();
- std::map<std::string,String> manifest={{"format","2"},{"tag","v0.3.1"},{"capabilities","1"},{"schema","1"},{"board","s3"},{"size","512"},{"sha256",String(std::string(64,'0'))},{"signature",String(std::string(512,'0'))}};
+ std::map<std::string,String> manifest={{"format","2"},{"tag","v99.0.0"},{"capabilities","1"},{"schema","1"},{"board","s3"},{"size","512"},{"sha256",String(std::string(64,'0'))},{"signature",String(std::string(512,'0'))}};
  server.headers["X-Dragon-Parent"]="";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==401&&erases==0);
  randomHex(parentSession.token);parentSession.issued=millis();server.headers["X-Dragon-Parent"]=parentSession.token;
  server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==403&&erases==0); // unsigned rejected BEFORE erase
@@ -95,7 +95,7 @@ int main(){
  manifest["board"]="s3";
  for(const char* schema:{"","2"}){manifest["schema"]=schema;server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);}manifest["schema"]="1";
  voltageCalibrationPresent=true;manifest["capabilities"]="0";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);manifest["capabilities"]="1";voltageCalibrationPresent=false;
- for(const char* tag:{"v0.2.0",DragonOnline::CURRENT_TAG}){manifest["tag"]=tag;server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);}manifest["tag"]="v0.3.1";
+ for(const char* tag:{"v0.2.0",DragonOnline::CURRENT_TAG}){manifest["tag"]=tag;server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);}manifest["tag"]="v99.0.0";
  manifest["format"]="1";server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==409&&erases==0);manifest["format"]="2";
  server.call("/api/update/start",HTTP_POST,manifest);assert(server.code==200&&erases==1);
  server.call("/api/update/finish",HTTP_POST);assert(server.code==409&&bootChanges==0);
@@ -139,19 +139,19 @@ int main(){
  assert(onlineTransport.url.find("/releases/latest/download/")!=std::string::npos);
  auto deliver=[&](const std::string& text){DragonOnline::Message m;m.kind=DragonOnline::DATA;assert(text.size()<=512);m.size=text.size();memcpy(m.bytes,text.data(),m.size);onlineTransport.messages.push_back(m);serviceOnline();};
  auto done=[&](){DragonOnline::Message m;m.kind=DragonOnline::DONE;onlineTransport.messages.push_back(m);serviceOnline();};
- auto metadata=[&](const char* board){return std::string("dragon-update-v2\n")+board+"\nv0.3.1\n512\n"+std::string(64,'0')+"\n1\n1\n2a"+std::string(510,'0')+"\n";};
+ auto metadata=[&](const char* board){return std::string("dragon-update-v2\n")+board+"\nv99.0.0\n512\n"+std::string(64,'0')+"\n1\n1\n2a"+std::string(510,'0')+"\n";};
  deliver("dragon-online-v1\nc3\nv0.3.0\n");done();assert(onlinePhase==ONLINE_FAILED&&onlineMessage.find("No compatible online release")!=std::string::npos&&erases==beforeErase);
  server.call("/api/update/online/check",HTTP_POST);
  auto text=metadata("c3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_FAILED&&erases==beforeErase);
  server.call("/api/update/online/check",HTTP_POST);text=metadata("s3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_READY&&erases==beforeErase);
  server.call("/api/update/online/install",HTTP_POST,{{"release","v0.3.2"}});assert(server.code==409&&erases==beforeErase);
- server.call("/api/update/online/install",HTTP_POST,{{"release","v0.3.1"}});assert(server.code==202&&erases==beforeErase+1&&onlinePhase==ONLINE_INSTALLING);
+ server.call("/api/update/online/install",HTTP_POST,{{"release","v99.0.0"}});assert(server.code==202&&erases==beforeErase+1&&onlinePhase==ONLINE_INSTALLING);
  deliver(std::string(512,'x'));auto previousBoot=bootChanges;done();assert(onlinePhase==ONLINE_RESTARTING&&bootChanges==previousBoot+1&&rebootPending);rebootPending=false;
- server.call("/api/update/online/check",HTTP_POST);text=metadata("s3");deliver(text.substr(0,512));deliver(text.substr(512));done();server.call("/api/update/online/install",HTTP_POST,{{"release","v0.3.1"}});auto previousAbort=aborts;parentSession.clear();serviceOnline();assert(onlinePhase==ONLINE_FAILED&&!transfer.active&&aborts==previousAbort+1);
+ server.call("/api/update/online/check",HTTP_POST);text=metadata("s3");deliver(text.substr(0,512));deliver(text.substr(512));done();server.call("/api/update/online/install",HTTP_POST,{{"release","v99.0.0"}});auto previousAbort=aborts;parentSession.clear();serviceOnline();assert(onlinePhase==ONLINE_FAILED&&!transfer.active&&aborts==previousAbort+1);
  parentSession.issued=millis();memset(parentSession.token,'b',64);parentSession.token[64]=0;server.headers["X-Dragon-Parent"]=parentSession.token;
  server.call("/api/update/online/check",HTTP_POST,{{"channel","beta"}});assert(server.code==202&&onlineTransport.url.find("/download/firmware-beta/dragon-s3.manifest")!=std::string::npos);
  text=metadata("s3");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_FAILED); // stable metadata cannot be offered as beta
- server.call("/api/update/online/check",HTTP_POST,{{"channel","beta"}});text=metadata("s3");text.replace(text.find("v0.3.1"),6,"v0.3.1-beta.1");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_READY);
+ server.call("/api/update/online/check",HTTP_POST,{{"channel","beta"}});text=metadata("s3");text.replace(text.find("v99.0.0"),7,"v99.0.0-beta.1");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_READY);
  server.call("/api/update/online/check",HTTP_POST);assert(onlineChannel=="release");deliver(text.substr(0,512));deliver(text.substr(512));done();assert(onlinePhase==ONLINE_FAILED); // beta must never leak into default release channel
  assert(DragonOnline::allowedURL("https://github.com/sai021/dragon-kingdom/releases/latest/download/dragon-s3.manifest"));assert(!DragonOnline::allowedURL("http://github.com/a"));assert(!DragonOnline::allowedURL("https://github.com.evil.test/a"));assert(!DragonOnline::allowedURL("https://github.com@evil.test/a"));
  puts("PASS: actual fixed-password parent API CSRF/login/throttle/token/expiry/logout/retired-change-route, update bounds/interruption, rotation pause/manual interval and backup validation. Crypto adapter is simulated.");
