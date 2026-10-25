@@ -1,6 +1,17 @@
 # Project checkpoint — 25 October 2026
 
-## Current updater: 1.2.0 automatic AP discovery/connection
+## Current updater: Easy Update 1.3.0
+
+The app is now named Dragon Kingdom Easy Update and opens in direct/offline mode.
+The parent password is prefilled, editable and memory-only; one Update selected
+dragon click starts backup and verified installation without a second confirmation.
+Home Wi-Fi mode remains required for already home-connected lamps, whose setup AP
+closes 15 seconds after joining home Wi-Fi. Connecting alone does not install.
+The family guide, manual edition 1.3 and class sheet recommend Easy Update first.
+Firmware remains 0.3.1. See [publication evidence](UPDATER-1.3.0-2026-10-25.md).
+Earlier updater checkpoints below are historical.
+
+## Earlier updater: 1.2.0 automatic AP discovery/connection
 
 At the owner's request, direct mode now scans encrypted Dragon-Kingdom networks,
 connects to the selected AP, checks the lamp identity, attempts reboot reconnection

@@ -215,7 +215,7 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 1.2, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 1.3, 25 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
 
 
 <!-- page -->
@@ -250,29 +250,30 @@ Open Connection & power near the top of the webpage for your home-network addres
 
 # Keep your dragon up to date
 
-For grown-ups - two Wi-Fi modes, no laptop USB or opening the box
+Easy Update - the recommended Windows/Mac method
 
-Shipped beta-3 dragons can show an HTTPS update error. Touch and local controls still work. **Do not factory-reset.** Keep the dragon on its normal bottom USB-C supply.
+Shipped beta-3 dragons can show an HTTPS update error. Touch and local controls still work. **Do not factory-reset.** Keep the dragon on its normal bottom USB-C supply; no laptop USB or opening the box.
 
-**Windows/Mac downloads and phone-only repair:** https://sai021.github.io/dragon-kingdom/update/
+**Download Easy Update:** https://sai021.github.io/dragon-kingdom/update/
 
-## Mode 1: Home Wi-Fi
+Extract the ZIP. Open **Dragon Kingdom Easy Update.exe** (Windows) or **Dragon Kingdom Easy Update.app** (Mac). Keep the extracted files together.
 
-1. Put computer and dragon on the same home network, with internet on the computer. In the updater, choose **Home Wi-Fi**, **Check for updates**, then **Find dragons**.
-2. Select yours. If missing, use **Add address** from its webpage. Enter parent password **dragon123**, review the versions and choose **Update selected dragon**.
+## Start with offline mode
 
-## Mode 2: Dragon Wi-Fi - automatic connection
+For lamps **not connected to home Wi-Fi**. Offline mode is already selected.
 
-For lamps **not on home Wi-Fi**. Their AP closes 15 seconds after joining saved home Wi-Fi; use Mode 1 for those lamps.
+1. While the computer has internet, choose **Find dragon Wi-Fi**. The app downloads signed files first and scans. Allow OS Wi-Fi/location permission if asked.
+2. Select your **Dragon-Kingdom-XXXXXX**, then **Connect to selected dragon**. The app switches Wi-Fi and checks its identity.
+3. Review versions and choose **Update selected dragon**. Parent password **dragon123** is filled in and editable; no extra confirmation is needed. Transfer needs no internet.
 
-1. While on internet, choose **Dragon setup Wi-Fi (offline)**, then **Find dragon Wi-Fi**. The app downloads signed files first and scans. Allow OS Wi-Fi/location permission if asked.
-2. Select your **Dragon-Kingdom-XXXXXX** and **Connect to selected dragon**. The app switches Wi-Fi and checks its identity; nothing is installed yet.
-3. Select the lamp, enter parent password **dragon123**, review versions and choose **Update selected dragon**. No internet is needed for transfer.
+## Already on home Wi-Fi?
 
-## Let the restart check finish
+Choose **Home Wi-Fi** instead: put computer and lamp on the same home network, then **Check for updates** and **Find dragons**. Select yours (or **Add address** from its webpage), review versions and update.
 
-The app saves a private backup, verifies signed firmware, then checks startup and saved settings. Keep power and the app connected. It tries to reconnect and return to the original Wi-Fi. Direct mode waits up to five minutes.
+A lamp's setup AP closes 15 seconds after joining home Wi-Fi. Power-cycling does not keep it open; use Home Wi-Fi mode for these lamps.
 
-If OS policy blocks connection: **Download for offline use** on internet, join dragon Wi-Fi yourself (password **dragon123**), then choose **Manual connection**. Rejoin after reboot if needed.
+## Let the checks finish
 
-Check saved dragons, touch and lighting afterward. If verification times out, check the installed version before retrying. Download fresh files for later offline updates. Home-Wi-Fi passwords are never entered into the app.
+The app saves a private backup, verifies signed firmware, then checks startup and saved settings. Keep power and the app connected. It tries to reconnect and restore the original Wi-Fi. Direct mode waits up to five minutes.
+
+If Wi-Fi control is blocked, the download page explains manual connection and phone-only alternatives. Check saved dragons, touch and lighting afterward. If verification times out, check the installed version before retrying. Download fresh files for later offline updates.
