@@ -1,6 +1,26 @@
 # Project checkpoint — 26 October 2026
 
-## Current updater: Easy Update 1.6.0 - 26 October
+## Current updater: Easy Update 1.7.0 - 26 October
+
+The owner reported 1.6.0 still rejected an unidentified board and asked for Fresh
+install selection. Version 1.7.0 removes both installation radio buttons. USB
+installation is detected automatically. Known compatible Dragon firmware follows
+the preservation path. Unknown firmware or unavailable backup offers only Abort
+or Continue without backup. Continue replaces unknown firmware and saved data;
+raw snapshots are not claimed as compatible Dragon settings backups. Abort
+precedes writes. The static USB power warning and optional Auto remain.
+
+Both Wi-Fi and USB firmware prepare automatically at startup with internet.
+The two download buttons are replaced with Choose firmware file… for a signed
+file on the PC. A complete signed Wi-Fi/USB firmware ZIP is linked in the guide
+for copying from another computer. Explicitly selected USB files take precedence
+over another Wi-Fi release in memory. The actual adapter/recovery integration
+is tested with an unidentified non-empty simulated board and both decisions.
+Manual edition 1.7 remains ten pages; the class-sheet QR links are unchanged.
+Firmware remains v0.3.1. No physical firmware flash is claimed for these new flows.
+See [release evidence](UPDATER-1.7.0-2026-10-26.md).
+
+## Earlier updater: Easy Update 1.6.0 - 26 October
 
 The Dragon Kingdom workshop design now offers three connection cards. USB has
 only a static power warning, optional Auto mode and Update/Fresh install choices;

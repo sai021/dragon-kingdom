@@ -215,7 +215,7 @@ Maker / Dragon healer contact: __________________________
 
 Dragon Wi-Fi and Parent settings password: **dragon123**. Play needs no login. Keep your home Wi-Fi password private.
 
-**About this edition:** Dragon Kingdom shipping user manual, version 1.6, 26 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
+**About this edition:** Dragon Kingdom shipping user manual, version 1.7, 26 October 2026. For firmware v0.3.0 and beta 3 or later. Keeper edition for the completed enclosure: right-side touch button, rear keyhole mounting slot and bottom USB-C power port.
 
 
 <!-- page -->
@@ -233,9 +233,9 @@ The bottom USB-C port is power-only. Never connect laptop USB and external/main 
 
 ## Easy Update: automatic USB updates
 
-Choose **USB cable** on internet; keep **USB Tools** with the app. Optional **Auto update USB dragons** prepares signed files first. Connect one ESP32, wait for the result, unplug, then wait for **USB Auto ready**. Manual: **Find USB dragons**, select a port, then **Update selected dragon**. **Stop** finishes the current operation; errors stop Auto.
+Choose **USB cable**; keep **USB Tools** with the app. Optional **Auto update USB dragons** handles one board at a time: connect, wait for the result, unplug, then wait for **USB Auto ready**. Manual: **Find USB dragons**, select a port, then **Update selected dragon**. **Stop** finishes the current operation; errors stop Auto.
 
-**Update & keep saved dragons** preserves a supported lamp; current/newer firmware is not rewritten. Empty boards can initialize. **Fresh install / reuse this board** replaces existing firmware and saved data, including unidentified firmware. Backups run automatically. If one fails, choose **Abort** or **Continue without backup**; continuing accepts that previous contents have no verified recovery backup.
+Firmware is detected automatically. Known compatible Dragon firmware is backed up and updated; current/newer firmware is not rewritten. Empty boards can initialize. Unknown firmware or an unavailable backup offers **Abort** or **Continue without backup**. For unknown firmware, Continue replaces existing firmware and saved data; any private raw flash snapshot is not a compatible Dragon settings backup. No installation-mode selection is needed.
 
 ## Close after recovery
 
@@ -278,4 +278,4 @@ Setup AP closes 15 seconds after joining home Wi-Fi; these lamps need Home Wi-Fi
 
 Keep power and the app connected. It tries to reconnect and restore the original Wi-Fi after each lamp. Checks allow five minutes per lamp. **Stop** cancels safely; after finalization it finishes checking that lamp and skips the rest. If Wi-Fi restoration fails, the batch stops.
 
-Offline startup uses the verified saved release, which may be older. Reopen on internet for fresh files. Check lighting/touch afterward; inspect the installed version before retrying failures. The guide includes manual and phone-only alternatives.
+Startup prepares Wi-Fi and USB firmware automatically on internet. Offline, use saved files or **Choose firmware file…** to load the signed firmware ZIP from your PC (download link in the guide). Selected files may be older. Reopen on internet for fresh files. Check lighting/touch afterward; inspect the installed version before retrying failures. The guide includes manual and phone-only alternatives.
